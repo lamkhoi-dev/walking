@@ -29,6 +29,7 @@ import '../../features/contest/presentation/pages/contest_detail_page.dart';
 import '../../features/contest/presentation/pages/leaderboard_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/step_tracker/presentation/pages/activity_page.dart';
+import '../../features/step_tracker/presentation/pages/goals_page.dart';
 
 /// Listenable that bridges AuthBloc state changes to GoRouter refresh
 class AuthChangeNotifier extends ChangeNotifier {
@@ -170,6 +171,13 @@ class AppRouter {
             ),
           );
         },
+      ),
+
+      // ===== GOALS PAGE (outside ShellRoute → no bottom nav) =====
+      GoRoute(
+        path: '/goals',
+        name: 'goals',
+        builder: (context, state) => const GoalsPage(),
       ),
 
       // ===== GROUP SUB-ROUTES (outside ShellRoute → no bottom nav) =====

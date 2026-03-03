@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/step_counter_service.dart';
 import '../../../../core/services/step_sync_service.dart';
 
@@ -44,6 +43,14 @@ class _StepTrackerSyncStatusUpdated extends StepTrackerEvent {
 
 /// Trigger a manual sync
 class StepTrackerSyncRequested extends StepTrackerEvent {}
+
+/// Change daily step goal
+class StepTrackerGoalChanged extends StepTrackerEvent {
+  final int newGoal;
+  const StepTrackerGoalChanged(this.newGoal);
+  @override
+  List<Object?> get props => [newGoal];
+}
 
 // ===== STATES =====
 abstract class StepTrackerState extends Equatable {
@@ -143,9 +150,10 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     on<_StepTrackerStatusUpdated>(_onStatusUpdated);
     on<_StepTrackerSyncStatusUpdated>(_onSyncStatusUpdated);
     on<StepTrackerSyncRequested>(_onSyncRequested);
+    on<StepTrackerGoalChanged>(_onGoalChanged);
   }
 
-  int get _goal => AppConstants.dailyStepGoalDefault;
+  int get _goal => _counterService.dailyGoal;
 
   StepTrackerRunning _buildRunningState({
     required int steps,
@@ -176,6 +184,14 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
   ) async {
     try {
       await _counterService.init();
+
+      // Wait for user box to be ready (switchUser called from auth listener)
+      int retries = 0;
+      while (_counterService.currentUserId == null && retries < 20) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        retries++;
+      }
+
       await _counterService.startTracking();
 
       // Listen to step updates
@@ -272,6 +288,21 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     Emitter<StepTrackerState> emit,
   ) async {
     await _syncService.syncNow();
+  }
+
+  Future<void> _onGoalChanged(
+    StepTrackerGoalChanged event,
+    Emitter<StepTrackerState> emit,
+  ) async {
+    await _counterService.setDailyGoal(event.newGoal);
+    if (state is StepTrackerRunning) {
+      final current = state as StepTrackerRunning;
+      final progress = event.newGoal > 0 ? current.todaySteps / event.newGoal : 0.0;
+      emit(current.copyWith(
+        goalSteps: event.newGoal,
+        progress: progress,
+      ));
+    }
   }
 
   @override

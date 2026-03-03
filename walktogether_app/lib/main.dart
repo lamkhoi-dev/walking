@@ -162,6 +162,8 @@ class _AppViewState extends State<_AppView> {
         if (state is AuthAuthenticated) {
           isLoggedIn = true;
           companyStatus = 'approved';
+          // Switch step counter to this user's box
+          StepCounterService().switchUser(state.user.id);
           // Connect socket with stored token
           _connectSocket();
         } else if (state is AuthPendingApproval) {
@@ -174,8 +176,8 @@ class _AppViewState extends State<_AppView> {
           isLoggedIn = true;
           companyStatus = 'suspended';
         } else if (state is AuthUnauthenticated) {
-          // Clear step data, stop sync, and disconnect socket
-          StepCounterService().clearData();
+          // Detach step data (preserves per-user data), stop sync, disconnect socket
+          StepCounterService().detachUser();
           StepSyncService().clearQueue();
           SocketService().disconnect();
         }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -133,11 +134,14 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: StepStatCard(
-                  icon: Icons.flag_rounded,
-                  value: '${(state.progress * 100).toInt()}%',
-                  label: 'Mục tiêu',
-                  iconColor: AppColors.primary,
+                child: GestureDetector(
+                  onTap: () => context.push('/goals'),
+                  child: StepStatCard(
+                    icon: Icons.flag_rounded,
+                    value: '${(state.progress * 100).toInt()}%',
+                    label: 'Mục tiêu',
+                    iconColor: AppColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -146,6 +150,26 @@ class _ActivityPageState extends State<ActivityPage> {
 
           // Tracking toggle & sync status
           _buildControlRow(context, state),
+          const SizedBox(height: 16),
+
+          // Goal detail button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/goals'),
+              icon: const Icon(Icons.emoji_events_rounded, size: 20),
+              label: Text('Xem mục tiêu & thành tựu',
+                  style: AppTextStyles.buttonMedium.copyWith(color: AppColors.primary)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 24),
 
           // Hourly chart
