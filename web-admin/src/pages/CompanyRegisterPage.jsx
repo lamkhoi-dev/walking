@@ -6,6 +6,7 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
   UserOutlined,
+  LockOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
