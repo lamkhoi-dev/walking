@@ -19,7 +19,10 @@ let io;
 const initSocket = (httpServer, options = {}) => {
   io = new Server(httpServer, {
     cors: {
-      origin: options.corsOrigins || ['http://localhost:5173', 'http://localhost:3000'],
+      origin: function (origin, callback) {
+        // Allow all origins (mobile apps send no origin)
+        callback(null, true);
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },

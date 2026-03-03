@@ -13,7 +13,21 @@ app.use(helmet());
 
 // ===== CORS =====
 app.use(cors({
-  origin: [env.clientUrl, env.appUrl, 'http://localhost:3000', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    const allowedOrigins = [
+      env.clientUrl,
+      env.appUrl,
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://walktogether-api.onrender.com',
+    ];
+    if (allowedOrigins.includes(origin) || origin.endsWith('.onrender.com')) {
+      return callback(null, true);
+    }
+    callback(null, true); // Allow all for now (mobile app)
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
