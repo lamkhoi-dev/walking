@@ -137,6 +137,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Store specific callback references so off() only removes these
   void Function(dynamic)? _onNewMessageCallback;
+  void Function(dynamic)? _onMessageSentCallback;
   void Function(dynamic)? _onTypingCallback;
 
   ChatBloc({
@@ -158,8 +159,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void _setupSocketListeners() {
     _onNewMessageCallback = (data) {
       if (data is Map<String, dynamic>) {
-        final message = MessageModel.fromJson(data);
-        if (message.conversationId == _currentConversationId) {
+        // Server sends { conversationId, message }
+        final msgData = data['message'] as Map<String, dynamic>?;
+        if (msgData != null &&
+            data['conversationId'] == _currentConversationId) {
+          final message = MessageModel.fromJson(msgData);
           add(ChatMessageReceived(message));
         }
       }
@@ -177,6 +181,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     };
 
     _socketService.on('chat:new_message', _onNewMessageCallback!);
+
+    // Listen for message_sent confirmation (from server to sender)
+    _onMessageSentCallback = (data) {
+      if (data is Map<String, dynamic>) {
+        final msgData = data['message'] as Map<String, dynamic>?;
+        if (msgData != null &&
+            data['conversationId'] == _currentConversationId) {
+          final message = MessageModel.fromJson(msgData);
+          add(ChatMessageReceived(message));
+        }
+      }
+    };
+    _socketService.on('chat:message_sent', _onMessageSentCallback!);
+
     _socketService.on('chat:typing', _onTypingCallback!);
   }
 
@@ -185,6 +203,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (_onNewMessageCallback != null) {
       _socketService.off('chat:new_message', _onNewMessageCallback!);
       _onNewMessageCallback = null;
+    }
+    if (_onMessageSentCallback != null) {
+      _socketService.off('chat:message_sent', _onMessageSentCallback!);
+      _onMessageSentCallback = null;
     }
     if (_onTypingCallback != null) {
       _socketService.off('chat:typing', _onTypingCallback!);

@@ -15,26 +15,29 @@ initSocket(server, {
   corsOrigins: [env.clientUrl, env.appUrl, 'http://localhost:3000', 'http://localhost:5173'],
 });
 
-// Connect to MongoDB then start server
+// Start server — bind to port first (for Render health check), then connect MongoDB
 const startServer = async () => {
+  // 1. Bind to port immediately so Render health check passes
+  server.listen(env.port, () => {
+    logger.info(`🚀 Server running on port ${env.port} [${env.nodeEnv}]`);
+    logger.info(`📋 Health check: http://localhost:${env.port}/api/v1/health`);
+  });
+
+  // 2. Connect MongoDB in background (don't block port binding)
   try {
     await connectDB(env.mongodbUri);
   } catch (error) {
     logger.error('❌ MongoDB connection failed:', error.message);
     if (env.nodeEnv !== 'development') {
+      logger.error('Exiting due to MongoDB failure in production');
       process.exit(1);
     }
     logger.warn('⚠️ Running in dev mode without MongoDB - some features will not work');
   }
 
-  server.listen(env.port, () => {
-    logger.info(`🚀 Server running on port ${env.port} [${env.nodeEnv}]`);
-    logger.info(`📋 Health check: http://localhost:${env.port}/api/v1/health`);
-
-    // Start cron jobs
-    startContestChecker();
-    startStepAggregation();
-  });
+  // 3. Start cron jobs after DB connected
+  startContestChecker();
+  startStepAggregation();
 };
 
 // Graceful shutdown

@@ -38,9 +38,9 @@ export default function LoginPage() {
           borderRadius: 16,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
         }}
-        bodyStyle={{ padding: '40px 32px' }}
+        styles={{ body: { padding: '40px 32px' } }}
       >
-        <Space direction="vertical" size={4} style={{ width: '100%', textAlign: 'center', marginBottom: 32 }}>
+        <Space orientation="vertical" size={4} style={{ width: '100%', textAlign: 'center', marginBottom: 32 }}>
           <div
             style={{
               width: 64,

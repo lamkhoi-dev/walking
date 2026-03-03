@@ -53,6 +53,9 @@ dependencies:
   pedometer_2: ^5.0.4
   flutter_foreground_task: ^8.10.1
 
+  # Permissions
+  permission_handler: ^11.3.1
+
   # Notifications
   flutter_local_notifications: ^18.0.1
 

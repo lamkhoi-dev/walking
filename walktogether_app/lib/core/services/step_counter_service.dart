@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Service for counting steps using device pedometer sensor.
 /// Stores data locally in Hive for offline resilience.
@@ -63,6 +65,15 @@ class StepCounterService {
   Future<void> startTracking() async {
     if (!_isInitialized) await init();
     if (_isTracking) return;
+
+    // Request ACTIVITY_RECOGNITION permission (required on Android 10+)
+    if (Platform.isAndroid) {
+      final status = await Permission.activityRecognition.request();
+      if (!status.isGranted) {
+        debugPrint('ACTIVITY_RECOGNITION permission denied: $status');
+        throw Exception('Cần cấp quyền nhận diện hoạt động để đếm bước chân');
+      }
+    }
 
     _isTracking = true;
     await _box?.put(_keyIsTracking, true);
