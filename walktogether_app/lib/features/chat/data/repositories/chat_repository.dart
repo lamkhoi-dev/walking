@@ -48,8 +48,8 @@ class ChatRepository {
 
     return MessagesResponse(
       messages: messages,
-      currentPage: pagination?['currentPage'] as int? ?? page,
-      totalPages: pagination?['totalPages'] as int? ?? 1,
+      currentPage: pagination?['page'] as int? ?? page,
+      totalPages: pagination?['pages'] as int? ?? 1,
       total: pagination?['total'] as int? ?? messages.length,
     );
   }

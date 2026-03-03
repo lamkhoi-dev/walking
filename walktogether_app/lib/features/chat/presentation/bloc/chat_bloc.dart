@@ -239,7 +239,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       emit(ChatLoaded(
         conversationId: event.conversationId,
-        messages: response.messages.reversed.toList(), // oldest first
+        messages: response.messages, // server returns oldest-first already
         hasMore: response.hasMore,
         currentPage: response.currentPage,
       ));
@@ -261,8 +261,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         page: currentState.currentPage + 1,
       );
 
-      // Prepend older messages (server returns newest first, we reverse)
-      final olderMessages = response.messages.reversed.toList();
+      // Prepend older messages (server returns oldest-first within each page)
+      final olderMessages = response.messages;
       emit(currentState.copyWith(
         messages: [...olderMessages, ...currentState.messages],
         hasMore: response.hasMore,
@@ -299,14 +299,42 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         conversationId: currentState.conversationId,
         content: event.content,
       );
+      // Safety timeout: if not confirmed in 10s, retry via REST
+      Future.delayed(const Duration(seconds: 10), () async {
+        final s = state;
+        if (s is ChatLoaded) {
+          final stillSending = s.messages.any(
+            (m) => m.id == optimisticMessage.id && m.isSending,
+          );
+          if (stillSending) {
+            try {
+              final confirmed = await _repository.sendMessageRest(
+                currentState.conversationId,
+                content: event.content,
+              );
+              add(ChatMessageReceived(confirmed));
+            } catch (_) {}
+          }
+        }
+      });
     } else {
-      // Fallback to REST
+      // Fallback to REST — replace optimistic message with server response
       try {
-        await _repository.sendMessageRest(
+        final confirmed = await _repository.sendMessageRest(
           currentState.conversationId,
           content: event.content,
         );
-      } catch (_) {}
+        add(ChatMessageReceived(confirmed));
+      } catch (_) {
+        // Mark message as failed by removing the optimistic message
+        final failedState = state;
+        if (failedState is ChatLoaded) {
+          final messages = failedState.messages
+              .where((m) => m.id != optimisticMessage.id)
+              .toList();
+          emit(failedState.copyWith(messages: messages));
+        }
+      }
     }
   }
 

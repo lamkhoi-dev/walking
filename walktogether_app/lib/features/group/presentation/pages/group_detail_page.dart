@@ -8,6 +8,7 @@ import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/app_error_widget.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../chat/presentation/bloc/conversation_list_bloc.dart';
 import '../../data/repositories/group_repository.dart';
 import '../bloc/group_detail_bloc.dart';
 import '../widgets/member_list_tile.dart';
@@ -58,7 +59,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<GroupDetailBloc, GroupDetailState>(
+    return BlocListener<ConversationListBloc, ConversationListState>(
+      listener: (context, convState) {
+        if (convState is ConversationListDirectCreated) {
+          context.push('/chat/${convState.conversation.id}');
+        }
+      },
+      child: BlocConsumer<GroupDetailBloc, GroupDetailState>(
       listener: (context, state) {
         if (state is GroupDetailActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -231,6 +238,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           ),
         );
       },
+    ),
     );
   }
 
@@ -294,6 +302,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         member.id,
                         member.fullName,
                       ),
+                      onTap: member.id != currentUserId
+                          ? () {
+                              // Create or open a direct conversation with this member
+                              context
+                                  .read<ConversationListBloc>()
+                                  .add(ConversationListCreateDirect(member.id));
+                            }
+                          : null,
                     );
                   },
                 ),

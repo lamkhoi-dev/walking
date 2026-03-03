@@ -164,6 +164,15 @@ class StepSyncService {
   /// Get pending sync count
   int get pendingCount => _queueBox?.length ?? 0;
 
+  /// Clear sync queue (called on logout)
+  Future<void> clearQueue() async {
+    stopPeriodicSync();
+    await _queueBox?.clear();
+    _lastSyncTime = null;
+    _syncStatusController.add(StepSyncStatus.idle);
+    debugPrint('Step sync queue cleared');
+  }
+
   /// Dispose resources
   Future<void> dispose() async {
     stopPeriodicSync();

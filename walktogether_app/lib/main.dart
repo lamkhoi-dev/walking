@@ -174,6 +174,9 @@ class _AppViewState extends State<_AppView> {
           isLoggedIn = true;
           companyStatus = 'suspended';
         } else if (state is AuthUnauthenticated) {
+          // Clear step data, stop sync, and disconnect socket
+          StepCounterService().clearData();
+          StepSyncService().clearQueue();
           SocketService().disconnect();
         }
 

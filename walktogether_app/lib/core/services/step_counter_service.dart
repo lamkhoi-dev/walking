@@ -198,6 +198,15 @@ class StepCounterService {
   /// Get today's date for sync
   String get todayDate => _todayDateStr();
 
+  /// Clear all local step data (called on logout)
+  Future<void> clearData() async {
+    await stopTracking();
+    await _box?.clear();
+    _isTracking = false;
+    _stepController.add(0);
+    debugPrint('Step counter data cleared');
+  }
+
   /// Dispose resources
   Future<void> dispose() async {
     await stopTracking();
