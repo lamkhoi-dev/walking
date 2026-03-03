@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WalkTogether UI Design System</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#44c548",
+              "primary-dark": "#369e3a",
+              "background-light": "#f6f8f6",
+              "background-dark": "#141e14",
+              "surface-light": "#ffffff",
+              "surface-dark": "#1e2a1e",
+              "text-main": "#101910",
+              "text-muted": "#5b8b5c",
+              "danger": "#ef4444",
+              "warning": "#f59e0b",
+              "success": "#10b981",
+              "info": "#3b82f6",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+            boxShadow: {
+                'soft': '0 4px 20px -2px rgba(68, 197, 72, 0.15)',
+                'card': '0 2px 8px rgba(0, 0, 0, 0.04)',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Custom scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #e2e8f0;
+            border-radius: 20px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-slate-100 min-h-screen pb-20">
+<!-- Top Navigation / Header -->
+<header class="sticky top-0 z-50 bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-soft">
+<span class="material-symbols-outlined text-2xl">directions_walk</span>
+</div>
+<div>
+<h1 class="font-display font-bold text-lg leading-tight">WalkTogether</h1>
+<p class="text-xs text-text-muted font-medium">Design System v1.0</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center text-text-muted transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</header>
+<main class="max-w-md mx-auto px-4 py-6 space-y-10">
+<!-- 1. BUTTONS -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">01. Buttons &amp; Actions</h2>
+<div class="space-y-4">
+<!-- Primary -->
+<button class="w-full h-14 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-bold text-base shadow-soft hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">play_arrow</span>
+                    Start Walking
+                </button>
+<!-- Secondary -->
+<button class="w-full h-14 rounded-xl border-2 border-primary/20 bg-transparent text-primary font-bold text-base hover:bg-primary/5 transition-all active:scale-[0.98] flex items-center justify-center">
+                    View Details
+                </button>
+<div class="flex gap-4">
+<!-- Danger -->
+<button class="flex-1 h-12 rounded-xl bg-danger/10 text-danger font-semibold text-sm hover:bg-danger/20 transition-all active:scale-[0.98]">
+                        End Session
+                    </button>
+<!-- Small Primary -->
+<button class="flex-1 h-12 rounded-xl bg-primary text-white font-semibold text-sm shadow-sm hover:bg-primary-dark transition-all active:scale-[0.98]">
+                        Join Challenge
+                    </button>
+</div>
+<!-- FAB & Icon Buttons -->
+<div class="flex items-center gap-6 justify-center pt-2">
+<button class="w-14 h-14 rounded-full bg-primary text-white shadow-soft flex items-center justify-center hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-surface-light border border-gray-100 text-text-muted shadow-card flex items-center justify-center hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-light text-text-muted flex items-center justify-center hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 2. INPUTS -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">02. Inputs &amp; Forms</h2>
+<div class="space-y-4">
+<!-- Empty State -->
+<div class="relative group">
+<div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full h-14 pl-12 pr-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-main placeholder-gray-400" placeholder="Search for friends..." type="text"/>
+</div>
+<!-- Focused/Active State -->
+<div class="relative">
+<label class="text-xs font-semibold text-primary ml-1 mb-1 block">Username</label>
+<input class="w-full h-14 px-4 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-primary focus:outline-none shadow-soft text-text-main font-medium" type="text" value="WalkerJane"/>
+<div class="absolute right-4 top-[34px] text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+</div>
+<!-- Error State -->
+<div class="relative">
+<input class="w-full h-14 px-4 rounded-xl bg-danger/5 border border-danger text-danger placeholder-danger/50 focus:outline-none focus:ring-4 focus:ring-danger/10 transition-all" type="email" value="invalid-email"/>
+<p class="text-xs text-danger font-medium mt-1 ml-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">error</span>
+                        Please enter a valid email address
+                    </p>
+</div>
+</div>
+</section>
+<!-- 3. CARDS -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">03. Cards &amp; Lists</h2>
+<div class="space-y-4">
+<!-- Highlight Gradient Card -->
+<div class="w-full rounded-2xl p-6 bg-gradient-to-br from-[#44c548] to-[#2563eb] text-white shadow-soft relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-sm font-medium text-white/80 mb-1">Daily Steps</p>
+<h3 class="text-3xl font-bold">8,432</h3>
+</div>
+<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+<span class="material-symbols-outlined">footprint</span>
+</div>
+</div>
+<div class="w-full bg-black/20 rounded-full h-2 mb-2">
+<div class="bg-white h-2 rounded-full w-[84%] shadow-sm"></div>
+</div>
+<div class="flex justify-between text-xs font-medium text-white/90">
+<span>Goal: 10,000</span>
+<span>84%</span>
+</div>
+</div>
+</div>
+<!-- Stat Row -->
+<div class="flex gap-4">
+<div class="flex-1 bg-surface-light dark:bg-surface-dark p-4 rounded-xl shadow-card border border-gray-100 dark:border-gray-800">
+<div class="text-text-muted mb-2 flex items-center gap-1 text-xs font-semibold uppercase">
+<span class="material-symbols-outlined text-base">local_fire_department</span>
+                            Calories
+                        </div>
+<p class="text-2xl font-bold text-text-main">342</p>
+</div>
+<div class="flex-1 bg-surface-light dark:bg-surface-dark p-4 rounded-xl shadow-card border border-gray-100 dark:border-gray-800">
+<div class="text-text-muted mb-2 flex items-center gap-1 text-xs font-semibold uppercase">
+<span class="material-symbols-outlined text-base">timer</span>
+                            Duration
+                        </div>
+<p class="text-2xl font-bold text-text-main">45<span class="text-sm font-normal text-gray-500 ml-1">min</span></p>
+</div>
+</div>
+<!-- List Item -->
+<div class="bg-surface-light dark:bg-surface-dark p-3 rounded-xl shadow-card border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Portrait of a smiling woman with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-Yo8SFfoiX3z6gwerA_9GsmpV_xp-NgeTkcmvnqfBKg_M9B1Aa-I3J6F-HhdQWyI0hAeeb9iZsF8t-QrAjM6WU9IzycKdbbhbBppxA9FuTVYtlpAj4QCr2X9kt_D3nrM8MDpQ3Mvj_wQqK3W3nxy3wbQfABWhcssIjUayQutmlz1dOuFXHPbrCVh5yj7VKq6rypqlnjyo-zmU5VfT_-oaKz5bq7i0YbywTls9lZt9UOOXNmKBLVq0pD8RD2FXILMoAovQCFehAmqn"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white dark:border-gray-800"></div>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-text-main text-sm">Sarah Miller</h4>
+<p class="text-xs text-text-muted truncate">Finished a 5km walk in Central Park</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-lg">thumb_up</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 4. BADGES & CHIPS -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">04. Badges &amp; Chips</h2>
+<div class="flex flex-wrap gap-3">
+<!-- Status Badges -->
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-success/10 text-success text-xs font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                    Active
+                </span>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-warning/10 text-warning text-xs font-bold">
+                    Pending
+                </span>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                    Approved
+                </span>
+<!-- Role Chips -->
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-bold shadow-sm">
+<span class="material-symbols-outlined text-xs">crown</span>
+                    Admin
+                </span>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-semibold">
+                    Member
+                </span>
+<!-- Notification Counter -->
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-danger text-white text-[10px] font-bold">
+                    3
+                </span>
+</div>
+</section>
+<!-- 5. AVATARS -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">05. Avatars</h2>
+<div class="flex items-end gap-4">
+<!-- Large Profile -->
+<div class="relative">
+<div class="w-20 h-20 rounded-full p-1 bg-gradient-to-br from-primary to-blue-500">
+<img class="w-full h-full rounded-full object-cover border-2 border-white dark:border-gray-900" data-alt="Portrait of a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDfeZBWXfBr4eOtIrjstTwOUTofzIE8SQV_YWtwKIQ8WwPEvtzwxsKAFjaJx-1PNFpwV2JDOQWltuVwyRIxTT7qrbApxA-tYK3EhUXVqGf8uETlUEzWiT3U580D_saXrdS4MedOUjBudKJNz9aVIxVXhj3YW9Wi8xdJxlPP-HDNzzmwWvt73jiaG7U-jdc-PnIl-Ht7kszHF_omWu9lDPRWLiOkWzAFpD8ah8LXNy8ZADw-7cf-GgiLi5YMupWYX7l15wWu4WWI2LJ"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-white dark:bg-gray-900 rounded-full p-1 shadow-sm">
+<span class="material-symbols-outlined text-primary text-sm bg-primary/10 rounded-full p-0.5">verified</span>
+</div>
+</div>
+<!-- Medium -->
+<div class="w-14 h-14 rounded-full relative">
+<img class="w-full h-full rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm" data-alt="Portrait of a woman looking sideways" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVhMatnJVemOIuAJB7uDiBlUcj5U2xxOKeVi8aFhaMvWEIF8p-Rf2DQXZNsGVYNym7Eh8RHqYKMkcH2DdoCS5lVjDQ1zDUdCT3Dy7s5-SJXVw9Wzme6L9YvotsP7kvWVlXzHmR7zXN49o1ILY59pNaXUbfTVwVJBcufeTodyAcIJd1BvePEjBAt00BJQtlNSTMJWWpzxK7f_f9uCyQKn_2KtW5oAoFNbwm2G74KcaH5K9WquX1wHjB9iYH_OSBUDJI7w-ASyioowPE"/>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-300 border-2 border-white dark:border-gray-800 rounded-full"></div>
+</div>
+<!-- Small Group -->
+<div class="flex -space-x-3">
+<img class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800" data-alt="Small portrait 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXKLCgVLs_WXdfChdnJV4g0mEbgbb7q9kipvaJMZF_fITCa9E7XyacREojszYVsjP01qCIcKffAzb5FoOA_JUAWpqf28-CPRRYcZowjuPnZkttIm2L8XHwIphamu9KP4g9JHKG5-yI2AJvhoOzTCHrI4Z4btuKxfhCzmy11VRKGENKwYujVYJWIRBiU0AOWqoVfaheGx1402W99UVP9rPlqdr2JtR3EoTTRMgV4j36M6co1BW2BuUjPKX6Y5QXxsVmDZtAe79s8zUf"/>
+<img class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800" data-alt="Small portrait 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4UNm2cDVYdmSkS20-Zs5awxXiYNtiaA1Q4QqlyBZVeJbWGR7ZQjuMYNk9gOGMAQUHFDT5aDckEyoNze_47M5lG7C0GKCOAhxCdnsMx4eygkulhaRdOvu4g_HT2d1mB3i7L7WrSxyLyzQC1H3X-YvoBRebilU8GIEn7vU6wIs66UPFgNjl-pH2jZHJL9ISmYdzzTU6OygrLNvsFzPgEUf6pGeyVmQahO9DXFhfw_7fEtLk2rJEiG17skPza_Jt9uiXr635LRq97qdb"/>
+<div class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-300">+5</div>
+</div>
+</div>
+</section>
+<!-- 6. CHAT -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">06. Chat</h2>
+<div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
+<!-- Received Message -->
+<div class="flex gap-2 items-end">
+<img class="w-8 h-8 rounded-full object-cover mb-1" data-alt="Chat avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcsJ30C3NWxLC01jujKruv6nrcacYRmvB0SB2SAq-eTRM9QBnraBR5bDZVyMczu7mg3Yd3tGAey4tYGQIBRhXaH0EoKR7LHBWvwkKgfEAs4LbbtEvYglAm_1htBsE8CjvkfoiXuV1GhcrgbLCSF9BWBzAGrzdEN_ci3dqsOOKNYfhcTYuwEbF2NGbVO75EH96B3yG2MccJQE6ol80XeFfYnExE2goiX8rVYamXydVl5MKKFEswNO4QmSo2STrJ7HnxOULN6UsuNk5N"/>
+<div class="flex flex-col gap-1 max-w-[80%]">
+<div class="bg-white dark:bg-surface-dark p-3 rounded-2xl rounded-bl-none shadow-sm border border-gray-100 dark:border-gray-700 text-sm text-text-main">
+                            Ready for the morning walk? 🏃‍♀️
+                        </div>
+<span class="text-[10px] text-gray-400 pl-1">08:30 AM</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex gap-2 items-end justify-end">
+<div class="flex flex-col gap-1 items-end max-w-[80%]">
+<div class="bg-gradient-to-br from-primary to-primary-dark p-3 rounded-2xl rounded-br-none shadow-soft text-sm text-white">
+                            Yes! I'll be at the park in 10 mins.
+                        </div>
+<div class="flex items-center gap-1 text-[10px] text-gray-400 pr-1">
+<span>08:32 AM</span>
+<span class="material-symbols-outlined text-[12px] text-primary">done_all</span>
+</div>
+</div>
+</div>
+<!-- Input Bar -->
+<div class="mt-4 flex gap-2 items-center bg-white dark:bg-surface-dark p-2 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
+<button class="w-8 h-8 rounded-full text-gray-400 hover:bg-gray-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">add_circle</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-text-main placeholder-gray-400 h-8" placeholder="Type a message..." type="text"/>
+<button class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 7. LEADERBOARD -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">07. Leaderboard</h2>
+<!-- Podium -->
+<div class="flex justify-center items-end gap-4 mb-6 h-40">
+<!-- Silver -->
+<div class="flex flex-col items-center w-20">
+<img class="w-12 h-12 rounded-full border-2 border-gray-300 shadow-md z-10 -mb-4" data-alt="Second place avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcPJaF0_JS0LzYh76Go96kpqnwWHLyqwg0miPpIulAfdFjxgnofi44lGwfOLE2xVGHCjUhaFAQkMwmmFmO_NGD6D_HSguRHR1RtPgVTHGLW6kj01gn8k-Bp1Dko0vlne0jcgTIdzfZyCIgE2bBeDvnDIL_BTqfUeWoOcxmM2RXbYi-K0FEAcaVKiFECdqmJd2Y-OpR8kxo9kBNt-Y---K527dkXLyknEczOM7HEJ35QjeaKA9hjC5YtSF8ws7uzuLpDDPo5vx0yJsz"/>
+<div class="w-full bg-gray-200 dark:bg-gray-700 h-24 rounded-t-lg flex flex-col items-center justify-end pb-2 relative">
+<div class="text-2xl font-bold text-gray-400">2</div>
+</div>
+<span class="text-xs font-bold mt-1 truncate w-full text-center">Alex</span>
+<span class="text-[10px] text-gray-500">12k</span>
+</div>
+<!-- Gold -->
+<div class="flex flex-col items-center w-24">
+<div class="relative z-10 -mb-5">
+<span class="absolute -top-4 left-1/2 -translate-x-1/2 text-yellow-500 material-symbols-outlined text-2xl drop-shadow-sm">crown</span>
+<img class="w-16 h-16 rounded-full border-4 border-yellow-400 shadow-lg" data-alt="First place avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9pF09vocEpdVaW4GARqmLvTxYmwsJZRz_cRWEu1_FEZyw0FftrmVxCfTOeaZ5Ppsyz87YURxeJSERxkjnFn8m32A5dvtdkz7dQX4WbxsxeuJ3ys4-cdulvtB6mV9mmYCQnQVuAXk82TkW9mAlp4Z7maSTDXc2mNWiCvCpyalHv4LHVB2ncj77lITBz1ie6Uhe14-Wqk3p_1AH5AahaVNRr59wK-92xdK1tOiV-Oy-JcVqOlfV3sui036tVCpndfa-smNmuF6ZpsS8"/>
+</div>
+<div class="w-full bg-gradient-to-b from-yellow-300 to-yellow-500 h-32 rounded-t-lg flex flex-col items-center justify-end pb-2 shadow-lg">
+<div class="text-3xl font-bold text-white drop-shadow-md">1</div>
+</div>
+<span class="text-sm font-bold mt-1 truncate w-full text-center">David</span>
+<span class="text-xs text-primary font-bold">15,420</span>
+</div>
+<!-- Bronze -->
+<div class="flex flex-col items-center w-20">
+<img class="w-12 h-12 rounded-full border-2 border-orange-300 shadow-md z-10 -mb-4" data-alt="Third place avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3FNqSqvugeBIDI5Reoi4Yc7KC1fqJf88Mgri9YOAusT5843rJBKn4UxjKFcBvrU1xAxmaoUZ3eJFmPiEwgv7ytKeI0_ZspiB5AOfxM9uod01oLMesm-RXT8nl9EJl5P-DafTqdC_nXMeHuMNN2c61GlyG3sAfLC8Hi8jfdrdaa3u5RraZLhq55d4sveC65DlhbzaQUeIwZjd2QBzpPVI0bSuuP_Kedzl1Szq5f07Likfn-IzyKjUK11azC3XynlYrlWTNx47WAN34"/>
+<div class="w-full bg-orange-200 dark:bg-orange-900/50 h-16 rounded-t-lg flex flex-col items-center justify-end pb-2">
+<div class="text-2xl font-bold text-orange-400">3</div>
+</div>
+<span class="text-xs font-bold mt-1 truncate w-full text-center">Maria</span>
+<span class="text-[10px] text-gray-500">10k</span>
+</div>
+</div>
+<!-- List Item Rank -->
+<div class="bg-surface-light dark:bg-surface-dark p-3 rounded-xl shadow-card border border-gray-100 dark:border-gray-800 flex items-center gap-4">
+<span class="font-bold text-gray-400 w-4 text-center">4</span>
+<img class="w-10 h-10 rounded-full object-cover" data-alt="User avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0QG8bB2usszMJZ4hJ81R-10P_pu-Ix5PYCg8ytBfIZtAqJXRTYzehhbAOXm_cXmev1xWSixxSHPSRAVnEfOivT8StXLGI-4y-okwNNZ9D9qCR2w20kBUNeu_bReDmEtVVLiPcFJXcNJiDWU7xEmcrFjE7ZKH3RDdoK-4Ejaw7HzsonHPR82k_fEOUOerEHgytdKyoLh7zV238zmz3oVJcmqzmSbghylcAAFZObl4fOTlJ3oGWAUnOOCSX2KGTb7gVU6fmuaidJ6qb"/>
+<div class="flex-1">
+<h4 class="font-bold text-text-main text-sm">John Doe</h4>
+</div>
+<div class="text-right">
+<p class="font-bold text-primary text-sm">9,845</p>
+<p class="text-[10px] text-text-muted">steps</p>
+</div>
+</div>
+</section>
+<!-- 8. FEEDBACK -->
+<section>
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">08. Feedback &amp; Overlays</h2>
+<!-- Toasts -->
+<div class="space-y-3 mb-6">
+<div class="flex items-center gap-3 p-3 bg-success/10 border border-success/20 rounded-lg text-success-dark">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="text-sm font-medium text-text-main">Goal reached successfully!</span>
+</div>
+<div class="flex items-center gap-3 p-3 bg-danger/5 border border-danger/20 rounded-lg">
+<span class="material-symbols-outlined text-danger">cancel</span>
+<span class="text-sm font-medium text-text-main">Connection lost. Retrying...</span>
+</div>
+</div>
+<!-- Bottom Sheet Preview -->
+<div class="relative bg-black/5 dark:bg-white/5 h-48 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 flex items-end justify-center">
+<div class="w-full bg-surface-light dark:bg-surface-dark rounded-t-3xl p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+<div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6"></div>
+<h3 class="font-bold text-lg mb-2">Session Summary</h3>
+<div class="flex gap-4 mb-2">
+<div class="h-12 w-full bg-gray-100 dark:bg-gray-800 rounded-lg"></div>
+<div class="h-12 w-full bg-gray-100 dark:bg-gray-800 rounded-lg"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- 9. NAVIGATION (Fixed Bottom) -->
+<section class="pb-8">
+<h2 class="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 pl-1">09. Navigation</h2>
+<div class="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-2 shadow-lg">
+<!-- Using the requested structure but cleaning it up visually -->
+<div class="flex justify-between items-center px-2">
+<a class="flex flex-1 flex-col items-center justify-center py-2 gap-1 rounded-xl text-primary hover:bg-primary/5 transition-colors" href="#">
+<div class="flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+</div>
+<p class="text-[10px] font-bold tracking-wide">Activity</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center py-2 gap-1 rounded-xl text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors" href="#">
+<div class="flex items-center justify-center">
+<span class="material-symbols-outlined">groups</span>
+</div>
+<p class="text-[10px] font-medium tracking-wide">Groups</p>
+</a>
+<!-- Floating Action Button in Nav (Optional but common in fitness apps) -->
+<div class="-mt-8 mx-2">
+<button class="w-14 h-14 rounded-full bg-primary text-white shadow-soft flex items-center justify-center border-4 border-white dark:border-background-dark">
+<span class="material-symbols-outlined text-3xl">directions_run</span>
+</button>
+</div>
+<a class="flex flex-1 flex-col items-center justify-center py-2 gap-1 rounded-xl text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors" href="#">
+<div class="flex items-center justify-center relative">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-danger rounded-full border-2 border-white dark:border-surface-dark"></span>
+</div>
+<p class="text-[10px] font-medium tracking-wide">Chat</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center py-2 gap-1 rounded-xl text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors" href="#">
+<div class="flex items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-[10px] font-medium tracking-wide">Profile</p>
+</a>
+</div>
+</div>
+</section>
+</main>
+</body></html>

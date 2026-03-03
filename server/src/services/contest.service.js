@@ -1,0 +1,246 @@
+const Contest = require('../models/Contest');
+const ContestLeaderboard = require('../models/ContestLeaderboard');
+const Group = require('../models/Group');
+const logger = require('../utils/logger');
+
+class ContestService {
+  /**
+   * Create a new contest in a group
+   */
+  async createContest({ name, description, groupId, companyId, createdBy, startDate, endDate }) {
+    // Validate dates
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start < now) {
+      const err = new Error('Ngày bắt đầu phải từ hôm nay trở đi');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (end <= start) {
+      const err = new Error('Ngày kết thúc phải sau ngày bắt đầu');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Check group exists and belongs to company
+    const group = await Group.findOne({ _id: groupId, companyId, isActive: true });
+    if (!group) {
+      const err = new Error('Không tìm thấy nhóm');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // Check no active/upcoming contest in this group
+    const existingContest = await Contest.findOne({
+      groupId,
+      status: { $in: ['upcoming', 'active'] },
+    });
+
+    if (existingContest) {
+      const err = new Error('Nhóm đã có cuộc thi đang diễn ra hoặc sắp diễn ra');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Create contest with all group members as participants
+    const contest = await Contest.create({
+      name,
+      description: description || '',
+      groupId,
+      companyId,
+      createdBy,
+      startDate: start,
+      endDate: end,
+      status: 'upcoming',
+      participants: group.members,
+    });
+
+    // Create leaderboard entries for each participant
+    const leaderboardEntries = group.members.map((userId) => ({
+      contestId: contest._id,
+      userId,
+      totalSteps: 0,
+      dailySteps: {},
+      rank: 0,
+    }));
+
+    await ContestLeaderboard.insertMany(leaderboardEntries);
+
+    logger.info(`Contest created: ${contest._id} in group ${groupId}`);
+
+    return contest.populate([
+      { path: 'groupId', select: 'name avatar' },
+      { path: 'createdBy', select: 'fullName avatar' },
+    ]);
+  }
+
+  /**
+   * Get contests for a company, optionally filtered by group
+   */
+  async getContests(companyId, groupId) {
+    const filter = { companyId };
+    if (groupId) {
+      filter.groupId = groupId;
+    }
+
+    const contests = await Contest.find(filter)
+      .populate('groupId', 'name avatar')
+      .populate('createdBy', 'fullName avatar')
+      .sort({ startDate: -1 })
+      .lean();
+
+    return contests;
+  }
+
+  /**
+   * Get a contest by ID
+   */
+  async getContestById(contestId) {
+    const contest = await Contest.findById(contestId)
+      .populate('groupId', 'name avatar totalMembers')
+      .populate('createdBy', 'fullName avatar')
+      .populate('participants', 'fullName avatar');
+
+    if (!contest) {
+      const err = new Error('Không tìm thấy cuộc thi');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    return contest;
+  }
+
+  /**
+   * Update a contest (only if upcoming)
+   */
+  async updateContest(contestId, updateData, companyId) {
+    const contest = await Contest.findById(contestId);
+
+    if (!contest) {
+      const err = new Error('Không tìm thấy cuộc thi');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    if (String(contest.companyId) !== String(companyId)) {
+      const err = new Error('Không có quyền cập nhật cuộc thi này');
+      err.statusCode = 403;
+      throw err;
+    }
+
+    if (contest.status !== 'upcoming') {
+      const err = new Error('Chỉ có thể cập nhật cuộc thi chưa bắt đầu');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Only allow updating specific fields
+    const allowedFields = ['name', 'description', 'startDate', 'endDate'];
+    for (const key of Object.keys(updateData)) {
+      if (allowedFields.includes(key)) {
+        contest[key] = updateData[key];
+      }
+    }
+
+    // Re-validate dates if changed
+    if (updateData.startDate || updateData.endDate) {
+      const now = new Date();
+      if (contest.startDate < now) {
+        const err = new Error('Ngày bắt đầu phải từ hôm nay trở đi');
+        err.statusCode = 400;
+        throw err;
+      }
+      if (contest.endDate <= contest.startDate) {
+        const err = new Error('Ngày kết thúc phải sau ngày bắt đầu');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    await contest.save();
+
+    return contest.populate([
+      { path: 'groupId', select: 'name avatar' },
+      { path: 'createdBy', select: 'fullName avatar' },
+    ]);
+  }
+
+  /**
+   * Cancel a contest
+   */
+  async cancelContest(contestId, companyId) {
+    const contest = await Contest.findById(contestId);
+
+    if (!contest) {
+      const err = new Error('Không tìm thấy cuộc thi');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    if (String(contest.companyId) !== String(companyId)) {
+      const err = new Error('Không có quyền huỷ cuộc thi này');
+      err.statusCode = 403;
+      throw err;
+    }
+
+    if (!['upcoming', 'active'].includes(contest.status)) {
+      const err = new Error('Chỉ có thể huỷ cuộc thi chưa bắt đầu hoặc đang diễn ra');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    contest.status = 'cancelled';
+    await contest.save();
+
+    logger.info(`Contest cancelled: ${contestId}`);
+    return contest;
+  }
+
+  /**
+   * Get active contest for a group
+   */
+  async getActiveContestByGroup(groupId) {
+    const contest = await Contest.findOne({
+      groupId,
+      status: 'active',
+    })
+      .populate('groupId', 'name avatar')
+      .populate('createdBy', 'fullName avatar')
+      .lean();
+
+    return contest;
+  }
+
+  /**
+   * Get leaderboard for a contest
+   */
+  async getLeaderboard(contestId) {
+    const contest = await Contest.findById(contestId);
+    if (!contest) {
+      const err = new Error('Không tìm thấy cuộc thi');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const leaderboard = await ContestLeaderboard.find({ contestId })
+      .populate('userId', 'fullName avatar')
+      .sort({ totalSteps: -1 })
+      .lean();
+
+    // Assign ranks
+    let currentRank = 1;
+    for (let i = 0; i < leaderboard.length; i++) {
+      if (i > 0 && leaderboard[i].totalSteps < leaderboard[i - 1].totalSteps) {
+        currentRank = i + 1;
+      }
+      leaderboard[i].rank = currentRank;
+    }
+
+    return leaderboard;
+  }
+}
+
+module.exports = new ContestService();

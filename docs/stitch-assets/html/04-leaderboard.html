@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WalkTogether Leaderboard Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#44c548",
+              "primary-dark": "#369e3a",
+              "background-light": "#f6f8f6",
+              "background-dark": "#141e14",
+              "surface-light": "#ffffff",
+              "surface-dark": "#1e2a1e",
+              "text-main": "#101910",
+              "text-muted": "#5b8b5c",
+              "danger": "#ef4444",
+              "warning": "#f59e0b",
+              "success": "#10b981",
+              "info": "#3b82f6",
+              "medal-gold": "#FFD700",
+              "medal-silver": "#C0C0C0",
+              "medal-bronze": "#CD7F32",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+            boxShadow: {
+                'soft': '0 4px 20px -2px rgba(68, 197, 72, 0.15)',
+                'card': '0 4px 12px rgba(0, 0, 0, 0.06)',
+                'glow': '0 0 15px rgba(255, 215, 0, 0.3)',
+            },
+            backgroundImage: {
+                'contest-header': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-slate-100 min-h-screen relative pb-10">
+<header class="bg-contest-header text-white pb-24 pt-6 px-4 rounded-b-[2.5rem] relative shadow-lg">
+<div class="h-6 w-full"></div>
+<div class="flex justify-between items-center mb-6">
+<button class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-white">arrow_back</span>
+</button>
+<div class="px-3 py-1 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+<span class="text-xs font-semibold tracking-wide">Đang diễn ra</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-white">share</span>
+</button>
+</div>
+<div class="text-center px-4">
+<h1 class="text-2xl font-bold mb-1">Thử thách 10K bước</h1>
+<p class="text-white/80 text-sm font-medium">Kết thúc trong: 2 ngày 14 giờ</p>
+</div>
+</header>
+<main class="px-4 -mt-16 relative z-10 max-w-md mx-auto space-y-6">
+<div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 shadow-card flex items-center justify-between border border-gray-100 dark:border-gray-800">
+<div>
+<p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">Xếp hạng của bạn</p>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-extrabold text-text-main">#5</span>
+<span class="text-sm font-medium text-gray-400">/ 142</span>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-gray-100 dark:bg-gray-700 mx-2"></div>
+<div class="text-right">
+<p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">Tổng bước chân</p>
+<div class="flex items-center justify-end gap-2">
+<span class="text-xl font-bold text-text-main">42,310</span>
+<div class="flex items-center text-xs font-bold text-success bg-success/10 px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>12%</span>
+</div>
+</div>
+</div>
+</div>
+<section class="pt-4">
+<div class="flex justify-center items-end gap-3 h-64 mb-4">
+<div class="flex flex-col items-center w-[28%] group">
+<div class="relative mb-2">
+<img alt="2nd Place Avatar" class="w-16 h-16 rounded-full border-4 border-gray-200 dark:border-gray-600 shadow-md object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcPJaF0_JS0LzYh76Go96kpqnwWHLyqwg0miPpIulAfdFjxgnofi44lGwfOLE2xVGHCjUhaFAQkMwmmFmO_NGD6D_HSguRHR1RtPgVTHGLW6kj01gn8k-Bp1Dko0vlne0jcgTIdzfZyCIgE2bBeDvnDIL_BTqfUeWoOcxmM2RXbYi-K0FEAcaVKiFECdqmJd2Y-OpR8kxo9kBNt-Y---K527dkXLyknEczOM7HEJ35QjeaKA9hjC5YtSF8ws7uzuLpDDPo5vx0yJsz"/>
+<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">#2</div>
+</div>
+<div class="text-center mb-2">
+<div class="text-xs font-bold text-text-main truncate w-20">Alex M.</div>
+<div class="text-[10px] font-medium text-text-muted">68,201</div>
+</div>
+<div class="w-full bg-gradient-to-t from-gray-300 to-gray-100 dark:from-gray-700 dark:to-gray-600 h-28 rounded-t-xl relative shadow-md flex justify-center pt-2">
+<span class="text-3xl">🥈</span>
+</div>
+</div>
+<div class="flex flex-col items-center w-[34%] z-10 group">
+<div class="relative mb-3">
+<span class="absolute -top-5 left-1/2 -translate-x-1/2 text-yellow-400 text-3xl drop-shadow-sm animate-bounce">👑</span>
+<img alt="1st Place Avatar" class="w-20 h-20 rounded-full border-4 border-yellow-400 shadow-glow object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9pF09vocEpdVaW4GARqmLvTxYmwsJZRz_cRWEu1_FEZyw0FftrmVxCfTOeaZ5Ppsyz87YURxeJSERxkjnFn8m32A5dvtdkz7dQX4WbxsxeuJ3ys4-cdulvtB6mV9mmYCQnQVuAXk82TkW9mAlp4Z7maSTDXc2mNWiCvCpyalHv4LHVB2ncj77lITBz1ie6Uhe14-Wqk3p_1AH5AahaVNRr59wK-92xdK1tOiV-Oy-JcVqOlfV3sui036tVCpndfa-smNmuF6ZpsS8"/>
+<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm">#1</div>
+</div>
+<div class="text-center mb-2">
+<div class="text-sm font-bold text-text-main truncate w-24">David K.</div>
+<div class="text-xs font-bold text-primary">72,432</div>
+</div>
+<div class="w-full bg-gradient-to-t from-yellow-400 to-yellow-200 h-36 rounded-t-xl relative shadow-[0_10px_20px_rgba(250,204,21,0.3)] flex justify-center pt-3">
+<span class="text-4xl">🥇</span>
+</div>
+</div>
+<div class="flex flex-col items-center w-[28%] group">
+<div class="relative mb-2">
+<img alt="3rd Place Avatar" class="w-16 h-16 rounded-full border-4 border-orange-200 dark:border-orange-900 shadow-md object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3FNqSqvugeBIDI5Reoi4Yc7KC1fqJf88Mgri9YOAusT5843rJBKn4UxjKFcBvrU1xAxmaoUZ3eJFmPiEwgv7ytKeI0_ZspiB5AOfxM9uod01oLMesm-RXT8nl9EJl5P-DafTqdC_nXMeHuMNN2c61GlyG3sAfLC8Hi8jfdrdaa3u5RraZLhq55d4sveC65DlhbzaQUeIwZjd2QBzpPVI0bSuuP_Kedzl1Szq5f07Likfn-IzyKjUK11azC3XynlYrlWTNx47WAN34"/>
+<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-orange-200 text-orange-800 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">#3</div>
+</div>
+<div class="text-center mb-2">
+<div class="text-xs font-bold text-text-main truncate w-20">Maria L.</div>
+<div class="text-[10px] font-medium text-text-muted">61,892</div>
+</div>
+<div class="w-full bg-gradient-to-t from-orange-300 to-orange-100 dark:from-orange-800 dark:to-orange-700 h-20 rounded-t-xl relative shadow-md flex justify-center pt-2">
+<span class="text-3xl">🥉</span>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] -mx-4 px-4 pt-6 pb-20 min-h-[400px]">
+<div class="flex items-center justify-between mb-4 px-2">
+<h3 class="font-bold text-lg text-text-main">Top Walkers</h3>
+<button class="text-primary text-sm font-semibold hover:underline">Xem tất cả</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-50 dark:border-gray-800 hover:shadow-card transition-shadow">
+<div class="w-8 font-bold text-gray-400 text-center">4</div>
+<img alt="User Avatar" class="w-10 h-10 rounded-full object-cover border border-gray-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0QG8bB2usszMJZ4hJ81R-10P_pu-Ix5PYCg8ytBfIZtAqJXRTYzehhbAOXm_cXmev1xWSixxSHPSRAVnEfOivT8StXLGI-4y-okwNNZ9D9qCR2w20kBUNeu_bReDmEtVVLiPcFJXcNJiDWU7xEmcrFjE7ZKH3RDdoK-4Ejaw7HzsonHPR82k_fEOUOerEHgytdKyoLh7zV238zmz3oVJcmqzmSbghylcAAFZObl4fOTlJ3oGWAUnOOCSX2KGTb7gVU6fmuaidJ6qb"/>
+<div class="ml-3 flex-1">
+<div class="font-bold text-sm text-text-main">John Doe</div>
+<div class="text-[10px] text-gray-400">Marketing Dept.</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-text-main">58,120</div>
+<div class="text-[10px] text-success font-medium">+9,201 today</div>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-xl bg-[#E8F5E9] dark:bg-primary/20 border border-primary/30 shadow-soft transform scale-[1.02]">
+<div class="w-8 font-bold text-primary text-center">5</div>
+<div class="relative">
+<img alt="My Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDfeZBWXfBr4eOtIrjstTwOUTofzIE8SQV_YWtwKIQ8WwPEvtzwxsKAFjaJx-1PNFpwV2JDOQWltuVwyRIxTT7qrbApxA-tYK3EhUXVqGf8uETlUEzWiT3U580D_saXrdS4MedOUjBudKJNz9aVIxVXhj3YW9Wi8xdJxlPP-HDNzzmwWvt73jiaG7U-jdc-PnIl-Ht7kszHF_omWu9lDPRWLiOkWzAFpD8ah8LXNy8ZADw-7cf-GgiLi5YMupWYX7l15wWu4WWI2LJ"/>
+<div class="absolute -bottom-1 -right-1 bg-primary text-white text-[8px] px-1 rounded-full">YOU</div>
+</div>
+<div class="ml-3 flex-1">
+<div class="font-bold text-sm text-text-main">You</div>
+<div class="text-[10px] text-text-muted">Design Team</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-primary text-lg">42,310</div>
+<div class="text-[10px] text-text-muted font-bold">+8,432 today</div>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-50 dark:border-gray-800 hover:shadow-card transition-shadow">
+<div class="w-8 font-bold text-gray-400 text-center">6</div>
+<img alt="User Avatar" class="w-10 h-10 rounded-full object-cover border border-gray-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVhMatnJVemOIuAJB7uDiBlUcj5U2xxOKeVi8aFhaMvWEIF8p-Rf2DQXZNsGVYNym7Eh8RHqYKMkcH2DdoCS5lVjDQ1zDUdCT3Dy7s5-SJXVw9Wzme6L9YvotsP7kvWVlXzHmR7zXN49o1ILY59pNaXUbfTVwVJBcufeTodyAcIJd1BvePEjBAt00BJQtlNSTMJWWpzxK7f_f9uCyQKn_2KtW5oAoFNbwm2G74KcaH5K9WquX1wHjB9iYH_OSBUDJI7w-ASyioowPE"/>
+<div class="ml-3 flex-1">
+<div class="font-bold text-sm text-text-main">Sarah Jenkins</div>
+<div class="text-[10px] text-gray-400">HR Dept.</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-text-main">40,112</div>
+<div class="text-[10px] text-success font-medium">+5,600 today</div>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-50 dark:border-gray-800 hover:shadow-card transition-shadow">
+<div class="w-8 font-bold text-gray-400 text-center">7</div>
+<img alt="User Avatar" class="w-10 h-10 rounded-full object-cover border border-gray-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-Yo8SFfoiX3z6gwerA_9GsmpV_xp-NgeTkcmvnqfBKg_M9B1Aa-I3J6F-HhdQWyI0hAeeb9iZsF8t-QrAjM6WU9IzycKdbbhbBppxA9FuTVYtlpAj4QCr2X9kt_D3nrM8MDpQ3Mvj_wQqK3W3nxy3wbQfABWhcssIjUayQutmlz1dOuFXHPbrCVh5yj7VKq6rypqlnjyo-zmU5VfT_-oaKz5bq7i0YbywTls9lZt9UOOXNmKBLVq0pD8RD2FXILMoAovQCFehAmqn"/>
+<div class="ml-3 flex-1">
+<div class="font-bold text-sm text-text-main">Emily Chen</div>
+<div class="text-[10px] text-gray-400">Sales Dept.</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-text-main">38,945</div>
+<div class="text-[10px] text-success font-medium">+10,230 today</div>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-50 dark:border-gray-800 hover:shadow-card transition-shadow">
+<div class="w-8 font-bold text-gray-400 text-center">8</div>
+<img alt="User Avatar" class="w-10 h-10 rounded-full object-cover border border-gray-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXKLCgVLs_WXdfChdnJV4g0mEbgbb7q9kipvaJMZF_fITCa9E7XyacREojszYVsjP01qCIcKffAzb5FoOA_JUAWpqf28-CPRRYcZowjuPnZkttIm2L8XHwIphamu9KP4g9JHKG5-yI2AJvhoOzTCHrI4Z4btuKxfhCzmy11VRKGENKwYujVYJWIRBiU0AOWqoVfaheGx1402W99UVP9rPlqdr2JtR3EoTTRMgV4j36M6co1BW2BuUjPKX6Y5QXxsVmDZtAe79s8zUf"/>
+<div class="ml-3 flex-1">
+<div class="font-bold text-sm text-text-main">Michael T.</div>
+<div class="text-[10px] text-gray-400">Engineering</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-text-main">35,221</div>
+<div class="text-[10px] text-success font-medium">+7,105 today</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-6 left-0 right-0 px-6 z-50">
+<button class="w-full h-14 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-bold text-base shadow-soft hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">directions_run</span>
+            Cập nhật kết quả ngay
+        </button>
+</div>
+
+</body></html>

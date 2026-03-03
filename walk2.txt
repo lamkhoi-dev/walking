@@ -1,0 +1,25 @@
+Idea chính:  App running, đếm số bước đi; app này sinh ra để mấy cty tạo nhóm cho mấy nhân viên trong cty, chạy bộ cùng nhau, rèn luyện sức khoẻ,
+và để đếm số bước chân thì cho phép chạy ngầm nhé, hiện thên thanh thông báo..
+
+Giai đoạn 1:
+- admin: quản lí cty, phê duyệt cty
+---Mô tả---
+- ở phần này là superadmin web portal, công ty sẽ lên web này đăng kí và superadmin sẽ duyệt, thì lúc đó admin công ty có thể lên app, login và tạo nhóm, đồng thời mục profile có chỗ để cung cấp mã cty(ngắn, tạo ngẫu nhiên, dễ nhớ), mã này superadmin à admin cty đó có thể thấy và đồng thời mã cty sẽ dùng để đăng kí user
+- cty tạo nhóm, thêm thành viên, chat nhóm, chat1vs1 ,tạo cuộc thi, tìm kím nhóm bằng tên hoặc qr code
+---Mô tả---
+- user bình thường sẽ đăng kí qua app, lúc này có thông báo nếu đăng kí doanh nghiệp thì có nút chuyển hướng qua web, nếu đăng kí user thì cho phép nhập mail hoặc số điện thoại, pass và mã cty, sau khi đăng nhập vào thì có thể dùng các tính năng của app
+- Admin có thể tạo các nhóm và thêm các thành viên trong cty vào ( tên nhóm, mô tả, thêm thành viên ....)
+- nhóm sẽ chat với nhau như 1 nhóm trên messenger ấy, có thể chat 1vs1 với nhau luôn
+- tạo cuộc thi, trong mỗi nhóm có thể tạo cuộc thi, khi bấm tạo cuộc thi sẽ có (tên cuộc thi, mô tả, ngày bắt đầu, ngày kết thúc...) chỉ có thể tạo 1 cuộc thi tại 1 thời điểm, sau khi tạo cuộc thi thì bắt đầu đếm số bước chân của các thành viên và cấp nhật bảng xếp hạng (realtime) hoặc cuối ngày nếu realtime quá nặng
+- tìm kím nhóm bằng tên hoặc qr code
+
+
+Giai đoạn 2
+- trang mục tiêu hằng ngày, đếm số bước đi
+- leaderboard
+- profile
+
+Giai đoạn 3:
+- social : đăng bài viết, video, like tim, comment
+
+mongodb+srv://khoilamtemptemp_db_user:o4IJLrhvjOWbFgTa@walking.ddztptq.mongodb.net/?appName=walking

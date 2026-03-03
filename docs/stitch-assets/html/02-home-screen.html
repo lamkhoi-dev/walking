@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WalkTogether Home Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#4CAF50",
+              "primary-dark": "#388E3C",
+              "secondary": "#2196F3",
+              "accent-purple": "#7C4DFF",
+              "surface-light": "#ffffff",
+              "text-main": "#101910",
+              "text-muted": "#64748b",
+            },
+            fontFamily: {
+              "sans": ["Inter", "sans-serif"]
+            },
+            boxShadow: {
+                'soft': '0 8px 30px -4px rgba(76, 175, 80, 0.15)',
+                'card': '0 4px 15px -3px rgba(0, 0, 0, 0.05)',
+                'glow': '0 0 20px rgba(76, 175, 80, 0.3)',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+        }.curved-header {
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+        }.circular-chart {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            max-height: 250px;
+        }
+        .circle-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 2.5;
+        }
+        .circle {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            animation: progress 1s ease-out forwards;
+        }
+        @keyframes progress {
+            0% { stroke-dasharray: 0 100; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-gray-50 pb-24 text-text-main min-h-screen relative overflow-x-hidden">
+<div class="curved-header bg-gradient-to-br from-[#4CAF50] to-[#2196F3] pt-12 pb-24 px-6 relative z-0 shadow-lg">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-white/90 text-sm font-medium">Thứ Hai, 02/03/2026</span>
+</div>
+<h1 class="text-2xl font-bold text-white tracking-tight">Xin chào, Minh! 👋</h1>
+</div>
+<div class="bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-white text-sm">business</span>
+<span class="text-xs font-semibold text-white">Công ty ABC</span>
+</div>
+</div>
+</div>
+<div class="relative z-10 -mt-20 flex justify-center mb-6">
+<div class="relative w-[250px] h-[250px] bg-white rounded-full shadow-soft flex items-center justify-center">
+<svg class="circular-chart w-full h-full absolute inset-0 transform -rotate-90" viewBox="0 0 36 36">
+<defs>
+<linearGradient id="gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#4CAF50"></stop>
+<stop offset="100%" stop-color="#2196F3"></stop>
+</linearGradient>
+</defs>
+<path class="circle-bg" d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+<path class="circle" d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831" stroke="url(#gradient)" stroke-dasharray="84, 100"></path>
+</svg>
+<div class="flex flex-col items-center justify-center z-10">
+<div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">directions_walk</span>
+</div>
+<span class="text-4xl font-extrabold text-gray-800 tracking-tight">8,432</span>
+<span class="text-gray-500 font-medium mt-1">bước</span>
+<div class="mt-2 text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                    84% mục tiêu
+                </div>
+</div>
+</div>
+</div>
+<div class="px-5 space-y-6">
+<div class="grid grid-cols-3 gap-3">
+<div class="bg-white p-3 rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 border border-gray-100">
+<span class="material-symbols-outlined text-orange-500 mb-1" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-lg font-bold text-gray-800">342</span>
+<span class="text-xs text-gray-500 font-medium">cal</span>
+</div>
+<div class="bg-white p-3 rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 border border-gray-100">
+<span class="material-symbols-outlined text-blue-500 mb-1">straighten</span>
+<span class="text-lg font-bold text-gray-800">6.4</span>
+<span class="text-xs text-gray-500 font-medium">km</span>
+</div>
+<div class="bg-white p-3 rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 border border-gray-100">
+<span class="material-symbols-outlined text-purple-500 mb-1">timer</span>
+<span class="text-lg font-bold text-gray-800">84</span>
+<span class="text-xs text-gray-500 font-medium">phút</span>
+</div>
+</div>
+<div class="flex justify-between items-center px-1">
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm group-active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">groups</span>
+</div>
+<span class="text-xs font-semibold text-gray-600">Nhóm</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shadow-sm group-active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">trophy</span>
+</div>
+<span class="text-xs font-semibold text-gray-600">Cuộc thi</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-green-50 text-green-600 flex items-center justify-center shadow-sm group-active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">chat_bubble</span>
+</div>
+<span class="text-xs font-semibold text-gray-600">Chat</span>
+</button>
+<button class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm group-active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">leaderboard</span>
+</div>
+<span class="text-xs font-semibold text-gray-600">Xếp hạng</span>
+</button>
+</div>
+<div class="w-full rounded-2xl p-5 bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white shadow-soft relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-md">
+<span class="material-symbols-outlined text-sm">emoji_events</span>
+</div>
+<h3 class="font-bold text-lg">Thử thách 10K bước</h3>
+</div>
+<span class="bg-white/20 px-2 py-1 rounded-lg text-xs font-bold backdrop-blur-md">Hạng #5</span>
+</div>
+<div class="flex justify-between text-xs font-medium text-white/90 mb-2">
+<span>Tiến độ</span>
+<span>8.4k / 10k</span>
+</div>
+<div class="w-full bg-black/20 rounded-full h-2.5">
+<div class="bg-white h-2.5 rounded-full w-[84%] shadow-sm relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-md"></div>
+</div>
+</div>
+<div class="mt-3 text-xs text-white/80 font-medium">
+                    🔥 Bạn đang cháy hết mình! Cố lên nhé!
+                </div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-4">
+<h2 class="text-lg font-bold text-gray-800">Hoạt động gần đây</h2>
+<a class="text-sm font-semibold text-primary hover:text-primary-dark" href="#">Xem tất cả</a>
+</div>
+<div class="space-y-3">
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+<span class="font-bold text-xs">CN</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-gray-800 text-sm">Hôm qua</h4>
+<p class="text-xs text-gray-500">Đã đạt mục tiêu hàng ngày</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-gray-800">10,245</p>
+<p class="text-[10px] text-gray-400 font-medium uppercase">bước</p>
+</div>
+</div>
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
+<span class="font-bold text-xs">T7</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-gray-800 text-sm">Thứ Bảy</h4>
+<p class="text-xs text-gray-500">Đi bộ nhẹ nhàng</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-gray-800">6,120</p>
+<p class="text-[10px] text-gray-400 font-medium uppercase">bước</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] px-6 py-3 pb-8 z-50">
+<div class="flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 text-primary w-16" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">directions_run</span>
+<span class="text-[10px] font-bold">Hoạt động</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-colors w-16" href="#">
+<span class="material-symbols-outlined text-2xl">groups</span>
+<span class="text-[10px] font-medium">Nhóm</span>
+</a>
+<div class="relative -top-8">
+<button class="w-14 h-14 rounded-full bg-gradient-to-r from-primary to-green-400 text-white shadow-lg flex items-center justify-center border-4 border-gray-50 hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-colors w-16 relative" href="#">
+<div class="relative">
+<span class="material-symbols-outlined text-2xl">chat_bubble_outline</span>
+<span class="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold border-2 border-white">3</span>
+</div>
+<span class="text-[10px] font-medium">Chat</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-colors w-16" href="#">
+<span class="material-symbols-outlined text-2xl">person_outline</span>
+<span class="text-[10px] font-medium">Hồ sơ</span>
+</a>
+</div>
+</div>
+
+</body></html>

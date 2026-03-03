@@ -1,0 +1,39 @@
+node_modules/
+.env
+*.log
+dist/
+coverage/
+.DS_Store
+build/
+
+# Flutter
+walktogether_app/.dart_tool/
+walktogether_app/.packages
+walktogether_app/build/
+walktogether_app/.flutter-plugins
+walktogether_app/.flutter-plugins-dependencies
+walktogether_app/android/.gradle/
+walktogether_app/android/app/build/
+walktogether_app/ios/Pods/
+walktogether_app/ios/.symlinks/
+walktogether_app/macos/Pods/
+walktogether_app/macos/.symlinks/
+walktogether_app/windows/flutter/ephemeral/
+walktogether_app/linux/flutter/ephemeral/
+walktogether_app/.pub-cache/
+walktogether_app/.pub/
+*.iml
+
+# Web Admin
+web-admin/node_modules/
+web-admin/dist/
+
+# Server
+server/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
