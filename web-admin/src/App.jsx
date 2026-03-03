@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CompanyListPage from './pages/CompanyListPage';
 import CompanyDetailPage from './pages/CompanyDetailPage';
+import CompanyRegisterPage from './pages/CompanyRegisterPage';
 
 // Protected route wrapper
 function PrivateRoute({ children }) {
@@ -27,6 +28,7 @@ function App() {
           path="/login"
           element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
         />
+        <Route path="/register-company" element={<CompanyRegisterPage />} />
         <Route
           path="/"
           element={

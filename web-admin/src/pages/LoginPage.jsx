@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
@@ -101,6 +103,18 @@ export default function LoginPage() {
             </Button>
           </Form.Item>
         </Form>
+
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            Bạn là doanh nghiệp?{' '}
+            <a
+              onClick={() => navigate('/register-company')}
+              style={{ color: '#44C548', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Đăng ký công ty
+            </a>
+          </Text>
+        </div>
       </Card>
     </div>
   );

@@ -40,6 +40,9 @@ dependencies:
   # Navigation
   go_router: ^14.6.2
 
+  # External links
+  url_launcher: ^6.3.1
+
   # Network
   dio: ^5.7.0
   socket_io_client: ^2.0.3+1
