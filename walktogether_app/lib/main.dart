@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/storage_service.dart';
@@ -36,6 +37,9 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+
+  // Initialize locale data for date formatting (Vietnamese)
+  await initializeDateFormatting('vi', null);
 
   // Initialize Hive for local storage
   await Hive.initFlutter();
