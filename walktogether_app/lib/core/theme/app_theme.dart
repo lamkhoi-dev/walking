@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
 /// WalkTogether Light Theme
@@ -12,7 +11,7 @@ class AppTheme {
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: GoogleFonts.inter().fontFamily,
+      fontFamily: 'Inter',
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
@@ -24,7 +23,7 @@ class AppTheme {
         centerTitle: false,
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textMain,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.textMain,
@@ -38,7 +37,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -53,7 +52,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
-          textStyle: GoogleFonts.inter(
+          textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -79,11 +78,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
-        hintStyle: GoogleFonts.inter(
+        hintStyle: TextStyle(
           color: AppColors.textSecondary.withValues(alpha: 0.6),
           fontSize: 14,
         ),
-        labelStyle: GoogleFonts.inter(
+        labelStyle: const TextStyle(
           color: AppColors.textSecondary,
           fontSize: 14,
         ),
