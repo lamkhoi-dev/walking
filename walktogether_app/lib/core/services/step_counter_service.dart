@@ -135,6 +135,14 @@ class StepCounterService {
       }
     }
 
+    if (Platform.isIOS) {
+      final status = await Permission.sensors.request();
+      if (!status.isGranted) {
+        debugPrint('Motion permission denied on iOS: $status');
+        throw Exception('Cần cấp quyền truy cập cảm biến để đếm số bước chân');
+      }
+    }
+
     _isTracking = true;
     await _box?.put(_keyIsTracking, true);
 
