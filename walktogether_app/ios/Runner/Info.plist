@@ -26,8 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Runly cần truy cập camera để quét mã QR.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Runly cần truy cập thư viện ảnh để chọn ảnh đại diện.</string>
 	<key>NSMotionUsageDescription</key>
-	<string>WalkTogether cần truy cập cảm biến chuyển động để đếm số bước chân của bạn.</string>
+	<string>Runly cần truy cập cảm biến chuyển động để đếm số bước chân của bạn.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
