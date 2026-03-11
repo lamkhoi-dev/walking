@@ -59,12 +59,24 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ConversationListBloc, ConversationListState>(
-      listener: (context, convState) {
-        if (convState is ConversationListDirectCreated) {
-          context.push('/chat/${convState.conversation.id}');
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ConversationListBloc, ConversationListState>(
+          listener: (context, convState) {
+            if (convState is ConversationListDirectCreated) {
+              context.push('/chat/${convState.conversation.id}');
+            } else if (convState is ConversationListError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(convState.message),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: AppColors.danger,
+                ),
+              );
+            }
+          },
+        ),
+      ],
       child: BlocConsumer<GroupDetailBloc, GroupDetailState>(
       listener: (context, state) {
         if (state is GroupDetailActionSuccess) {

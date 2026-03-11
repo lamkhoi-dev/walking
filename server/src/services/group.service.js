@@ -73,8 +73,11 @@ class GroupService {
     const filter = { isActive: true };
 
     if (isAdmin && companyId) {
-      // Admin sees all groups in their company
-      filter.companyId = companyId;
+      // Admin sees all groups in their company + groups they are a member of
+      filter.$or = [
+        { companyId },
+        { members: userId },
+      ];
     } else {
       // Regular members only see groups they belong to
       filter.members = userId;
