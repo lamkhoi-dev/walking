@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/repositories/group_repository.dart';
+import '../bloc/group_list_bloc.dart';
 
 /// QR Scanner page for joining groups by scanning QR codes
 class QRScannerPage extends StatefulWidget {
@@ -165,7 +166,8 @@ class _QRScannerPageState extends State<QRScannerPage> {
         ),
       );
 
-      // Navigate to the group detail page
+      // Refresh group list and navigate to group detail
+      context.read<GroupListBloc>().add(GroupListLoadRequested());
       context.go('/groups/$groupId');
     } catch (e) {
       if (!mounted) return;

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/repositories/group_repository.dart';
+import '../bloc/group_list_bloc.dart';
 import '../widgets/member_selector.dart';
 
 /// Page for creating a new group (company_admin only)
@@ -53,7 +55,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         ),
       );
 
-      context.pop(true); // Return true to trigger refresh
+      // Refresh group list before popping
+      context.read<GroupListBloc>().add(GroupListLoadRequested());
+      context.pop(true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);

@@ -74,8 +74,16 @@ const getGroupById = async (req, res, next) => {
   try {
     const group = await groupService.getGroupById(req.params.id);
 
-    // Ensure user's company matches group's company
-    if (group.companyId.toString() !== req.user.companyId.toString()) {
+    // Allow access if user is a member of the group, or same company
+    const isMember = group.members?.some(
+      (m) => (m._id || m).toString() === req.user._id.toString()
+    );
+    const sameCompany =
+      req.user.companyId &&
+      group.companyId &&
+      group.companyId.toString() === req.user.companyId.toString();
+
+    if (!isMember && !sameCompany) {
       return error(res, 403, 'Bạn không có quyền xem nhóm này');
     }
 

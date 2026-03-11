@@ -127,7 +127,7 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (group.companyId.toString() !== companyId.toString()) {
+    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
       const err = new Error('Bạn không có quyền cập nhật nhóm này');
       err.statusCode = 403;
       throw err;
@@ -163,7 +163,7 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (group.companyId.toString() !== companyId.toString()) {
+    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
       const err = new Error('Bạn không có quyền xóa nhóm này');
       err.statusCode = 403;
       throw err;
@@ -253,7 +253,7 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (companyId && group.companyId.toString() !== companyId.toString()) {
+    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
       const err = new Error('Bạn không có quyền quản lý nhóm này');
       err.statusCode = 403;
       throw err;
