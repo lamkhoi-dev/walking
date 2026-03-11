@@ -46,5 +46,13 @@ post_install do |installer|
       config.build_settings['VALIDATE_WORKSPACE'] = 'YES'
       config.build_settings['VALIDATE_WORKSPACE_SKIPPED_SDK_FRAMEWORKS'] = 'MLImage MLKitBarcodeScanning MLKitCommon MLKitVision'
     end
+
+    # Enable permission_handler permissions (macros required by permission_handler_apple)
+    if target.name == 'permission_handler_apple'
+      target.build_configurations.each do |config|
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'PERMISSION_SENSORS=1'
+      end
+    end
   end
 end
