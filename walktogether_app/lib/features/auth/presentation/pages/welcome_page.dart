@@ -19,10 +19,9 @@ class WelcomePage extends StatelessWidget {
 
               // Logo & Title
               Container(
-                width: 80,
-                height: 80,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -32,15 +31,17 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.directions_walk,
-                  size: 44,
-                  color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/runly_logo.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               const Text(
-                'WalkTogether',
+                'Runly',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
