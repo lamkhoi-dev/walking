@@ -78,5 +78,10 @@
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.runly.app.refresh</string>
+		<string>com.runly.app.processing</string>
+	</array>
 </dict>
 </plist>
