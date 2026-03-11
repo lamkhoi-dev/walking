@@ -1,11 +1,11 @@
 {
-    "name": "walktogether_app",
-    "short_name": "walktogether_app",
+    "name": "Runly",
+    "short_name": "Runly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Runly - Đếm bước chân, chạy bộ cùng nhau",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

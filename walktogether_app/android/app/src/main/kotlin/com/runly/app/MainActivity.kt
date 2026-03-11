@@ -1,4 +1,4 @@
-package com.walktogether.walktogether_app
+﻿package com.runly.app
 
 import io.flutter.embedding.android.FlutterActivity
 
