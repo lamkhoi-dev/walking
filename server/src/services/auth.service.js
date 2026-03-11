@@ -34,18 +34,21 @@ class AuthService {
       throw err;
     }
 
-    // Find company by code
-    const company = await Company.findOne({ code: companyCode.toUpperCase() });
-    if (!company) {
-      const err = new Error('Mã công ty không tồn tại');
-      err.statusCode = 404;
-      throw err;
-    }
+    // Find company by code (OPTIONAL)
+    let company = null;
+    if (companyCode) {
+      company = await Company.findOne({ code: companyCode.toUpperCase() });
+      if (!company) {
+        const err = new Error('Mã công ty không tồn tại');
+        err.statusCode = 404;
+        throw err;
+      }
 
-    if (company.status !== 'approved') {
-      const err = new Error('Công ty chưa được phê duyệt');
-      err.statusCode = 400;
-      throw err;
+      if (company.status !== 'approved') {
+        const err = new Error('Công ty chưa được phê duyệt');
+        err.statusCode = 400;
+        throw err;
+      }
     }
 
     // Check email/phone uniqueness
@@ -74,28 +77,32 @@ class AuthService {
       password,
       fullName,
       role: 'member',
-      companyId: company._id,
-      companyCode: company.code,
+      companyId: company?._id || undefined,
+      companyCode: company?.code || undefined,
     });
 
-    // Update company member count
-    await Company.findByIdAndUpdate(company._id, {
-      $inc: { totalMembers: 1 },
-    });
+    // Update company member count (only if company exists)
+    if (company) {
+      await Company.findByIdAndUpdate(company._id, {
+        $inc: { totalMembers: 1 },
+      });
+    }
 
     // Generate tokens
     const tokens = this.generateTokens(user._id);
 
-    logger.info(`New member registered: ${user.fullName} (${company.name})`);
+    logger.info(`New member registered: ${user.fullName}${company ? ` (${company.name})` : ''}`);
 
     return {
       user: user.toJSON(),
-      company: {
-        _id: company._id,
-        name: company.name,
-        status: company.status,
-        code: company.code,
-      },
+      company: company
+        ? {
+            _id: company._id,
+            name: company.name,
+            status: company.status,
+            code: company.code,
+          }
+        : null,
       ...tokens,
     };
   }

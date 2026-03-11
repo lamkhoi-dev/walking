@@ -168,6 +168,10 @@ class _AppViewState extends State<_AppView> {
           companyStatus = 'approved';
           // Switch step counter to this user's box
           StepCounterService().switchUser(state.user.id);
+          // Auto-start step tracking
+          if (context.mounted) {
+            context.read<StepTrackerBloc>().add(StepTrackerStartRequested());
+          }
           // Connect socket with stored token
           _connectSocket();
         } else if (state is AuthPendingApproval) {
@@ -192,7 +196,7 @@ class _AppViewState extends State<_AppView> {
         );
       },
       child: MaterialApp.router(
-        title: 'WalkTogether',
+        title: 'Runly',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _appRouter.router,

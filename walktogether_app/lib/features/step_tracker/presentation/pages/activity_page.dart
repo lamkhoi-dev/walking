@@ -22,11 +22,8 @@ class _ActivityPageState extends State<ActivityPage> {
   @override
   void initState() {
     super.initState();
-    // Auto-start tracking when page loads
-    final bloc = context.read<StepTrackerBloc>();
-    if (bloc.state is StepTrackerInitial) {
-      bloc.add(StepTrackerStartRequested());
-    }
+    // Tracking is auto-started from main.dart after login.
+    // No need to start here.
   }
 
   @override

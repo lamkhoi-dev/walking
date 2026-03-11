@@ -24,6 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _companyCodeController = TextEditingController();
+  bool _showCompanyCode = false;
 
   @override
   void dispose() {
@@ -46,7 +47,9 @@ class _RegisterPageState extends State<RegisterPage> {
           phone: !isEmail ? identifier : null,
           password: _passwordController.text,
           fullName: _nameController.text.trim(),
-          companyCode: _companyCodeController.text.trim(),
+          companyCode: _showCompanyCode
+              ? _companyCodeController.text.trim()
+              : null,
         ),
       );
     }
@@ -97,7 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Tham gia WalkTogether cùng đồng nghiệp!',
+                  'Tham gia Runly ngay!',
                   style: TextStyle(
                     fontSize: 15,
                     color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -176,22 +179,47 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 16),
 
-                CustomTextField(
-                  label: 'Mã công ty',
-                  hint: 'Nhập mã 6 ký tự (vd: AB1234)',
-                  controller: _companyCodeController,
-                  prefixIcon: const Icon(Icons.business_outlined, size: 20),
-                  textInputAction: TextInputAction.done,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Vui lòng nhập mã công ty';
-                    }
-                    if (value.trim().length != 6) {
-                      return 'Mã công ty phải có 6 ký tự';
-                    }
-                    return null;
-                  },
+                // Optional company code section
+                GestureDetector(
+                  onTap: () => setState(() => _showCompanyCode = !_showCompanyCode),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _showCompanyCode
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Tôi có mã công ty',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
+                if (_showCompanyCode) ...[
+                  const SizedBox(height: 12),
+                  CustomTextField(
+                    label: 'Mã công ty',
+                    hint: 'Nhập mã 6 ký tự (vd: AB1234)',
+                    controller: _companyCodeController,
+                    prefixIcon: const Icon(Icons.business_outlined, size: 20),
+                    textInputAction: TextInputAction.done,
+                    validator: (value) {
+                      if (value != null && value.trim().isNotEmpty && value.trim().length != 6) {
+                        return 'Mã công ty phải có 6 ký tự';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
 
                 const SizedBox(height: 32),
 

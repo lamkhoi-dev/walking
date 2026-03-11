@@ -6,7 +6,7 @@ import '../../../chat/presentation/bloc/conversation_list_bloc.dart';
 import '../../../step_tracker/presentation/bloc/step_tracker_bloc.dart';
 
 /// Home shell page with bottom navigation bar
-/// Wraps child routes: /home, /groups, /chat, /profile
+/// Wraps child routes: /home, /chat, /profile
 class HomeShellPage extends StatelessWidget {
   final Widget child;
 
@@ -14,9 +14,8 @@ class HomeShellPage extends StatelessWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/groups')) return 1;
-    if (location.startsWith('/chat')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/chat')) return 1;
+    if (location.startsWith('/profile')) return 2;
     return 0; // /home
   }
 
@@ -48,12 +47,6 @@ class HomeShellPage extends StatelessWidget {
                   label: 'Hoạt động',
                   isSelected: currentIndex == 0,
                   onTap: () => context.go('/home'),
-                ),
-                _NavItem(
-                  icon: Icons.groups_outlined,
-                  label: 'Nhóm',
-                  isSelected: currentIndex == 1,
-                  onTap: () => context.go('/groups'),
                 ),
                 // Center FAB — toggle step tracking
                 BlocBuilder<StepTrackerBloc, StepTrackerState>(
@@ -92,7 +85,7 @@ class HomeShellPage extends StatelessWidget {
                     return _NavItem(
                       icon: Icons.chat_bubble_outline,
                       label: 'Chat',
-                      isSelected: currentIndex == 2,
+                      isSelected: currentIndex == 1,
                       onTap: () => context.go('/chat'),
                       badgeCount: unread > 0 ? unread : null,
                     );
@@ -101,7 +94,7 @@ class HomeShellPage extends StatelessWidget {
                 _NavItem(
                   icon: Icons.person_outline,
                   label: 'Hồ sơ',
-                  isSelected: currentIndex == 3,
+                  isSelected: currentIndex == 2,
                   onTap: () => context.go('/profile'),
                 ),
               ],

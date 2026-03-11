@@ -143,7 +143,7 @@ class ProfilePage extends StatelessWidget {
                       // App version  
                       Center(
                         child: Text(
-                          'WalkTogether v1.0.0',
+                          'Runly v1.0.0',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                           ),

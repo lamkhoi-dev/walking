@@ -51,7 +51,7 @@ class WelcomePage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Cùng nhau rèn luyện sức khỏe\nmỗi bước chân đều có ý nghĩa',
+                'One Step. One Journey.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,

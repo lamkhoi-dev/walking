@@ -5,7 +5,7 @@ const registerSchema = Joi.object({
   phone: Joi.string().pattern(/^[0-9]{10,11}$/).trim(),
   password: Joi.string().min(6).required(),
   fullName: Joi.string().min(2).max(50).trim().required(),
-  companyCode: Joi.string().length(6).uppercase().required(),
+  companyCode: Joi.string().length(6).uppercase().allow('', null),
 }).or('email', 'phone').messages({
   'object.missing': 'Email hoặc số điện thoại là bắt buộc',
 });

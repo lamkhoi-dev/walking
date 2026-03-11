@@ -21,14 +21,14 @@ class AuthRegisterRequested extends AuthEvent {
   final String? phone;
   final String password;
   final String fullName;
-  final String companyCode;
+  final String? companyCode;
 
   AuthRegisterRequested({
     this.email,
     this.phone,
     required this.password,
     required this.fullName,
-    required this.companyCode,
+    this.companyCode,
   });
 }
 

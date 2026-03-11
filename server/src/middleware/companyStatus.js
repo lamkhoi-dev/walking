@@ -12,14 +12,17 @@ const requireApprovedCompany = async (req, res, next) => {
       return next();
     }
 
-    // User must have a companyId
+    // User without company → allow through (free user)
     if (!req.user.companyId) {
-      return error(res, 403, 'Không tìm thấy thông tin công ty');
+      req.company = null;
+      return next();
     }
 
     const company = await Company.findById(req.user.companyId);
     if (!company) {
-      return error(res, 403, 'Công ty không tồn tại');
+      // Company reference invalid → treat as free user
+      req.company = null;
+      return next();
     }
 
     switch (company.status) {

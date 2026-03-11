@@ -10,15 +10,14 @@ class GroupService {
    * Create a new group
    */
   async createGroup({ name, description, avatar, memberIds = [], companyId, createdBy }) {
-    // Validate memberIds belong to the same company
+    // Validate memberIds are active users (no company restriction)
     if (memberIds.length > 0) {
       const validMembers = await User.countDocuments({
         _id: { $in: memberIds },
-        companyId,
         isActive: true,
       });
       if (validMembers !== memberIds.length) {
-        const err = new Error('Một số thành viên không thuộc công ty này');
+        const err = new Error('Một số thành viên không tồn tại hoặc đã bị vô hiệu hóa');
         err.statusCode = 400;
         throw err;
       }
@@ -71,9 +70,12 @@ class GroupService {
    * Get groups for a user
    */
   async getGroups(userId, companyId, isAdmin = false) {
-    const filter = { companyId, isActive: true };
+    const filter = { isActive: true };
 
-    if (!isAdmin) {
+    if (isAdmin && companyId) {
+      // Admin sees all groups in their company
+      filter.companyId = companyId;
+    } else {
       // Regular members only see groups they belong to
       filter.members = userId;
     }
@@ -190,15 +192,14 @@ class GroupService {
       throw err;
     }
 
-    // Validate all members belong to same company
+    // Validate all members are active users (no company restriction)
     const validMembers = await User.find({
       _id: { $in: memberIds },
-      companyId,
       isActive: true,
     }).select('_id fullName');
 
     if (validMembers.length !== memberIds.length) {
-      const err = new Error('Một số thành viên không thuộc công ty này');
+      const err = new Error('Một số thành viên không tồn tại hoặc đã bị vô hiệu hóa');
       err.statusCode = 400;
       throw err;
     }
@@ -304,11 +305,17 @@ class GroupService {
       return [];
     }
 
-    const groups = await Group.find({
-      companyId,
+    const filter = {
       isActive: true,
       name: { $regex: escapeRegex(query.trim()), $options: 'i' },
-    })
+    };
+
+    // If user has a company, search within company; otherwise search all
+    if (companyId) {
+      filter.companyId = companyId;
+    }
+
+    const groups = await Group.find(filter)
       .populate('members', '_id fullName avatar')
       .populate('createdBy', '_id fullName avatar')
       .sort({ name: 1 })
@@ -326,13 +333,6 @@ class GroupService {
     if (!group) {
       const err = new Error('Không tìm thấy nhóm');
       err.statusCode = 404;
-      throw err;
-    }
-
-    // Check same company
-    if (group.companyId.toString() !== companyId.toString()) {
-      const err = new Error('Nhóm này thuộc công ty khác');
-      err.statusCode = 403;
       throw err;
     }
 

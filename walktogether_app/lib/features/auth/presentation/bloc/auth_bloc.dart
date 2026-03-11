@@ -75,7 +75,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           phone: event.phone,
           password: event.password,
           fullName: event.fullName,
-          companyCode: event.companyCode,
+          companyCode: event.companyCode?.isNotEmpty == true
+              ? event.companyCode
+              : null,
         ),
       );
       _emitAuthState(emit, response.user, response.company);

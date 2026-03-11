@@ -13,7 +13,6 @@ import '../../features/group/data/repositories/group_repository.dart';
 // GroupListBloc is provided at app level in main.dart
 import '../../features/group/presentation/bloc/group_detail_bloc.dart';
 import '../../features/group/presentation/bloc/group_search_bloc.dart';
-import '../../features/group/presentation/pages/group_list_page.dart';
 import '../../features/group/presentation/pages/group_detail_page.dart';
 import '../../features/group/presentation/pages/create_group_page.dart';
 import '../../features/group/presentation/pages/group_search_page.dart';
@@ -21,7 +20,7 @@ import '../../features/group/presentation/pages/group_qr_page.dart';
 import '../../features/group/presentation/pages/qr_scanner_page.dart';
 import '../../features/chat/data/repositories/chat_repository.dart';
 import '../../features/chat/presentation/bloc/chat_bloc.dart';
-import '../../features/chat/presentation/pages/chat_list_page.dart';
+import '../../features/chat/presentation/pages/chat_tabs_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/contest/data/repositories/contest_repository.dart';
 import '../../features/contest/presentation/pages/contest_list_page.dart';
@@ -138,14 +137,9 @@ class AppRouter {
             builder: (context, state) => const ActivityPage(),
           ),
           GoRoute(
-            path: '/groups',
-            name: 'groups',
-            builder: (context, state) => const GroupListPage(),
-          ),
-          GoRoute(
             path: '/chat',
             name: 'chat',
-            builder: (context, state) => const ChatListPage(),
+            builder: (context, state) => const ChatTabsPage(),
           ),
           GoRoute(
             path: '/profile',
