@@ -7,7 +7,7 @@ class ConversationModel {
   final int? groupTotalMembers;
   final List<ParticipantModel> participants;
   final MessageModel? lastMessage;
-  final String companyId;
+  final String? companyId;
   final bool isActive;
   final int unreadCount;
   final DateTime createdAt;
@@ -22,7 +22,7 @@ class ConversationModel {
     this.groupTotalMembers,
     this.participants = const [],
     this.lastMessage,
-    required this.companyId,
+    this.companyId,
     this.isActive = true,
     this.unreadCount = 0,
     required this.createdAt,

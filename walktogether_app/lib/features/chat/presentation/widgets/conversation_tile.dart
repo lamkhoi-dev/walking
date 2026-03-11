@@ -161,7 +161,9 @@ class ConversationTile extends StatelessWidget {
 
     final prefix = msg.isMine(currentUserId)
         ? 'Bạn: '
-        : '${msg.senderName ?? ''}: ';
+        : msg.senderName != null && msg.senderName!.isNotEmpty
+            ? '${msg.senderName}: '
+            : '';
     return '$prefix${msg.content}';
   }
 

@@ -11,7 +11,10 @@ const getConversations = async (userId) => {
     participants: userId,
     isActive: true,
   })
-    .populate('lastMessage')
+    .populate({
+      path: 'lastMessage',
+      populate: { path: 'senderId', select: 'fullName avatar' },
+    })
     .populate('participants', 'fullName avatar email phone lastOnline')
     .populate({
       path: 'groupId',
@@ -45,17 +48,16 @@ const getOrCreateDirectConversation = async (userId, otherUserId, companyId) => 
   let conversation = await Conversation.findOne({
     type: 'direct',
     participants: { $all: [userId, otherUserId], $size: 2 },
-    companyId,
   })
-    .populate('lastMessage')
+    .populate({
+      path: 'lastMessage',
+      populate: { path: 'senderId', select: 'fullName avatar' },
+    })
     .populate('participants', 'fullName avatar email phone lastOnline');
 
   if (!conversation) {
-    // Verify both users exist and are in the same company
-    const [user, otherUser] = await Promise.all([
-      User.findById(userId),
-      User.findById(otherUserId),
-    ]);
+    // Verify other user exists
+    const otherUser = await User.findById(otherUserId);
 
     if (!otherUser) {
       const err = new Error('Người dùng không tồn tại');
@@ -63,21 +65,18 @@ const getOrCreateDirectConversation = async (userId, otherUserId, companyId) => 
       throw err;
     }
 
-    if (String(user.companyId) !== String(otherUser.companyId)) {
-      const err = new Error('Không thể chat với người ngoài công ty');
-      err.statusCode = 403;
-      throw err;
-    }
-
     conversation = await Conversation.create({
       type: 'direct',
       participants: [userId, otherUserId],
-      companyId,
+      companyId: companyId || undefined,
     });
 
     // Re-populate
     conversation = await Conversation.findById(conversation._id)
-      .populate('lastMessage')
+      .populate({
+        path: 'lastMessage',
+        populate: { path: 'senderId', select: 'fullName avatar' },
+      })
       .populate('participants', 'fullName avatar email phone lastOnline');
   }
 
