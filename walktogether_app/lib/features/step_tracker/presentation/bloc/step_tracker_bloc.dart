@@ -187,8 +187,11 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     StepTrackerStartRequested event,
     Emitter<StepTrackerState> emit,
   ) async {
-    // Guard: don't start if already running
-    if (state is StepTrackerRunning) return;
+    // Guard: don't start if already tracking
+    if (state is StepTrackerRunning &&
+        (state as StepTrackerRunning).isTracking) {
+      return;
+    }
 
     try {
       await _counterService.init();

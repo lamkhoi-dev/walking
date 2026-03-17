@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -35,14 +37,17 @@ import '../../features/step_tracker/presentation/pages/goals_page.dart';
 class AuthChangeNotifier extends ChangeNotifier {
   bool _isLoggedIn = false;
   String? _companyStatus;
+  bool _isConnectingServer = false;
 
   bool get isLoggedIn => _isLoggedIn;
   String? get companyStatus => _companyStatus;
+  bool get isConnectingServer => _isConnectingServer;
 
-  void update({required bool isLoggedIn, String? companyStatus}) {
-    if (_isLoggedIn != isLoggedIn || _companyStatus != companyStatus) {
+  void update({required bool isLoggedIn, String? companyStatus, bool isConnectingServer = false}) {
+    if (_isLoggedIn != isLoggedIn || _companyStatus != companyStatus || _isConnectingServer != isConnectingServer) {
       _isLoggedIn = isLoggedIn;
       _companyStatus = companyStatus;
+      _isConnectingServer = isConnectingServer;
       notifyListeners();
     }
   }
@@ -61,9 +66,16 @@ class AppRouter {
     redirect: (context, state) {
       final loggedIn = authNotifier.isLoggedIn;
       final companyStatus = authNotifier.companyStatus;
+      final isConnecting = authNotifier.isConnectingServer;
       final loggingIn = state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
           state.matchedLocation == '/';
+
+      // Server cold start in progress — don't redirect anywhere
+      if (isConnecting) {
+        if (state.matchedLocation == '/connecting') return null;
+        return '/connecting';
+      }
 
       // Not logged in → go to welcome
       if (!loggedIn) {
@@ -96,6 +108,11 @@ class AppRouter {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/connecting',
+        name: 'connecting',
+        builder: (context, state) => const _ServerConnectingPage(),
+      ),
       GoRoute(
         path: '/',
         name: 'welcome',
@@ -266,4 +283,75 @@ class AppRouter {
       ),
     ],
   );
+}
+
+/// Page shown during Render server cold start
+class _ServerConnectingPage extends StatelessWidget {
+  const _ServerConnectingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              final attempt = state is AuthConnectingServer ? state.attempt : 1;
+              final maxAttempts = state is AuthConnectingServer ? state.maxAttempts : 4;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 4,
+                      color: Color(0xFF44C548),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Đang kết nối máy chủ...',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1A2E),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Máy chủ đang khởi động, vui lòng đợi\ntrong giây lát nhé! 🚀',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF6B7280),
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Lần thử $attempt / $maxAttempts',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 }

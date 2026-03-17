@@ -7,6 +7,14 @@ abstract class AuthState {}
 /// Initial state — checking auth
 class AuthInitial extends AuthState {}
 
+/// Connecting to server (cold start retry in progress)
+class AuthConnectingServer extends AuthState {
+  final int attempt;
+  final int maxAttempts;
+
+  AuthConnectingServer({required this.attempt, required this.maxAttempts});
+}
+
 /// Loading state (login/register in progress)
 class AuthLoading extends AuthState {}
 

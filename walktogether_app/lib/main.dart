@@ -168,8 +168,11 @@ class _AppViewState extends State<_AppView> {
       listener: (context, state) {
         bool isLoggedIn = false;
         String? companyStatus;
+        bool isConnectingServer = false;
 
-        if (state is AuthAuthenticated) {
+        if (state is AuthConnectingServer) {
+          isConnectingServer = true;
+        } else if (state is AuthAuthenticated) {
           isLoggedIn = true;
           companyStatus = 'approved';
           // Switch step counter to this user's box
@@ -199,6 +202,7 @@ class _AppViewState extends State<_AppView> {
         _authNotifier.update(
           isLoggedIn: isLoggedIn,
           companyStatus: companyStatus,
+          isConnectingServer: isConnectingServer,
         );
       },
       child: MaterialApp.router(

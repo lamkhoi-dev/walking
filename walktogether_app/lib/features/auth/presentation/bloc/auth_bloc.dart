@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/login_request.dart';
 import '../../data/models/register_request.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/company_model.dart';
+import '../../../../core/network/api_exceptions.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -34,11 +36,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
 
-      // Verify token by calling /auth/me
-      final result = await _authRepository.getMe();
-      _emitAuthState(emit, result.user, result.company);
+      // Verify token by calling /auth/me with retry for cold start
+      const maxRetries = 3;
+      const retryDelays = [Duration(seconds: 5), Duration(seconds: 10), Duration(seconds: 20)];
+
+      for (int attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          final result = await _authRepository.getMe();
+          _emitAuthState(emit, result.user, result.company);
+          return;
+        } catch (e) {
+          // Only clear tokens on 401 (invalid/expired token)
+          if (e is UnauthorizedException) {
+            await _authRepository.clearTokens();
+            emit(AuthUnauthenticated());
+            return;
+          }
+
+          // For timeout/network errors, retry (Render cold start can take 30-60s)
+          if ((e is TimeoutException || e is NetworkException) &&
+              attempt < maxRetries) {
+            debugPrint('Auth check attempt ${attempt + 1} failed (${e.runtimeType}), retrying...');
+            emit(AuthConnectingServer(
+              attempt: attempt + 1,
+              maxAttempts: maxRetries + 1,
+            ));
+            await Future.delayed(retryDelays[attempt]);
+            continue;
+          }
+
+          // All retries exhausted or unknown error — still don't clear tokens
+          debugPrint('Auth check failed after retries: $e');
+          emit(AuthUnauthenticated());
+          return;
+        }
+      }
     } catch (_) {
-      await _authRepository.clearTokens();
       emit(AuthUnauthenticated());
     }
   }
