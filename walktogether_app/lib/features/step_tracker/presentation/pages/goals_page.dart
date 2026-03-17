@@ -37,6 +37,20 @@ class _GoalsPageState extends State<GoalsPage> {
       ),
       body: BlocBuilder<StepTrackerBloc, StepTrackerState>(
         builder: (context, state) {
+          // Show loading indicator while syncing from server
+          if (state is StepTrackerLoading) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Đang đồng bộ dữ liệu...'),
+                ],
+              ),
+            );
+          }
+          
           final todaySteps = state is StepTrackerRunning ? state.todaySteps : 0;
           final goalSteps = state is StepTrackerRunning ? state.goalSteps : _stepService.dailyGoal;
           final progress = goalSteps > 0 ? todaySteps / goalSteps : 0.0;

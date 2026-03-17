@@ -130,10 +130,13 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
-      const err = new Error('Bạn không có quyền cập nhật nhóm này');
-      err.statusCode = 403;
-      throw err;
+    // If group has companyId, admin MUST be from that company
+    if (group.companyId) {
+      if (!companyId || group.companyId.toString() !== companyId.toString()) {
+        const err = new Error('Bạn không có quyền cập nhật nhóm này');
+        err.statusCode = 403;
+        throw err;
+      }
     }
 
     // Only allow updating name, description, avatar
@@ -166,10 +169,13 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
-      const err = new Error('Bạn không có quyền xóa nhóm này');
-      err.statusCode = 403;
-      throw err;
+    // If group has companyId, admin MUST be from that company
+    if (group.companyId) {
+      if (!companyId || group.companyId.toString() !== companyId.toString()) {
+        const err = new Error('Bạn không có quyền xóa nhóm này');
+        err.statusCode = 403;
+        throw err;
+      }
     }
 
     group.isActive = false;
@@ -196,17 +202,19 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
-      const err = new Error('Bạn không có quyền quản lý nhóm này');
-      err.statusCode = 403;
-      throw err;
+    // If group has companyId, admin MUST be from that company
+    if (group.companyId) {
+      if (!companyId || group.companyId.toString() !== companyId.toString()) {
+        const err = new Error('Bạn không có quyền quản lý nhóm này');
+        err.statusCode = 403;
+        throw err;
+      }
     }
 
-    // Validate all members are active users from the same company
+    // Validate all members are active users (allow cross-company members)
     const validMembers = await User.find({
       _id: { $in: memberIds },
       isActive: true,
-      companyId: group.companyId, // Only allow members from same company
     }).select('_id fullName');
 
     if (validMembers.length !== memberIds.length) {
@@ -264,10 +272,13 @@ class GroupService {
     }
 
     // Verify group belongs to admin's company
-    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
-      const err = new Error('Bạn không có quyền quản lý nhóm này');
-      err.statusCode = 403;
-      throw err;
+    // If group has companyId, admin MUST be from that company
+    if (group.companyId) {
+      if (!companyId || group.companyId.toString() !== companyId.toString()) {
+        const err = new Error('Bạn không có quyền quản lý nhóm này');
+        err.statusCode = 403;
+        throw err;
+      }
     }
 
     // Cannot remove creator

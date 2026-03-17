@@ -180,6 +180,32 @@ class StepCounterService {
     debugPrint('Step tracking stopped');
   }
 
+  /// Set today's steps from server data (called on app start to prevent data loss)
+  /// This ensures local steps are at least as high as server steps
+  Future<void> syncFromServer(int serverSteps) async {
+    if (_box == null || !_box!.isOpen) return;
+
+    final localSteps = todaySteps;
+    
+    // If server has more steps, use server value and adjust baseline
+    if (serverSteps > localSteps) {
+      final lastSensor = (_box?.get(_keyLastSensorSteps, defaultValue: 0) ?? 0) as int;
+      
+      // Adjust baseline so that: serverSteps = lastSensor - newBaseline
+      // newBaseline = lastSensor - serverSteps
+      if (lastSensor > 0) {
+        final newBaseline = lastSensor - serverSteps;
+        await _box?.put(_keyBaseline, newBaseline);
+      }
+      
+      await _box?.put(_keyTodaySteps, serverSteps);
+      _stepController.add(serverSteps);
+      debugPrint('Synced from server: local=$localSteps → server=$serverSteps');
+    } else {
+      debugPrint('Local steps ($localSteps) >= server ($serverSteps), keeping local');
+    }
+  }
+
   /// Handle incoming step count from sensor
   void _onStepCount(int sensorSteps) {
     if (_box == null || !_box!.isOpen) return;

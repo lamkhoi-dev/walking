@@ -66,6 +66,9 @@ abstract class StepTrackerState extends Equatable {
 
 class StepTrackerInitial extends StepTrackerState {}
 
+/// Loading state while syncing from server
+class StepTrackerLoading extends StepTrackerState {}
+
 class StepTrackerRunning extends StepTrackerState {
   final int todaySteps;
   final double distance; // meters
@@ -198,6 +201,9 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     }
 
     try {
+      // Show loading state while syncing from server
+      emit(StepTrackerLoading());
+
       await _counterService.init();
 
       // Wait for user box to be ready (switchUser called from auth listener)
@@ -205,6 +211,18 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       while (_counterService.currentUserId == null && retries < 20) {
         await Future.delayed(const Duration(milliseconds: 200));
         retries++;
+      }
+
+      // CRITICAL: Fetch today's steps from server BEFORE starting tracking
+      // This prevents overwriting server data with lower local value
+      if (_stepRepository != null) {
+        try {
+          final serverToday = await _stepRepository.getToday();
+          await _counterService.syncFromServer(serverToday.steps);
+          debugPrint('Server today steps: ${serverToday.steps}');
+        } catch (e) {
+          debugPrint('Failed to fetch today steps from server: $e (continuing with local)');
+        }
       }
 
       await _counterService.startTracking();
@@ -241,7 +259,7 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
         isTracking: true,
       ));
 
-      // Force emit current steps to trigger UI update (in case switchUser already emitted before subscribe)
+      // Force emit current steps to trigger UI update
       add(_StepTrackerStepsUpdated(_counterService.todaySteps));
     } catch (e) {
       emit(StepTrackerError(e.toString()));
