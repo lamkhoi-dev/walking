@@ -19,6 +19,7 @@ import 'features/group/presentation/bloc/group_list_bloc.dart';
 import 'features/chat/data/repositories/chat_repository.dart';
 import 'features/chat/presentation/bloc/conversation_list_bloc.dart';
 import 'features/contest/data/repositories/contest_repository.dart';
+import 'features/step_tracker/data/repositories/step_repository.dart';
 import 'features/step_tracker/presentation/bloc/step_tracker_bloc.dart';
 
 void main() async {
@@ -58,6 +59,7 @@ void main() async {
   final groupRepository = GroupRepository(dio: dioClient);
   final chatRepository = ChatRepository(dioClient);
   final contestRepository = ContestRepository(dio: dioClient);
+  final stepRepository = StepRepository(dioClient);
 
   // Initialize step services
   final stepCounterService = StepCounterService();
@@ -74,6 +76,7 @@ void main() async {
       contestRepository: contestRepository,
       stepCounterService: stepCounterService,
       stepSyncService: stepSyncService,
+      stepRepository: stepRepository,
     ),
   );
 }
@@ -86,6 +89,7 @@ class WalkTogetherApp extends StatelessWidget {
   final StepCounterService stepCounterService;
   final ContestRepository contestRepository;
   final StepSyncService stepSyncService;
+  final StepRepository stepRepository;
 
   const WalkTogetherApp({
     super.key,
@@ -96,6 +100,7 @@ class WalkTogetherApp extends StatelessWidget {
     required this.contestRepository,
     required this.stepCounterService,
     required this.stepSyncService,
+    required this.stepRepository,
   });
 
   @override
@@ -122,6 +127,7 @@ class WalkTogetherApp extends StatelessWidget {
             create: (_) => StepTrackerBloc(
               counterService: stepCounterService,
               syncService: stepSyncService,
+              stepRepository: stepRepository,
             ),
           ),
         ],

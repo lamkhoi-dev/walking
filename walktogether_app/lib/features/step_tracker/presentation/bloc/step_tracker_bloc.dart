@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/services/step_counter_service.dart';
 import '../../../../core/services/step_sync_service.dart';
+import '../../data/repositories/step_repository.dart';
 
 // ===== EVENTS =====
 abstract class StepTrackerEvent extends Equatable {
@@ -133,6 +135,7 @@ class StepTrackerError extends StepTrackerState {
 class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
   final StepCounterService _counterService;
   final StepSyncService _syncService;
+  final StepRepository? _stepRepository;
 
   StreamSubscription<int>? _stepSub;
   StreamSubscription<String>? _statusSub;
@@ -141,8 +144,10 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
   StepTrackerBloc({
     StepCounterService? counterService,
     StepSyncService? syncService,
+    StepRepository? stepRepository,
   })  : _counterService = counterService ?? StepCounterService(),
         _syncService = syncService ?? StepSyncService(),
+        _stepRepository = stepRepository,
         super(StepTrackerInitial()) {
     on<StepTrackerStartRequested>(_onStart);
     on<StepTrackerStopRequested>(_onStop);
@@ -218,6 +223,11 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       // Start periodic sync
       _syncService.startPeriodicSync();
 
+      // Restore goal history from server if local Hive is empty (e.g., after reinstall)
+      if (_counterService.goalHistory.isEmpty && _stepRepository != null) {
+        _restoreFromServer();
+      }
+
       // Emit initial running state with current steps
       emit(_buildRunningState(
         steps: _counterService.todaySteps,
@@ -225,6 +235,29 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       ));
     } catch (e) {
       emit(StepTrackerError(e.toString()));
+    }
+  }
+
+  /// Fetch step history from server and restore into local Hive (background, non-blocking)
+  Future<void> _restoreFromServer() async {
+    try {
+      // Fetch all history (no date range limit)
+      final records = await _stepRepository!.getHistory();
+
+      if (records.isNotEmpty) {
+        final serverData = records
+            .map((r) => {'date': r.date, 'steps': r.steps})
+            .toList();
+        await _counterService.restoreGoalHistoryFromServer(serverData);
+
+        // Also restore today's steps if local is 0 but server has data
+        final todayRecord = records.where((r) => r.date == _counterService.todayDate).firstOrNull;
+        if (todayRecord != null && _counterService.todaySteps == 0 && todayRecord.steps > 0) {
+          debugPrint('Restored today steps from server: ${todayRecord.steps}');
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to restore step history from server: $e');
     }
   }
 

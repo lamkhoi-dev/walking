@@ -333,6 +333,36 @@ class StepCounterService {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
+  /// Restore goal history from server data (called after reinstall when Hive is empty)
+  Future<void> restoreGoalHistoryFromServer(List<Map<String, dynamic>> serverRecords) async {
+    if (_box == null || !_box!.isOpen) return;
+
+    final history = goalHistory;
+    for (final record in serverRecords) {
+      final date = record['date'] as String? ?? '';
+      final steps = record['steps'] as int? ?? 0;
+      if (date.isEmpty) continue;
+
+      // Don't overwrite today's local data (sensor is more accurate)
+      if (date == _todayDateStr() && todaySteps > 0) continue;
+
+      // Don't overwrite existing local records
+      if (history.containsKey(date)) continue;
+
+      final goal = dailyGoal;
+      history[date] = {
+        'steps': steps,
+        'goal': goal,
+        'achieved': steps >= goal,
+      };
+    }
+
+    await _box?.put(_keyGoalHistory, history);
+    _updateStreak(history);
+
+    debugPrint('Restored ${serverRecords.length} records from server into goal history');
+  }
+
   /// Get today's date for sync
   String get todayDate => _todayDateStr();
 
