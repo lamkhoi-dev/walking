@@ -16,7 +16,8 @@ class AppConstants {
   static const int maxPageSize = 100;
 
   // === STEP COUNTER ===
-  static const int stepSyncInterval = 300; // 5 minutes in seconds
+  static const int stepSyncInterval = 60; // 1 minute in seconds (was 5 min)
+  static const int stepSyncThreshold = 100; // Sync when steps increase by this much
   static const int dailyStepGoalDefault = 10000;
 
   // === COMPANY CODE ===

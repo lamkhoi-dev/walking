@@ -317,6 +317,9 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       syncStatus: syncStatus,
       isTracking: isTracking,
     ));
+
+    // Smart sync: check if steps changed significantly
+    _syncService.checkAndSync();
   }
 
   void _onStatusUpdated(

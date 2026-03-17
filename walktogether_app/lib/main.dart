@@ -145,21 +145,33 @@ class _AppView extends StatefulWidget {
   State<_AppView> createState() => _AppViewState();
 }
 
-class _AppViewState extends State<_AppView> {
+class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
   late final AuthChangeNotifier _authNotifier;
   late final AppRouter _appRouter;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _authNotifier = AuthChangeNotifier();
     _appRouter = AppRouter(authNotifier: _authNotifier);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _authNotifier.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Sync steps when app goes to background/inactive
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      StepSyncService().syncNow();
+      debugPrint('App lifecycle: $state — syncing steps');
+    }
   }
 
   @override

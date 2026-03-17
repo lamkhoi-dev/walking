@@ -28,6 +28,7 @@ class StepSyncService {
 
   DateTime? _lastSyncTime;
   DateTime? get lastSyncTime => _lastSyncTime;
+  int _lastSyncedSteps = 0;
 
   /// Initialize sync service with DioClient
   Future<void> init(DioClient dioClient) async {
@@ -52,6 +53,18 @@ class StepSyncService {
   void stopPeriodicSync() {
     _syncTimer?.cancel();
     _syncTimer = null;
+  }
+
+  /// Check if steps changed significantly and sync if needed
+  /// Call this from step counter when steps update
+  void checkAndSync() {
+    final stepService = StepCounterService();
+    final currentSteps = stepService.todaySteps;
+    final threshold = AppConstants.stepSyncThreshold;
+    
+    if (currentSteps - _lastSyncedSteps >= threshold) {
+      syncNow();
+    }
   }
 
   /// Sync steps now (called by timer or manually)
@@ -84,6 +97,7 @@ class StepSyncService {
       if (socketService.isConnected) {
         socketService.emit('steps:sync', data);
         _lastSyncTime = DateTime.now();
+        _lastSyncedSteps = steps;
         _syncStatusController.add(StepSyncStatus.synced);
         _isSyncing = false;
 
@@ -100,6 +114,7 @@ class StepSyncService {
             data: data,
           );
           _lastSyncTime = DateTime.now();
+          _lastSyncedSteps = steps;
           _syncStatusController.add(StepSyncStatus.synced);
           _isSyncing = false;
 
