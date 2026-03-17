@@ -40,17 +40,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       const maxRetries = 3;
       const retryDelays = [Duration(seconds: 3), Duration(seconds: 5), Duration(seconds: 10)];
 
-      // Show connecting page immediately while verifying token
-      // (Render cold start can take 30-60s — don't show login page)
-      emit(AuthConnectingServer(attempt: 1, maxAttempts: maxRetries + 1));
-
-      for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      for (int attempt = 1; attempt <= maxRetries + 1; attempt++) {
+        // Show connecting status
+        debugPrint('AUTH: Emitting AuthConnectingServer(attempt: $attempt)');
+        emit(AuthConnectingServer(attempt: attempt, maxAttempts: maxRetries + 1));
+        
         try {
+          debugPrint('AUTH: Calling getMe()...');
           final result = await _authRepository.getMe()
-              .timeout(const Duration(seconds: 30));
+              .timeout(const Duration(seconds: 20));
+          debugPrint('AUTH: getMe() SUCCESS - user: ${result.user.id}');
           _emitAuthState(emit, result.user, result.company);
+          debugPrint('AUTH: Emitted auth state');
           return;
         } catch (e) {
+          debugPrint('AUTH: attempt $attempt failed: ${e.runtimeType} - $e');
+          
           // Only clear tokens on 401 (invalid/expired token)
           if (e is UnauthorizedException) {
             await _authRepository.clearTokens();
@@ -58,25 +63,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             return;
           }
 
-          // Retryable errors: timeout (API or Dart) and network
-          final isRetryable = e is TimeoutException ||
-              e is NetworkException ||
-              e.runtimeType.toString() == 'TimeoutException'; // dart:async TimeoutException
-
-          if (isRetryable && attempt < maxRetries) {
-            debugPrint('Auth check attempt ${attempt + 1} failed (${e.runtimeType}), retrying...');
-            emit(AuthConnectingServer(
-              attempt: attempt + 2,
-              maxAttempts: maxRetries + 1,
-            ));
-            await Future.delayed(retryDelays[attempt]);
-            continue;
+          // Last attempt failed → show failed screen
+          if (attempt > maxRetries) {
+            emit(AuthConnectingFailed());
+            return;
           }
 
-          // All retries exhausted or non-retryable error → show failed with retry button
-          debugPrint('Auth check failed: $e');
-          emit(AuthConnectingFailed());
-          return;
+          // Wait before next retry
+          await Future.delayed(retryDelays[attempt - 1]);
         }
       }
     } catch (_) {

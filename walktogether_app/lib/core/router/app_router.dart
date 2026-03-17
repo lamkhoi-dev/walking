@@ -68,41 +68,48 @@ class AppRouter {
       final loggedIn = authNotifier.isLoggedIn;
       final companyStatus = authNotifier.companyStatus;
       final isConnecting = authNotifier.isConnectingServer;
-      final loggingIn = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/';
+      final currentPath = state.matchedLocation;
+      final isAuthPage = currentPath == '/login' ||
+          currentPath == '/register' ||
+          currentPath == '/' ||
+          currentPath == '/connecting';
 
-      // Server cold start in progress — don't redirect anywhere
+      // Server cold start in progress — stay on connecting page
       if (isConnecting) {
-        if (state.matchedLocation == '/connecting') return null;
+        if (currentPath == '/connecting') return null;
         return '/connecting';
       }
 
-      // Not logged in → go to welcome
+      // Not logged in → go to welcome (if not already on auth pages)
       if (!loggedIn) {
-        return loggingIn ? null : '/';
+        if (currentPath == '/' || currentPath == '/login' || currentPath == '/register') {
+          return null;
+        }
+        return '/';
       }
 
-      // Logged in but company pending
+      // === LOGGED IN ===
+
+      // Company pending
       if (companyStatus == 'pending') {
-        if (state.matchedLocation == '/pending-approval') return null;
+        if (currentPath == '/pending-approval') return null;
         return '/pending-approval';
       }
 
-      // Logged in but company rejected
+      // Company rejected
       if (companyStatus == 'rejected') {
-        if (state.matchedLocation == '/rejected') return null;
+        if (currentPath == '/rejected') return null;
         return '/rejected';
       }
 
-      // Logged in but company suspended
+      // Company suspended
       if (companyStatus == 'suspended') {
-        if (state.matchedLocation == '/suspended') return null;
+        if (currentPath == '/suspended') return null;
         return '/suspended';
       }
 
-      // Logged in and on login page → go to home
-      if (loggingIn) {
+      // Logged in with approved company — redirect auth pages to home
+      if (isAuthPage) {
         return '/home';
       }
 
@@ -300,12 +307,28 @@ class _ServerConnectingPage extends StatelessWidget {
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final isFailed = state is AuthConnectingFailed;
-              final attempt = state is AuthConnectingServer ? state.attempt : 0;
+              final attempt = state is AuthConnectingServer ? state.attempt : 1;
               final maxAttempts = state is AuthConnectingServer ? state.maxAttempts : 4;
+              
+              // Debug info
+              final stateType = state.runtimeType.toString();
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // DEBUG: Show current state
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'DEBUG: $stateType',
+                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                    ),
+                  ),
                   if (!isFailed) ...[
                     const SizedBox(
                       width: 56,
