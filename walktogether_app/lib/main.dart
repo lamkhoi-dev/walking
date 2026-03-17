@@ -170,7 +170,7 @@ class _AppViewState extends State<_AppView> {
         String? companyStatus;
         bool isConnectingServer = false;
 
-        if (state is AuthConnectingServer) {
+        if (state is AuthConnectingServer || state is AuthConnectingFailed) {
           isConnectingServer = true;
         } else if (state is AuthAuthenticated) {
           isLoggedIn = true;

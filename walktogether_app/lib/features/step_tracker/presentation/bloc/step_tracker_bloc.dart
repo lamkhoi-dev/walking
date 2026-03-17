@@ -43,6 +43,9 @@ class _StepTrackerSyncStatusUpdated extends StepTrackerEvent {
   List<Object?> get props => [syncStatus];
 }
 
+/// Internal: data restored from server (triggers UI rebuild)
+class _StepTrackerDataRestored extends StepTrackerEvent {}
+
 /// Trigger a manual sync
 class StepTrackerSyncRequested extends StepTrackerEvent {}
 
@@ -156,6 +159,7 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     on<_StepTrackerSyncStatusUpdated>(_onSyncStatusUpdated);
     on<StepTrackerSyncRequested>(_onSyncRequested);
     on<StepTrackerGoalChanged>(_onGoalChanged);
+    on<_StepTrackerDataRestored>(_onDataRestored);
   }
 
   int get _goal => _counterService.dailyGoal;
@@ -258,9 +262,24 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
         if (todayRecord != null && _counterService.todaySteps == 0 && todayRecord.steps > 0) {
           debugPrint('Restored today steps from server: ${todayRecord.steps}');
         }
+
+        // Trigger UI rebuild via event (emit can't be used outside event handlers)
+        add(_StepTrackerDataRestored());
       }
     } catch (e) {
       debugPrint('Failed to restore step history from server: $e');
+    }
+  }
+
+  Future<void> _onDataRestored(
+    _StepTrackerDataRestored event,
+    Emitter<StepTrackerState> emit,
+  ) async {
+    if (state is StepTrackerRunning) {
+      emit(_buildRunningState(
+        steps: _counterService.todaySteps,
+        isTracking: _counterService.isTracking,
+      ));
     }
   }
 

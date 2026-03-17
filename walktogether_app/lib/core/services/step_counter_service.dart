@@ -96,8 +96,9 @@ class StepCounterService {
     // Check if date changed (midnight reset)
     _checkDateReset();
 
-    // Restore tracking state
-    _isTracking = _box?.get(_keyIsTracking, defaultValue: false) ?? false;
+    // Reset tracking state — actual tracking is restarted by the bloc
+    _isTracking = false;
+    await _box?.put(_keyIsTracking, false);
 
     // Emit current steps to listeners
     _stepController.add(todaySteps);
@@ -247,14 +248,6 @@ class StepCounterService {
     final history = goalHistory;
     history[date] = {'steps': steps, 'goal': goal, 'achieved': achieved};
 
-    // Keep only last 90 days
-    if (history.length > 90) {
-      final sortedKeys = history.keys.toList()..sort();
-      for (final key in sortedKeys.take(history.length - 90)) {
-        history.remove(key);
-      }
-    }
-
     _box?.put(_keyGoalHistory, history);
 
     // Update streak
@@ -302,12 +295,6 @@ class StepCounterService {
           'goal': goal,
           'achieved': yesterdaySteps >= goal,
         };
-        if (history.length > 90) {
-          final sortedKeys = history.keys.toList()..sort();
-          for (final key in sortedKeys.take(history.length - 90)) {
-            history.remove(key);
-          }
-        }
         _box?.put(_keyGoalHistory, history);
         _updateStreak(history);
       }

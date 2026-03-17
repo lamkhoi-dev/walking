@@ -53,6 +53,9 @@ class AuthCompanySuspended extends AuthState {
 /// Not authenticated
 class AuthUnauthenticated extends AuthState {}
 
+/// Server connection failed after retries (show retry button)
+class AuthConnectingFailed extends AuthState {}
+
 /// Error during auth operation
 class AuthError extends AuthState {
   final String message;

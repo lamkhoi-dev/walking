@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async' show Timer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -38,11 +38,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       // Verify token by calling /auth/me with retry for cold start
       const maxRetries = 3;
-      const retryDelays = [Duration(seconds: 5), Duration(seconds: 10), Duration(seconds: 20)];
+      const retryDelays = [Duration(seconds: 3), Duration(seconds: 5), Duration(seconds: 10)];
+
+      // Show connecting page immediately while verifying token
+      // (Render cold start can take 30-60s — don't show login page)
+      emit(AuthConnectingServer(attempt: 1, maxAttempts: maxRetries + 1));
 
       for (int attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          final result = await _authRepository.getMe();
+          final result = await _authRepository.getMe()
+              .timeout(const Duration(seconds: 30));
           _emitAuthState(emit, result.user, result.company);
           return;
         } catch (e) {
@@ -53,21 +58,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             return;
           }
 
-          // For timeout/network errors, retry (Render cold start can take 30-60s)
-          if ((e is TimeoutException || e is NetworkException) &&
-              attempt < maxRetries) {
+          // Retryable errors: timeout (API or Dart) and network
+          final isRetryable = e is TimeoutException ||
+              e is NetworkException ||
+              e.runtimeType.toString() == 'TimeoutException'; // dart:async TimeoutException
+
+          if (isRetryable && attempt < maxRetries) {
             debugPrint('Auth check attempt ${attempt + 1} failed (${e.runtimeType}), retrying...');
             emit(AuthConnectingServer(
-              attempt: attempt + 1,
+              attempt: attempt + 2,
               maxAttempts: maxRetries + 1,
             ));
             await Future.delayed(retryDelays[attempt]);
             continue;
           }
 
-          // All retries exhausted or unknown error — still don't clear tokens
-          debugPrint('Auth check failed after retries: $e');
-          emit(AuthUnauthenticated());
+          // All retries exhausted or non-retryable error → show failed with retry button
+          debugPrint('Auth check failed: $e');
+          emit(AuthConnectingFailed());
           return;
         }
       }

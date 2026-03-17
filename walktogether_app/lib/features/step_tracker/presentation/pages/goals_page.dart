@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/step_counter_service.dart';
 import '../bloc/step_tracker_bloc.dart';
+import '../widgets/step_stats_dialog.dart';
 
 /// Beautiful goals page — daily goal, weekly chart, milestones, streak
 class GoalsPage extends StatefulWidget {
@@ -57,10 +58,18 @@ class _GoalsPageState extends State<GoalsPage> {
               const SizedBox(height: 20),
 
               // === WEEKLY PROGRESS ===
-              _WeeklyProgressCard(
-                goalHistory: _stepService.goalHistory,
-                todaySteps: todaySteps,
-                dailyGoal: goalSteps,
+              GestureDetector(
+                onTap: () => StepStatsDialog.show(
+                  context,
+                  goalHistory: _stepService.goalHistory,
+                  todaySteps: todaySteps,
+                  dailyGoal: goalSteps,
+                ),
+                child: _WeeklyProgressCard(
+                  goalHistory: _stepService.goalHistory,
+                  todaySteps: todaySteps,
+                  dailyGoal: goalSteps,
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -637,6 +646,8 @@ class _WeeklyProgressCard extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(width: 6),
+              Icon(Icons.open_in_new_rounded, size: 16, color: AppColors.textSecondary),
             ],
           ),
           const SizedBox(height: 20),
