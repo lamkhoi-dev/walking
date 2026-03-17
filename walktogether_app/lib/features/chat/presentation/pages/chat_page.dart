@@ -27,6 +27,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final _scrollController = ScrollController();
   bool _isLoadingMore = false;
+  bool _isInitialLoad = true;
 
   String get _currentUserId {
     final authState = context.read<AuthBloc>().state;
@@ -96,10 +97,13 @@ class _ChatPageState extends State<ChatPage> {
       body: BlocConsumer<ChatBloc, ChatState>(
         listener: (context, state) {
           if (state is ChatLoaded) {
-            // Scroll to bottom on initial load and new messages
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _scrollToBottom(animate: false);
-            });
+            // Only jump to bottom on initial load
+            if (_isInitialLoad) {
+              _isInitialLoad = false;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _scrollToBottom(animate: false);
+              });
+            }
           }
         },
         builder: (context, state) {
@@ -140,9 +144,9 @@ class _ChatPageState extends State<ChatPage> {
                         senderName: _currentUserName,
                         senderAvatar: _currentUserAvatar,
                       ));
-                  // Scroll down after sending
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    _scrollToBottom();
+                  // Scroll down after sending with smooth animation
+                  Future.delayed(const Duration(milliseconds: 150), () {
+                    _scrollToBottom(animate: true);
                   });
                 },
                 onTypingStart: () {

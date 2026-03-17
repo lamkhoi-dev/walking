@@ -240,6 +240,9 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
         steps: _counterService.todaySteps,
         isTracking: true,
       ));
+
+      // Force emit current steps to trigger UI update (in case switchUser already emitted before subscribe)
+      add(_StepTrackerStepsUpdated(_counterService.todaySteps));
     } catch (e) {
       emit(StepTrackerError(e.toString()));
     }

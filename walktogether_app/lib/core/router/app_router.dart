@@ -309,26 +309,10 @@ class _ServerConnectingPage extends StatelessWidget {
               final isFailed = state is AuthConnectingFailed;
               final attempt = state is AuthConnectingServer ? state.attempt : 1;
               final maxAttempts = state is AuthConnectingServer ? state.maxAttempts : 4;
-              
-              // Debug info
-              final stateType = state.runtimeType.toString();
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // DEBUG: Show current state
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'DEBUG: $stateType',
-                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                    ),
-                  ),
                   if (!isFailed) ...[
                     const SizedBox(
                       width: 56,

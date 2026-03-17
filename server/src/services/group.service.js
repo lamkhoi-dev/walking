@@ -195,10 +195,18 @@ class GroupService {
       throw err;
     }
 
-    // Validate all members are active users (no company restriction)
+    // Verify group belongs to admin's company
+    if (companyId && group.companyId && group.companyId.toString() !== companyId.toString()) {
+      const err = new Error('Bạn không có quyền quản lý nhóm này');
+      err.statusCode = 403;
+      throw err;
+    }
+
+    // Validate all members are active users from the same company
     const validMembers = await User.find({
       _id: { $in: memberIds },
       isActive: true,
+      companyId: group.companyId, // Only allow members from same company
     }).select('_id fullName');
 
     if (validMembers.length !== memberIds.length) {
