@@ -22,6 +22,7 @@ class StepCounterService {
   static const String _keyDailyGoal = 'daily_goal';
   static const String _keyGoalHistory = 'goal_history'; // date → {steps, goal, achieved}
   static const String _keyStreak = 'current_streak';
+  static const String _keyServerOffset = 'server_offset'; // Steps from server at last sync
 
   late final Pedometer _pedometer = Pedometer();
   Box? _box;
@@ -41,6 +42,7 @@ class StepCounterService {
 
   bool get isTracking => _isTracking;
   int get todaySteps => _box?.get(_keyTodaySteps, defaultValue: 0) ?? 0;
+  int get serverOffset => (_box?.get(_keyServerOffset, defaultValue: 0) ?? 0) as int;
   String? get currentUserId => _currentUserId;
 
   /// Get the user's daily step goal (default 10000)
@@ -82,8 +84,14 @@ class StepCounterService {
 
   /// Switch to a user-specific Hive box. Call on login.
   Future<void> switchUser(String userId) async {
-    // If same user, no-op
-    if (_currentUserId == userId && _box != null && _box!.isOpen) return;
+    // If same user and box already open, just ensure tracking state is reset
+    if (_currentUserId == userId && _box != null && _box!.isOpen) {
+      // Still need to reset in-memory tracking state because subscriptions
+      // may have been lost (app restart, hot reload, etc.)
+      _isTracking = false;
+      debugPrint('Step counter: same user, reset tracking state');
+      return;
+    }
 
     // Stop tracking & close previous box
     await stopTracking();
@@ -147,6 +155,10 @@ class StepCounterService {
     _isTracking = true;
     await _box?.put(_keyIsTracking, true);
 
+    // Cancel any existing subscriptions before creating new ones
+    await _stepSubscription?.cancel();
+    await _statusSubscription?.cancel();
+
     // Listen to step count events
     _stepSubscription = _pedometer.stepCountStream().listen(
       _onStepCount,
@@ -181,29 +193,24 @@ class StepCounterService {
   }
 
   /// Set today's steps from server data (called on app start to prevent data loss)
-  /// This ensures local steps are at least as high as server steps
+  /// This stores server steps as an offset, so local tracking adds to it.
   Future<void> syncFromServer(int serverSteps) async {
     if (_box == null || !_box!.isOpen) return;
 
-    final localSteps = todaySteps;
+    final currentTotal = todaySteps;
     
-    // If server has more steps, use server value and adjust baseline
-    if (serverSteps > localSteps) {
-      final lastSensor = (_box?.get(_keyLastSensorSteps, defaultValue: 0) ?? 0) as int;
-      
-      // Adjust baseline so that: serverSteps = lastSensor - newBaseline
-      // newBaseline = lastSensor - serverSteps
-      if (lastSensor > 0) {
-        final newBaseline = lastSensor - serverSteps;
-        await _box?.put(_keyBaseline, newBaseline);
-      }
-      
-      await _box?.put(_keyTodaySteps, serverSteps);
-      _stepController.add(serverSteps);
-      debugPrint('Synced from server: local=$localSteps → server=$serverSteps');
-    } else {
-      debugPrint('Local steps ($localSteps) >= server ($serverSteps), keeping local');
-    }
+    // Store server steps as offset - local tracking will ADD to this
+    await _box?.put(_keyServerOffset, serverSteps);
+    
+    // Reset local tracking counters - next sensor reading will set new baseline
+    await _box?.put(_keyBaseline, 0);
+    await _box?.put(_keyLastSensorSteps, 0);
+    
+    // Set todaySteps = serverOffset (local steps will be added on sensor readings)
+    await _box?.put(_keyTodaySteps, serverSteps);
+    
+    _stepController.add(serverSteps);
+    debugPrint('Synced from server: previous=$currentTotal → serverOffset=$serverSteps (local counters reset)');
   }
 
   /// Handle incoming step count from sensor
@@ -215,36 +222,40 @@ class StepCounterService {
 
     final baseline = (_box?.get(_keyBaseline, defaultValue: 0) ?? 0) as int;
     final lastSensor = (_box?.get(_keyLastSensorSteps, defaultValue: 0) ?? 0) as int;
+    final offset = serverOffset; // Steps from server at last sync
 
     // Detect device reboot: sensor steps < last known sensor steps
     if (sensorSteps < lastSensor && lastSensor > 0) {
-      // Device rebooted — set new baseline
+      // Device rebooted — set new baseline, preserve server offset
       debugPrint('Device reboot detected. Resetting baseline.');
-      final currentToday = todaySteps;
-      _box?.put(_keyBaseline, sensorSteps - currentToday);
+      final localSteps = todaySteps - offset; // Local steps only (exclude server offset)
+      _box?.put(_keyBaseline, sensorSteps - localSteps);
       _box?.put(_keyLastSensorSteps, sensorSteps);
       return;
     }
 
-    // First reading — set baseline
+    // First reading after sync — set baseline (local steps start from 0)
     if (baseline == 0 && lastSensor == 0) {
       _box?.put(_keyBaseline, sensorSteps);
       _box?.put(_keyLastSensorSteps, sensorSteps);
+      debugPrint('First sensor reading: baseline=$sensorSteps, serverOffset=$offset');
+      // Don't change todaySteps here - keep serverOffset value
       return;
     }
 
-    // Calculate today's steps
-    final steps = sensorSteps - baseline;
-    final clampedSteps = steps < 0 ? 0 : steps;
+    // Calculate today's steps = serverOffset + localSteps
+    final localSteps = sensorSteps - baseline;
+    final clampedLocalSteps = localSteps < 0 ? 0 : localSteps;
+    final totalSteps = offset + clampedLocalSteps;
 
-    _box?.put(_keyTodaySteps, clampedSteps);
+    _box?.put(_keyTodaySteps, totalSteps);
     _box?.put(_keyLastSensorSteps, sensorSteps);
 
     // Update hourly breakdown
-    _updateHourlySteps(clampedSteps);
+    _updateHourlySteps(totalSteps);
 
     // Emit to listeners
-    _stepController.add(clampedSteps);
+    _stepController.add(totalSteps);
   }
 
   void _onStepCountError(dynamic error) {
@@ -325,10 +336,11 @@ class StepCounterService {
         _updateStreak(history);
       }
 
-      // Save last sensor reading as new baseline
+      // Reset all counters for new day
       final lastSensor = _box?.get(_keyLastSensorSteps, defaultValue: 0) ?? 0;
       _box?.put(_keyBaseline, lastSensor);
       _box?.put(_keyTodaySteps, 0);
+      _box?.put(_keyServerOffset, 0); // Reset server offset for new day
       _box?.put(_keyHourlySteps, <String, int>{});
       _box?.put(_keyTrackingDate, today);
     }

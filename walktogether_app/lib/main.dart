@@ -187,9 +187,9 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
         } else if (state is AuthAuthenticated) {
           isLoggedIn = true;
           companyStatus = 'approved';
-          // Switch step counter to this user's box
+          // Switch step counter to this user's box (async, bloc will wait)
           StepCounterService().switchUser(state.user.id);
-          // Auto-start step tracking
+          // Auto-start step tracking (bloc handles waiting for switchUser)
           if (context.mounted) {
             context.read<StepTrackerBloc>().add(StepTrackerStartRequested());
           }
@@ -205,6 +205,10 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
           isLoggedIn = true;
           companyStatus = 'suspended';
         } else if (state is AuthUnauthenticated) {
+          // Reset step tracker bloc to initial state
+          if (context.mounted) {
+            context.read<StepTrackerBloc>().add(StepTrackerResetRequested());
+          }
           // Detach step data (preserves per-user data), stop sync, disconnect socket
           StepCounterService().detachUser();
           StepSyncService().clearQueue();

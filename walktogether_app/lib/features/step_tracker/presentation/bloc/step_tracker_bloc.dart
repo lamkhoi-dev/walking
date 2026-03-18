@@ -19,6 +19,9 @@ class StepTrackerStartRequested extends StepTrackerEvent {}
 /// Stop tracking steps
 class StepTrackerStopRequested extends StepTrackerEvent {}
 
+/// Reset tracker state (on logout)
+class StepTrackerResetRequested extends StepTrackerEvent {}
+
 /// Internal: steps updated from sensor
 class _StepTrackerStepsUpdated extends StepTrackerEvent {
   final int steps;
@@ -157,6 +160,7 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
         super(StepTrackerInitial()) {
     on<StepTrackerStartRequested>(_onStart);
     on<StepTrackerStopRequested>(_onStop);
+    on<StepTrackerResetRequested>(_onReset);
     on<_StepTrackerStepsUpdated>(_onStepsUpdated);
     on<_StepTrackerStatusUpdated>(_onStatusUpdated);
     on<_StepTrackerSyncStatusUpdated>(_onSyncStatusUpdated);
@@ -208,9 +212,13 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
 
       // Wait for user box to be ready (switchUser called from auth listener)
       int retries = 0;
-      while (_counterService.currentUserId == null && retries < 20) {
+      while (_counterService.currentUserId == null && retries < 30) {
         await Future.delayed(const Duration(milliseconds: 200));
         retries++;
+      }
+
+      if (_counterService.currentUserId == null) {
+        debugPrint('Warning: switchUser not completed after ${retries * 200}ms, proceeding anyway');
       }
 
       // CRITICAL: Fetch today's steps from server BEFORE starting tracking
@@ -318,6 +326,28 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       final current = state as StepTrackerRunning;
       emit(current.copyWith(isTracking: false));
     }
+  }
+
+  /// Reset tracker to initial state (on logout)
+  Future<void> _onReset(
+    StepTrackerResetRequested event,
+    Emitter<StepTrackerState> emit,
+  ) async {
+    // Cancel all subscriptions
+    await _stepSub?.cancel();
+    await _statusSub?.cancel();
+    await _syncSub?.cancel();
+    _stepSub = null;
+    _statusSub = null;
+    _syncSub = null;
+
+    // Stop tracking and sync
+    await _counterService.stopTracking();
+    _syncService.stopPeriodicSync();
+
+    // Reset to initial state so next start will work
+    emit(StepTrackerInitial());
+    debugPrint('StepTrackerBloc reset to initial state');
   }
 
   void _onStepsUpdated(
