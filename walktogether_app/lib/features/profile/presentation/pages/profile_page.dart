@@ -37,18 +37,24 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   }
 
   Future<void> _loadStats() async {
+    debugPrint('ProfilePage: _loadStats called');
+    setState(() => _isLoadingStats = true);
+    
     try {
       final dio = context.read<DioClient>();
       final repo = ProfileRepository(dio: dio);
+      debugPrint('ProfilePage: calling repo.getStats()');
       final stats = await repo.getStats();
+      debugPrint('ProfilePage: got stats - today steps: ${stats.today.steps}, allTime: ${stats.allTime.totalSteps}');
       if (mounted) {
         setState(() {
           _stats = stats;
           _isLoadingStats = false;
         });
       }
-    } catch (e) {
-      debugPrint('Error loading stats: $e');
+    } catch (e, stackTrace) {
+      debugPrint('ProfilePage: Error loading stats: $e');
+      debugPrint('ProfilePage: Stack trace: $stackTrace');
       if (mounted) {
         setState(() {
           _isLoadingStats = false;
@@ -270,6 +276,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   }
 
   Widget _buildQuickStats() {
+    debugPrint('ProfilePage: _buildQuickStats - isLoading: $_isLoadingStats, stats: $_stats');
+    
     if (_isLoadingStats) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -279,9 +287,15 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
     final stats = _stats;
     if (stats == null) {
-      return const SizedBox.shrink();
+      debugPrint('ProfilePage: stats is null, returning empty');
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: Text('Đang tải thống kê...')),
+      );
     }
 
+    debugPrint('ProfilePage: showing stats - allTime.totalSteps: ${stats.allTime.totalSteps}');
+    
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(

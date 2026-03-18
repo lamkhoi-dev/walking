@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
 
@@ -138,6 +139,9 @@ class ProfileRepository {
   /// Get personal statistics
   Future<PersonalStats> getStats() async {
     final response = await _dio.get(ApiEndpoints.myStats);
-    return PersonalStats.fromJson(response.data['data'] as Map<String, dynamic>);
+    debugPrint('ProfileRepository: raw response: ${response.data}');
+    final data = response.data['data'] as Map<String, dynamic>;
+    debugPrint('ProfileRepository: data to parse: $data');
+    return PersonalStats.fromJson(data);
   }
 }
