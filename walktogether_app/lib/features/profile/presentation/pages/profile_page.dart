@@ -48,8 +48,19 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         });
       }
     } catch (e) {
+      debugPrint('Error loading stats: $e');
       if (mounted) {
-        setState(() => _isLoadingStats = false);
+        setState(() {
+          _isLoadingStats = false;
+          // Create empty stats as fallback
+          _stats = PersonalStats(
+            today: TodayStats(steps: 0, distance: 0, calories: 0),
+            week: PeriodStats(totalSteps: 0, totalDistance: 0, totalCalories: 0, avgStepsPerDay: 0, daysTracked: 0),
+            month: PeriodStats(totalSteps: 0, totalDistance: 0, totalCalories: 0, avgStepsPerDay: 0, daysTracked: 0),
+            allTime: AllTimeStats(totalSteps: 0, totalDistance: 0, totalCalories: 0, daysTracked: 0, bestDay: null),
+            streak: 0,
+          );
+        });
       }
     }
   }
@@ -69,46 +80,39 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          body: RefreshIndicator(
-            onRefresh: _loadStats,
-            child: CustomScrollView(
-              slivers: [
-                // Gradient Header with Profile
-                _buildHeader(user),
-                
-                // Quick Stats Cards
-                SliverToBoxAdapter(
-                  child: _buildQuickStats(),
-                ),
+          body: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              // Gradient Header with Profile
+              _buildHeader(user, innerBoxIsScrolled),
+              
+              // Quick Stats Cards
+              SliverToBoxAdapter(
+                child: _buildQuickStats(),
+              ),
 
-                // Tab Bar
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SliverTabBarDelegate(
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: AppColors.textSecondary,
-                      indicatorColor: AppColors.primary,
-                      indicatorWeight: 3,
-                      tabs: const [
-                        Tab(text: 'Thông tin'),
-                        Tab(text: 'Thống kê'),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Tab Content
-                SliverFillRemaining(
-                  child: TabBarView(
+              // Tab Bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverTabBarDelegate(
+                  TabBar(
                     controller: _tabController,
-                    children: [
-                      _buildInfoTab(user, company),
-                      _buildStatsTab(),
+                    labelColor: AppColors.primary,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    indicatorColor: AppColors.primary,
+                    indicatorWeight: 3,
+                    tabs: const [
+                      Tab(text: 'Thông tin'),
+                      Tab(text: 'Thống kê'),
                     ],
                   ),
                 ),
+              ),
+            ],
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildInfoTab(user, company),
+                _buildStatsTab(),
               ],
             ),
           ),
@@ -117,10 +121,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildHeader(dynamic user) {
+  Widget _buildHeader(dynamic user, bool innerBoxIsScrolled) {
     return SliverAppBar(
       expandedHeight: 280,
       pinned: true,
+      forceElevated: innerBoxIsScrolled,
       automaticallyImplyLeading: false,
       backgroundColor: AppColors.primary,
       surfaceTintColor: Colors.transparent,

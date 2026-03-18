@@ -203,7 +203,7 @@ class AuthService {
     let company = null;
     if (user.role === 'company_admin' || user.role === 'member') {
       company = await Company.findById(user.companyId).select(
-        '_id name status code'
+        '_id name status code totalMembers'
       );
     }
 
@@ -273,7 +273,7 @@ class AuthService {
     let company = null;
     if (user.companyId) {
       company = await Company.findById(user.companyId).select(
-        '_id name status code logo'
+        '_id name status code logo totalMembers'
       );
     }
 
