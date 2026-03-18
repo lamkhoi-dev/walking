@@ -19,11 +19,28 @@ class PersonalStats {
   });
 
   factory PersonalStats.fromJson(Map<String, dynamic> json) {
+    final month = PeriodStats.fromJson(json['month'] ?? {});
+    
+    // Fallback: if allTime is empty/missing, use month data
+    AllTimeStats allTime;
+    if (json['allTime'] != null && (json['allTime'] as Map).isNotEmpty) {
+      allTime = AllTimeStats.fromJson(json['allTime']);
+    } else {
+      // Use month stats as fallback for allTime
+      allTime = AllTimeStats(
+        totalSteps: month.totalSteps,
+        totalDistance: month.totalDistance,
+        totalCalories: month.totalCalories,
+        daysTracked: month.daysTracked,
+        bestDay: null,
+      );
+    }
+    
     return PersonalStats(
       today: TodayStats.fromJson(json['today'] ?? {}),
       week: PeriodStats.fromJson(json['week'] ?? {}),
-      month: PeriodStats.fromJson(json['month'] ?? {}),
-      allTime: AllTimeStats.fromJson(json['allTime'] ?? {}),
+      month: month,
+      allTime: allTime,
       streak: (json['streak'] as num?)?.toInt() ?? 0,
     );
   }

@@ -24,16 +24,16 @@
 ## 1. Tổng quan 3 Phases
 
 ```
-Phase 1 (LOCKED)              Phase 2                    Phase 3
+Phase 1 (LOCKED ✅)           Phase 2 (~66%)              Phase 3
 ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
-│ ✅ Auth System    │    │ 🎯 Daily Goals    │    │ 📱 Social Feed    │
-│ ✅ Company Mgmt   │    │ 🏆 Global Leader  │    │ 📝 Posts (text)   │
+│ ✅ Auth System    │    │ ✅ Daily Goals(UI)│    │ 📱 Social Feed    │
+│ ✅ Company Mgmt   │    │ ❌ Global Leader  │    │ 📝 Posts (text)   │
 │ ✅ Groups         │    │    board           │    │ 🖼️ Posts (image)  │
-│ ✅ Chat (Group+DM)│    │ 👤 Full Profile   │    │ 🎥 Posts (video)  │
-│ ✅ Step Counter   │    │ 📊 Statistics     │    │ ❤️ Likes           │
-│ ✅ Contests       │    │ 📈 Charts/Graphs  │    │ 💬 Comments       │
-│ ✅ Contest Leader  │    │ 🔔 Push Notif    │    │ 🔄 Share          │
-│    board          │    │ ⚙️ Settings       │    │ 🔍 Discovery      │
+│ ✅ Chat (Group+DM)│    │ ❌ Full Profile   │    │ 🎥 Posts (video)  │
+│ ✅ Step Counter   │    │ ✅ Statistics     │    │ ❤️ Likes           │
+│ ✅ Contests       │    │ ✅ Charts/Graphs  │    │ 💬 Comments       │
+│ ✅ Contest Leader  │    │ ❌ Push Notif    │    │ 🔄 Share          │
+│    board          │    │ ✅ Settings       │    │ 🔍 Discovery      │
 │ ✅ Web Admin      │    │                   │    │                   │
 └──────────────────┘    └──────────────────┘    └──────────────────┘
        │                        │                        │
@@ -172,19 +172,22 @@ Phase 1 Code Changes khi làm Phase 3:
 
 ## 5. Phase 2 — Personal & Analytics
 
-> **Status**: Chưa lock in, có thể thay đổi  
-> **Depends on**: Phase 1 hoàn thành
+> **Status**: 🟡 **~66% Done** (5/9 features completed, updated 2026-03-19)  
+> **Depends on**: Phase 1 hoàn thành ✅
 
 ### 5.1 Tổng quan tính năng
 
-| # | Tính năng | Mô tả | Complexity |
-|---|---|---|---|
-| 1 | **Daily Goals** | Đặt mục tiêu bước/ngày, progress tracking | Medium |
-| 2 | **Global Leaderboard** | BXH toàn công ty (tuần/tháng), BXH nhóm | Medium |
-| 3 | **Full Profile** | Edit profile, avatar, thông tin cá nhân | Low |
-| 4 | **Statistics Dashboard** | Charts bước/ngày, tuần, tháng | Medium |
-| 5 | **Push Notifications** | Thông báo cuộc thi, chat, goals | Medium |
-| 6 | **Settings** | Đổi mật khẩu, notification settings, units | Low |
+| # | Tính năng | Mô tả | Complexity | Status |
+|---|---|---|---|---|
+| 1 | **Daily Goals** | Đặt mục tiêu bước/ngày, progress tracking | Medium | ⚠️ UI Done (GoalsPage 1016L), backend sync goal via Settings API |
+| 2 | **Step Statistics** | Charts bước/ngày, tuần, tháng + Stats popup | Medium | ✅ Done (StepStatsDialog 737L + GET /steps/stats API) |
+| 3 | **Profile Stats Tab** | Thống kê cá nhân trên Profile | Medium | ✅ Done (ProfilePage stats tab + ProfileRepository) |
+| 4 | **Profile Edit** | Edit fullName, avatar | Low | ✅ Done (Edit dialog + PUT /auth/me) |
+| 5 | **Step Progress Ring** | Animated ring trên Activity page | Low | ✅ Done (StepProgressRing widget + hourly chart) |
+| 6 | **Global Leaderboard** | BXH toàn công ty (tuần/tháng), BXH nhóm | Medium | ❌ Not Started |
+| 7 | **Full Profile Fields** | height, weight, dob, gender, bio | Low | ❌ Not Started (User model chưa có fields) |
+| 8 | **Push Notifications** | Thông báo cuộc thi, chat, goals | Medium | ❌ Not Started (deviceToken exists nhưng chưa FCM) |
+| 9 | **Settings** | Đổi mật khẩu, notification settings, units | Low | ✅ Done (UserSettings model + API + Flutter UI) |
 
 ### 5.2 Sprint Plan Phase 2
 

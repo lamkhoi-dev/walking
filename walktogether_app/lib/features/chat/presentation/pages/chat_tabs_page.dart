@@ -9,6 +9,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../group/presentation/bloc/group_list_bloc.dart';
 import '../../../group/presentation/widgets/group_card.dart';
+import '../../data/models/conversation_model.dart';
 import '../bloc/conversation_list_bloc.dart';
 import '../widgets/conversation_tile.dart';
 
@@ -133,9 +134,7 @@ class _DirectMessagesTab extends StatelessWidget {
 
         final allConversations = state is ConversationListLoaded
             ? state.conversations
-            : state is ConversationListDirectCreated
-                ? state.conversations
-                : <dynamic>[];
+            : <ConversationModel>[];
 
         // Filter to show only direct conversations
         final conversations = allConversations

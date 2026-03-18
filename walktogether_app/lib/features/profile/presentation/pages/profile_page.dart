@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -22,12 +23,23 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   late TabController _tabController;
   PersonalStats? _stats;
   bool _isLoadingStats = true;
+  bool _statsLoaded = false;
+  late DioClient _dioClient;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadStats();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_statsLoaded) {
+      _statsLoaded = true;
+      _dioClient = context.read<DioClient>();
+      _loadStats();
+    }
   }
 
   @override
@@ -41,8 +53,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     setState(() => _isLoadingStats = true);
     
     try {
-      final dio = context.read<DioClient>();
-      final repo = ProfileRepository(dio: dio);
+      final repo = ProfileRepository(dio: _dioClient);
       debugPrint('ProfilePage: calling repo.getStats()');
       final stats = await repo.getStats();
       debugPrint('ProfilePage: got stats - today steps: ${stats.today.steps}, allTime: ${stats.allTime.totalSteps}');
@@ -730,18 +741,22 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       child: Column(
         children: [
           _buildActionItem(
+            icon: Icons.settings_outlined,
+            label: 'Cài đặt',
+            onTap: () => context.push('/settings'),
+          ),
+          Divider(height: 1, indent: 56, color: Colors.grey.shade100),
+          _buildActionItem(
             icon: Icons.notifications_outlined,
             label: 'Thông báo',
-            onTap: () {
-              // TODO: Implement notifications settings
-            },
+            onTap: () => context.push('/settings'),
           ),
           Divider(height: 1, indent: 56, color: Colors.grey.shade100),
           _buildActionItem(
             icon: Icons.help_outline,
             label: 'Trợ giúp & Hỗ trợ',
             onTap: () {
-              // TODO: Implement help
+              // TODO: Implement help page
             },
           ),
           Divider(height: 1, indent: 56, color: Colors.grey.shade100),

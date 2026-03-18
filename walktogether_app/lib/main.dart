@@ -70,6 +70,7 @@ void main() async {
   runApp(
     WalkTogetherApp(
       storageService: storageService,
+      dioClient: dioClient,
       authRepository: authRepository,
       groupRepository: groupRepository,
       chatRepository: chatRepository,
@@ -83,6 +84,7 @@ void main() async {
 
 class WalkTogetherApp extends StatelessWidget {
   final StorageService storageService;
+  final DioClient dioClient;
   final AuthRepository authRepository;
   final GroupRepository groupRepository;
   final ChatRepository chatRepository;
@@ -94,6 +96,7 @@ class WalkTogetherApp extends StatelessWidget {
   const WalkTogetherApp({
     super.key,
     required this.storageService,
+    required this.dioClient,
     required this.authRepository,
     required this.groupRepository,
     required this.chatRepository,
@@ -107,6 +110,7 @@ class WalkTogetherApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<DioClient>.value(value: dioClient),
         RepositoryProvider<GroupRepository>.value(value: groupRepository),
         RepositoryProvider<ChatRepository>.value(value: chatRepository),
         RepositoryProvider<ContestRepository>.value(value: contestRepository),

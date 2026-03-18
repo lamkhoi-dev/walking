@@ -50,4 +50,8 @@ class ApiEndpoints {
   static const String stepToday = '/steps/today';
   static const String stepHistory = '/steps/history';
   static const String stepStats = '/steps/stats';
+
+  // === SETTINGS ===
+  static const String settings = '/settings';
+  static const String changePassword = '/auth/change-password';
 }

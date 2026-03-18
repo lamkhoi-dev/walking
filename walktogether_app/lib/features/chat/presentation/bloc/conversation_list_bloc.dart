@@ -69,10 +69,9 @@ class ConversationListError extends ConversationListState {
 /// After creating a direct conversation — navigate to it
 class ConversationListDirectCreated extends ConversationListState {
   final ConversationModel conversation;
-  final List<ConversationModel> conversations;
-  const ConversationListDirectCreated(this.conversation, this.conversations);
+  const ConversationListDirectCreated(this.conversation);
   @override
-  List<Object?> get props => [conversation, conversations];
+  List<Object?> get props => [conversation];
 }
 
 // ===== BLOC =====
@@ -162,8 +161,7 @@ class ConversationListBloc
     try {
       final conversation =
           await _repository.getOrCreateDirectConversation(event.userId);
-      final conversations = await _repository.getConversations();
-      emit(ConversationListDirectCreated(conversation, conversations));
+      emit(ConversationListDirectCreated(conversation));
     } catch (e) {
       emit(ConversationListError(e.toString()));
     }

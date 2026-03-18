@@ -33,6 +33,11 @@ import '../../features/contest/presentation/pages/leaderboard_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/step_tracker/presentation/pages/activity_page.dart';
 import '../../features/step_tracker/presentation/pages/goals_page.dart';
+import '../../features/settings/data/repositories/settings_repository.dart';
+import '../../features/settings/presentation/bloc/settings_bloc.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/settings/presentation/pages/change_password_page.dart';
+import '../../core/network/dio_client.dart';
 
 /// Listenable that bridges AuthBloc state changes to GoRouter refresh
 class AuthChangeNotifier extends ChangeNotifier {
@@ -292,6 +297,36 @@ class AppRouter {
           final contestId = state.pathParameters['id']!;
           final name = state.uri.queryParameters['name'] ?? 'Bảng xếp hạng';
           return LeaderboardPage(contestId: contestId, contestName: name);
+        },
+      ),
+
+      // ===== SETTINGS ROUTES (outside ShellRoute → no bottom nav) =====
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => SettingsCubit(
+              repository: SettingsRepository(
+                dio: context.read<DioClient>(),
+              ),
+            ),
+            child: const SettingsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/settings/change-password',
+        name: 'change-password',
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => SettingsCubit(
+              repository: SettingsRepository(
+                dio: context.read<DioClient>(),
+              ),
+            ),
+            child: const ChangePasswordPage(),
+          );
         },
       ),
     ],

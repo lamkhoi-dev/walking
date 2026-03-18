@@ -77,10 +77,6 @@ class HomeShellPage extends StatelessWidget {
                       for (final c in chatState.conversations) {
                         unread += c.unreadCount;
                       }
-                    } else if (chatState is ConversationListDirectCreated) {
-                      for (final c in chatState.conversations) {
-                        unread += c.unreadCount;
-                      }
                     }
                     return _NavItem(
                       icon: Icons.chat_bubble_outline,

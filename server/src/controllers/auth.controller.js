@@ -190,6 +190,48 @@ const getMyStats = async (req, res, next) => {
   }
 };
 
+/**
+ * Change password
+ * PUT /api/v1/auth/change-password
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    if (!currentPassword || !newPassword) {
+      return error(res, 400, 'Vui lòng nhập mật khẩu hiện tại và mật khẩu mới');
+    }
+
+    if (newPassword.length < 6) {
+      return error(res, 400, 'Mật khẩu mới phải có ít nhất 6 ký tự');
+    }
+
+    // Fetch user with password field
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return error(res, 404, 'Không tìm thấy người dùng');
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return error(res, 401, 'Mật khẩu hiện tại không đúng');
+    }
+
+    // Update password (pre-save hook will hash it)
+    user.password = newPassword;
+    await user.save();
+
+    return success(res, 200, 'Đổi mật khẩu thành công');
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   registerCompany,
@@ -199,4 +241,5 @@ module.exports = {
   getMe,
   updateMe,
   getMyStats,
+  changePassword,
 };
