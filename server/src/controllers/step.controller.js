@@ -1,4 +1,6 @@
 const stepService = require('../services/step.service');
+const leaderboardService = require('../services/leaderboard.service');
+const logger = require('../utils/logger');
 const { success, error } = require('../utils/response');
 
 /**
@@ -7,6 +9,7 @@ const { success, error } = require('../utils/response');
 const syncSteps = async (req, res, next) => {
   try {
     const { date, steps, hourlySteps } = req.body;
+    const userId = req.user._id;
 
     if (!date) {
       return error(res, 400, 'Ngày là bắt buộc');
@@ -17,10 +20,29 @@ const syncSteps = async (req, res, next) => {
     }
 
     const record = await stepService.syncSteps(
-      req.user._id,
+      userId,
       req.user.companyId,
       { date, steps, hourlySteps }
     );
+
+    // Update contest leaderboards if user is in active contests
+    try {
+      const activeContests = await leaderboardService.getActiveContestsForUser(userId);
+      for (const contest of activeContests) {
+        await leaderboardService.updateLeaderboard(
+          userId,
+          contest._id,
+          date,
+          steps
+        );
+      }
+      if (activeContests.length > 0) {
+        logger.debug(`Leaderboard updated via REST: user=${userId}, contests=${activeContests.length}`);
+      }
+    } catch (leaderboardErr) {
+      logger.error(`Leaderboard update error: ${leaderboardErr.message}`);
+      // Don't fail the sync if leaderboard update fails
+    }
 
     return success(res, 200, 'Đồng bộ bước thành công', record);
   } catch (err) {
