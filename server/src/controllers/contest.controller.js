@@ -32,13 +32,13 @@ const createContest = async (req, res, next) => {
 };
 
 /**
- * GET / — list contests for the user's company
+ * GET / — list contests for the user
  * Query: ?groupId=xxx
  */
 const getContests = async (req, res, next) => {
   try {
     const { groupId } = req.query;
-    const contests = await contestService.getContests(req.user.companyId, groupId);
+    const contests = await contestService.getContests(req.user._id, req.user.companyId, groupId);
     return success(res, 200, 'Lấy danh sách cuộc thi thành công', contests);
   } catch (err) {
     next(err);

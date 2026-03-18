@@ -3,6 +3,8 @@ const escapeRegex = require('../utils/escapeRegex');
 const User = require('../models/User');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const Contest = require('../models/Contest');
+const ContestLeaderboard = require('../models/ContestLeaderboard');
 const logger = require('../utils/logger');
 
 class GroupService {
@@ -253,6 +255,41 @@ class GroupService {
         type: 'system',
         content: `${names} đã được thêm vào nhóm`,
       });
+    }
+
+    // Add new members to active/upcoming contests in this group
+    const activeContests = await Contest.find({
+      groupId,
+      status: { $in: ['active', 'upcoming'] },
+    });
+
+    for (const contest of activeContests) {
+      // Add to participants
+      await Contest.findByIdAndUpdate(contest._id, {
+        $addToSet: { participants: { $each: newMemberIds } },
+      });
+
+      // Create leaderboard entries for new members
+      const existingEntries = await ContestLeaderboard.find({
+        contestId: contest._id,
+        userId: { $in: newMemberIds },
+      });
+      const existingUserIds = existingEntries.map((e) => e.userId.toString());
+
+      const newLeaderboardEntries = newMemberIds
+        .filter((id) => !existingUserIds.includes(id.toString()))
+        .map((userId) => ({
+          contestId: contest._id,
+          userId,
+          totalSteps: 0,
+          dailySteps: {},
+          rank: 0,
+        }));
+
+      if (newLeaderboardEntries.length > 0) {
+        await ContestLeaderboard.insertMany(newLeaderboardEntries);
+        logger.info(`Added ${newLeaderboardEntries.length} leaderboard entries for contest ${contest._id}`);
+      }
     }
 
     logger.info(`Added ${newMembers.length} members to group ${group.name}`);

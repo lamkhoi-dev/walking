@@ -35,6 +35,9 @@ class ContestService {
       throw err;
     }
 
+    logger.info(`Creating contest for group ${group.name}, members: ${group.members.length}`);
+    logger.debug(`Group members: ${JSON.stringify(group.members)}`);
+
     // Check no active/upcoming contest in this group
     const existingContest = await Contest.findOne({
       groupId,
@@ -80,15 +83,34 @@ class ContestService {
   }
 
   /**
-   * Get contests for a company, optionally filtered by group
+   * Get contests for a group that user can see
+   * User can see contest if they are a participant OR from the same company
    */
-  async getContests(companyId, groupId) {
-    const filter = { companyId };
-    if (groupId) {
-      filter.groupId = groupId;
+  async getContests(userId, companyId, groupId) {
+    if (!groupId) {
+      // If no groupId, get all contests where user is participant or same company
+      const contests = await Contest.find({
+        $or: [
+          { participants: userId },
+          { companyId: companyId }
+        ]
+      })
+        .populate('groupId', 'name avatar')
+        .populate('createdBy', 'fullName avatar')
+        .sort({ startDate: -1 })
+        .lean();
+      return contests;
     }
 
-    const contests = await Contest.find(filter)
+    // If groupId specified, get contests for that group
+    // User can see if they are participant OR from same company as contest
+    const contests = await Contest.find({
+      groupId,
+      $or: [
+        { participants: userId },
+        { companyId: companyId }
+      ]
+    })
       .populate('groupId', 'name avatar')
       .populate('createdBy', 'fullName avatar')
       .sort({ startDate: -1 })
@@ -225,6 +247,35 @@ class ContestService {
       const err = new Error('Không tìm thấy cuộc thi');
       err.statusCode = 404;
       throw err;
+    }
+
+    // Sync: ensure all group members have leaderboard entries
+    const group = await Group.findById(contest.groupId);
+    if (group) {
+      const existingEntries = await ContestLeaderboard.find({ contestId }).select('userId');
+      const existingUserIds = existingEntries.map((e) => e.userId.toString());
+
+      const missingMembers = group.members.filter(
+        (memberId) => !existingUserIds.includes(memberId.toString())
+      );
+
+      if (missingMembers.length > 0) {
+        // Add missing members to participants
+        await Contest.findByIdAndUpdate(contestId, {
+          $addToSet: { participants: { $each: missingMembers } },
+        });
+
+        // Create leaderboard entries
+        const newEntries = missingMembers.map((userId) => ({
+          contestId,
+          userId,
+          totalSteps: 0,
+          dailySteps: {},
+          rank: 0,
+        }));
+        await ContestLeaderboard.insertMany(newEntries);
+        logger.info(`Synced ${missingMembers.length} missing members to contest ${contestId}`);
+      }
     }
 
     const leaderboard = await ContestLeaderboard.find({ contestId })
