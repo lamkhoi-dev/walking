@@ -41,10 +41,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     super.dispose();
   }
 
-  bool _isCompanyAdmin(BuildContext context) {
+  /// Check if current user can manage this group (admin of the group's company)
+  bool _canManageGroup(BuildContext context, String groupCompanyId) {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
-      return authState.user.role == 'company_admin';
+      final user = authState.user;
+      // Must be company_admin AND from the same company as the group
+      return user.role == 'company_admin' && user.companyId == groupCompanyId;
     }
     return false;
   }
@@ -146,7 +149,8 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           );
         }
 
-        final isAdmin = _isCompanyAdmin(context);
+        // Check if user can manage this group (must be admin of group's company)
+        final canManage = _canManageGroup(context, group.companyId);
         final currentUserId = _currentUserId(context);
 
         return Scaffold(
@@ -166,7 +170,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                       onPressed: () => context.push('/groups/${group.id}/qr'),
                       tooltip: 'Mã QR nhóm',
                     ),
-                    if (isAdmin)
+                    if (canManage)
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, color: Colors.white),
                         onSelected: (value) {
@@ -241,7 +245,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
               controller: _tabController,
               children: [
                 // Tab 1: Members
-                _buildMembersTab(context, isAdmin, currentUserId, group),
+                _buildMembersTab(context, canManage, currentUserId, group),
 
                 // Tab 2: Info
                 _buildInfoTab(context, group),
@@ -256,14 +260,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
   Widget _buildMembersTab(
     BuildContext context,
-    bool isAdmin,
+    bool canManage,
     String? currentUserId,
     dynamic group,
   ) {
     return Column(
       children: [
-        // Add members button for admin
-        if (isAdmin)
+        // Add members button for admin of same company
+        if (canManage)
           Padding(
             padding: const EdgeInsets.all(16),
             child: OutlinedButton.icon(
@@ -307,7 +311,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     return MemberListTile(
                       member: member,
                       isCreator: isCreator,
-                      showRemoveButton: isAdmin && member.id != currentUserId,
+                      showRemoveButton: canManage && member.id != currentUserId,
                       onRemove: () => _confirmRemoveMember(
                         context,
                         group.id,
@@ -396,7 +400,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
         // Contest button
         InkWell(
           onTap: () => context.push(
-            '/contests/group/${group.id}?name=${Uri.encodeComponent(group.name)}',
+            '/contests/group/${group.id}?name=${Uri.encodeComponent(group.name)}&companyId=${group.companyId}',
           ),
           borderRadius: BorderRadius.circular(12),
           child: Container(

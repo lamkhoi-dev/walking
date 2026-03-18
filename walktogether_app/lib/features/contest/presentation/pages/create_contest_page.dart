@@ -36,14 +36,15 @@ class _CreateContestPageState extends State<CreateContestPage> {
 
   Future<void> _pickDate(bool isStart) async {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final initialDate = isStart
-        ? (_startDate ?? now.add(const Duration(days: 1)))
-        : (_endDate ?? (_startDate ?? now).add(const Duration(days: 7)));
+        ? (_startDate ?? today)
+        : (_endDate ?? (_startDate ?? today).add(const Duration(days: 7)));
 
     final picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
-      firstDate: now,
+      firstDate: today,
       lastDate: now.add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(

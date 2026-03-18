@@ -257,7 +257,12 @@ class AppRouter {
         builder: (context, state) {
           final groupId = state.pathParameters['groupId']!;
           final groupName = state.uri.queryParameters['name'] ?? 'Nhóm';
-          return ContestListPage(groupId: groupId, groupName: groupName);
+          final groupCompanyId = state.uri.queryParameters['companyId'];
+          return ContestListPage(
+            groupId: groupId,
+            groupName: groupName,
+            groupCompanyId: groupCompanyId,
+          );
         },
       ),
       GoRoute(

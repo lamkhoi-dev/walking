@@ -12,11 +12,13 @@ import '../widgets/contest_card.dart';
 class ContestListPage extends StatelessWidget {
   final String groupId;
   final String groupName;
+  final String? groupCompanyId;
 
   const ContestListPage({
     super.key,
     required this.groupId,
     required this.groupName,
+    this.groupCompanyId,
   });
 
   @override
@@ -28,6 +30,7 @@ class ContestListPage extends StatelessWidget {
       child: _ContestListView(
         groupId: groupId,
         groupName: groupName,
+        groupCompanyId: groupCompanyId,
       ),
     );
   }
@@ -36,28 +39,33 @@ class ContestListPage extends StatelessWidget {
 class _ContestListView extends StatelessWidget {
   final String groupId;
   final String groupName;
+  final String? groupCompanyId;
 
   const _ContestListView({
     required this.groupId,
     required this.groupName,
+    this.groupCompanyId,
   });
 
-  bool _isAdmin(BuildContext context) {
+  /// Check if current user can manage this group (admin of the group's company)
+  bool _canManageGroup(BuildContext context) {
+    if (groupCompanyId == null) return false;
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
-      return authState.user.role == 'company_admin';
+      final user = authState.user;
+      return user.role == 'company_admin' && user.companyId == groupCompanyId;
     }
     return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = _isAdmin(context);
+    final canManage = _canManageGroup(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Cuộc thi - $groupName'),
       ),
-      floatingActionButton: isAdmin
+      floatingActionButton: canManage
           ? FloatingActionButton.extended(
               onPressed: () async {
                 final result = await context.push(
@@ -119,7 +127,7 @@ class _ContestListView extends StatelessWidget {
                         color: Colors.grey[600],
                       ),
                     ),
-                    if (isAdmin) ...[
+                    if (canManage) ...[
                       const SizedBox(height: 8),
                       Text(
                         'Tạo cuộc thi đầu tiên cho nhóm!',

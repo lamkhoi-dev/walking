@@ -8,12 +8,14 @@ class ContestService {
    * Create a new contest in a group
    */
   async createContest({ name, description, groupId, companyId, createdBy, startDate, endDate }) {
-    // Validate dates
+    // Validate dates - compare by date only (ignore time)
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const start = new Date(startDate);
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const end = new Date(endDate);
 
-    if (start < now) {
+    if (startDay < today) {
       const err = new Error('Ngày bắt đầu phải từ hôm nay trở đi');
       err.statusCode = 400;
       throw err;
