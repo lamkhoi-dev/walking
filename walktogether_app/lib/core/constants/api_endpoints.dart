@@ -13,6 +13,8 @@ class ApiEndpoints {
   static const String refreshToken = '/auth/refresh-token';
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
+  static const String updateMe = '/auth/me';
+  static const String myStats = '/auth/me/stats';
 
   // === COMPANY ===
   static const String companyRegister = '/companies/register';

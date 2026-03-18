@@ -20,5 +20,7 @@ router.post('/refresh-token', authLimiter, validate(refreshTokenSchema), authCon
 // Protected routes
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getMe);
+router.put('/me', authenticate, authController.updateMe);
+router.get('/me/stats', authenticate, authController.getMyStats);
 
 module.exports = router;
