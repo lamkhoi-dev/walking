@@ -190,6 +190,11 @@ class _ContestDetailView extends StatelessWidget {
             ),
           ),
 
+          // Date Filter Chips
+          SliverToBoxAdapter(
+            child: _DateFilterChips(contest: contest),
+          ),
+
           // Podium
           SliverToBoxAdapter(
             child: BlocBuilder<LeaderboardBloc, LeaderboardState>(
@@ -478,6 +483,125 @@ class _ContestDetailView extends StatelessWidget {
             child: const Text('Hủy cuộc thi'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Date filter chips widget for leaderboard
+class _DateFilterChips extends StatelessWidget {
+  final ContestModel contest;
+  
+  const _DateFilterChips({required this.contest});
+
+  List<DateTime> _getContestDates() {
+    final dates = <DateTime>[];
+    final now = DateTime.now();
+    final startDate = contest.startDate;
+    final endDate = contest.endDate.isBefore(now) ? contest.endDate : now;
+    
+    // Only show dates if contest has started
+    if (startDate.isAfter(now)) return [];
+    
+    // Get all dates from start to min(end, today)
+    var current = DateTime(startDate.year, startDate.month, startDate.day);
+    final last = DateTime(endDate.year, endDate.month, endDate.day);
+    
+    while (!current.isAfter(last)) {
+      dates.add(current);
+      current = current.add(const Duration(days: 1));
+    }
+    
+    return dates;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDateKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LeaderboardBloc, LeaderboardState>(
+      builder: (context, state) {
+        final currentFilter = state is LeaderboardLoaded ? state.filterDate : null;
+        final dates = _getContestDates();
+        
+        // Don't show filter if no dates available
+        if (dates.isEmpty) return const SizedBox.shrink();
+        
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                // "Tổng" chip
+                _buildFilterChip(
+                  context,
+                  label: 'Tổng',
+                  isSelected: currentFilter == null,
+                  onTap: () {
+                    context.read<LeaderboardBloc>().add(
+                      const LeaderboardDateFilterChanged(null),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Date chips
+                ...dates.map((date) {
+                  final dateKey = _formatDateKey(date);
+                  final isToday = _formatDateKey(DateTime.now()) == dateKey;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _buildFilterChip(
+                      context,
+                      label: isToday ? 'Hôm nay' : _formatDate(date),
+                      isSelected: currentFilter == dateKey,
+                      onTap: () {
+                        context.read<LeaderboardBloc>().add(
+                          LeaderboardDateFilterChanged(dateKey),
+                        );
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterChip(
+    BuildContext context, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }

@@ -13,13 +13,21 @@ abstract class LeaderboardEvent extends Equatable {
 
 class LeaderboardLoadRequested extends LeaderboardEvent {
   final String contestId;
-  const LeaderboardLoadRequested(this.contestId);
+  final String? filterDate;
+  const LeaderboardLoadRequested(this.contestId, {this.filterDate});
   @override
-  List<Object?> get props => [contestId];
+  List<Object?> get props => [contestId, filterDate];
 }
 
 class LeaderboardRefreshRequested extends LeaderboardEvent {
   const LeaderboardRefreshRequested();
+}
+
+class LeaderboardDateFilterChanged extends LeaderboardEvent {
+  final String? filterDate;
+  const LeaderboardDateFilterChanged(this.filterDate);
+  @override
+  List<Object?> get props => [filterDate];
 }
 
 class LeaderboardUpdated extends LeaderboardEvent {
@@ -43,10 +51,12 @@ class LeaderboardLoading extends LeaderboardState {}
 class LeaderboardLoaded extends LeaderboardState {
   final String contestId;
   final List<LeaderboardEntryModel> entries;
+  final String? filterDate;
 
   const LeaderboardLoaded({
     required this.contestId,
     required this.entries,
+    this.filterDate,
   });
 
   /// Top 3 entries for podium
@@ -58,7 +68,7 @@ class LeaderboardLoaded extends LeaderboardState {
       entries.where((e) => e.rank > 3).toList();
 
   @override
-  List<Object?> get props => [contestId, entries];
+  List<Object?> get props => [contestId, entries, filterDate];
 }
 
 class LeaderboardError extends LeaderboardState {
@@ -73,6 +83,7 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
   final ContestRepository _repository;
   final SocketService _socketService;
   String? _currentContestId;
+  String? _currentFilterDate;
   void Function(dynamic)? _onLeaderboardUpdateCallback;
 
   LeaderboardBloc({
@@ -83,6 +94,7 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
         super(LeaderboardInitial()) {
     on<LeaderboardLoadRequested>(_onLoad);
     on<LeaderboardRefreshRequested>(_onRefresh);
+    on<LeaderboardDateFilterChanged>(_onDateFilterChanged);
     on<LeaderboardUpdated>(_onUpdated);
   }
 
@@ -122,10 +134,14 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
     }
 
     _currentContestId = event.contestId;
+    _currentFilterDate = event.filterDate;
     emit(LeaderboardLoading());
 
     try {
-      final entries = await _repository.getLeaderboard(event.contestId);
+      final entries = await _repository.getLeaderboard(
+        event.contestId,
+        filterDate: event.filterDate,
+      );
 
       // Subscribe to realtime updates
       _socketService.emit('leaderboard:subscribe', {
@@ -136,6 +152,7 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
       emit(LeaderboardLoaded(
         contestId: event.contestId,
         entries: entries,
+        filterDate: event.filterDate,
       ));
     } catch (e) {
       emit(LeaderboardError(e.toString()));
@@ -149,10 +166,38 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
     if (_currentContestId == null) return;
 
     try {
-      final entries = await _repository.getLeaderboard(_currentContestId!);
+      final entries = await _repository.getLeaderboard(
+        _currentContestId!,
+        filterDate: _currentFilterDate,
+      );
       emit(LeaderboardLoaded(
         contestId: _currentContestId!,
         entries: entries,
+        filterDate: _currentFilterDate,
+      ));
+    } catch (e) {
+      emit(LeaderboardError(e.toString()));
+    }
+  }
+
+  Future<void> _onDateFilterChanged(
+    LeaderboardDateFilterChanged event,
+    Emitter<LeaderboardState> emit,
+  ) async {
+    if (_currentContestId == null) return;
+    
+    _currentFilterDate = event.filterDate;
+    emit(LeaderboardLoading());
+
+    try {
+      final entries = await _repository.getLeaderboard(
+        _currentContestId!,
+        filterDate: event.filterDate,
+      );
+      emit(LeaderboardLoaded(
+        contestId: _currentContestId!,
+        entries: entries,
+        filterDate: event.filterDate,
       ));
     } catch (e) {
       emit(LeaderboardError(e.toString()));
@@ -167,6 +212,7 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
       emit(LeaderboardLoaded(
         contestId: _currentContestId!,
         entries: event.entries,
+        filterDate: _currentFilterDate,
       ));
     }
   }

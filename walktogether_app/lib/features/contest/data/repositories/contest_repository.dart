@@ -72,8 +72,15 @@ class ContestRepository {
   }
 
   /// Get leaderboard for a contest
-  Future<List<LeaderboardEntryModel>> getLeaderboard(String contestId) async {
-    final response = await _dio.get(ApiEndpoints.contestLeaderboard(contestId));
+  /// [filterDate] - Optional date filter (YYYY-MM-DD). If provided, shows steps for that day only.
+  Future<List<LeaderboardEntryModel>> getLeaderboard(String contestId, {String? filterDate}) async {
+    final queryParams = <String, dynamic>{};
+    if (filterDate != null) queryParams['date'] = filterDate;
+    
+    final response = await _dio.get(
+      ApiEndpoints.contestLeaderboard(contestId),
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
     final data = response.data['data'] as List? ?? [];
     return data
         .map((json) =>

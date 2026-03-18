@@ -8,6 +8,10 @@ class LeaderboardEntryModel {
   final int totalSteps;
   final Map<String, int> dailySteps;
   final int rank;
+  /// displaySteps: steps to display (either totalSteps or daily steps if filtered)
+  final int displaySteps;
+  /// filterDate: the date filter applied (null = total)
+  final String? filterDate;
 
   LeaderboardEntryModel({
     required this.id,
@@ -18,7 +22,9 @@ class LeaderboardEntryModel {
     required this.totalSteps,
     this.dailySteps = const {},
     required this.rank,
-  });
+    int? displaySteps,
+    this.filterDate,
+  }) : displaySteps = displaySteps ?? totalSteps;
 
   factory LeaderboardEntryModel.fromJson(Map<String, dynamic> json) {
     // Parse user info
@@ -44,15 +50,20 @@ class LeaderboardEntryModel {
       }
     }
 
+    final totalSteps = (json['totalSteps'] as num?)?.toInt() ?? 0;
+    final displaySteps = (json['displaySteps'] as num?)?.toInt() ?? totalSteps;
+
     return LeaderboardEntryModel(
       id: json['_id'] as String? ?? '',
       contestId: json['contestId'] as String? ?? '',
       userId: userId,
       fullName: fullName,
       avatar: avatar,
-      totalSteps: (json['totalSteps'] as num?)?.toInt() ?? 0,
+      totalSteps: totalSteps,
       dailySteps: dailySteps,
       rank: (json['rank'] as num?)?.toInt() ?? 0,
+      displaySteps: displaySteps,
+      filterDate: json['filterDate'] as String?,
     );
   }
 

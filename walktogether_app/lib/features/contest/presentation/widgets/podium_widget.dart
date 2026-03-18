@@ -150,7 +150,7 @@ class _PodiumPlace extends StatelessWidget {
         const SizedBox(height: 4),
         // Steps
         Text(
-          '${_formatNumber(entry.totalSteps)} bước',
+          '${_formatNumber(entry.displaySteps)} bước',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,

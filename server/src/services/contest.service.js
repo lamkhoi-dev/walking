@@ -240,8 +240,10 @@ class ContestService {
 
   /**
    * Get leaderboard for a contest
+   * @param {string} contestId
+   * @param {string} [filterDate] - Optional date filter (YYYY-MM-DD). If provided, shows steps for that day only.
    */
-  async getLeaderboard(contestId) {
+  async getLeaderboard(contestId, filterDate = null) {
     const contest = await Contest.findById(contestId);
     if (!contest) {
       const err = new Error('Không tìm thấy cuộc thi');
@@ -280,19 +282,42 @@ class ContestService {
 
     const leaderboard = await ContestLeaderboard.find({ contestId })
       .populate('userId', 'fullName avatar')
-      .sort({ totalSteps: -1 })
       .lean();
+
+    // If filterDate provided, use steps for that day; otherwise use totalSteps
+    let processedLeaderboard;
+    if (filterDate) {
+      processedLeaderboard = leaderboard.map((entry) => {
+        const dailySteps = entry.dailySteps instanceof Map
+          ? entry.dailySteps.get(filterDate) || 0
+          : (entry.dailySteps && entry.dailySteps[filterDate]) || 0;
+        return {
+          ...entry,
+          displaySteps: dailySteps,
+          filterDate,
+        };
+      });
+    } else {
+      processedLeaderboard = leaderboard.map((entry) => ({
+        ...entry,
+        displaySteps: entry.totalSteps,
+        filterDate: null,
+      }));
+    }
+
+    // Sort by displaySteps
+    processedLeaderboard.sort((a, b) => b.displaySteps - a.displaySteps);
 
     // Assign ranks
     let currentRank = 1;
-    for (let i = 0; i < leaderboard.length; i++) {
-      if (i > 0 && leaderboard[i].totalSteps < leaderboard[i - 1].totalSteps) {
+    for (let i = 0; i < processedLeaderboard.length; i++) {
+      if (i > 0 && processedLeaderboard[i].displaySteps < processedLeaderboard[i - 1].displaySteps) {
         currentRank = i + 1;
       }
-      leaderboard[i].rank = currentRank;
+      processedLeaderboard[i].rank = currentRank;
     }
 
-    return leaderboard;
+    return processedLeaderboard;
   }
 }
 

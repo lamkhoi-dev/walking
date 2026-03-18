@@ -103,10 +103,12 @@ const cancelContest = async (req, res, next) => {
 
 /**
  * GET /:id/leaderboard — get leaderboard for a contest
+ * Query: ?date=YYYY-MM-DD (optional, filter by specific day)
  */
 const getLeaderboard = async (req, res, next) => {
   try {
-    const leaderboard = await contestService.getLeaderboard(req.params.id);
+    const { date } = req.query;
+    const leaderboard = await contestService.getLeaderboard(req.params.id, date || null);
     return success(res, 200, 'Lấy bảng xếp hạng thành công', leaderboard);
   } catch (err) {
     if (err.statusCode) {

@@ -78,12 +78,12 @@ class LeaderboardRow extends StatelessWidget {
               ],
             ),
           ),
-          // Total steps
+          // Total steps / Display steps
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                _formatNumber(entry.totalSteps),
+                _formatNumber(entry.displaySteps),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
