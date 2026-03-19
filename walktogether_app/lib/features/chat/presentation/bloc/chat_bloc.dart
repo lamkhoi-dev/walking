@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../data/models/conversation_model.dart';
@@ -39,6 +40,22 @@ class ChatSendMessage extends ChatEvent {
   });
   @override
   List<Object?> get props => [content, senderId, senderName];
+}
+
+/// Send an image message
+class ChatSendImage extends ChatEvent {
+  final File imageFile;
+  final String senderId;
+  final String senderName;
+  final String? senderAvatar;
+  const ChatSendImage({
+    required this.imageFile,
+    required this.senderId,
+    required this.senderName,
+    this.senderAvatar,
+  });
+  @override
+  List<Object?> get props => [imageFile, senderId, senderName];
 }
 
 /// A new message received via socket
@@ -153,6 +170,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatTypingReceived>(_onTypingReceived);
     on<ChatSendTyping>(_onSendTyping);
     on<ChatMarkAsRead>(_onMarkAsRead);
+    on<ChatSendImage>(_onSendImage);
   }
 
   /// Setup socket listeners for a conversation
@@ -410,6 +428,44 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     if (_currentConversationId != null) {
       _socketService.markAsRead(_currentConversationId!);
+    }
+  }
+
+  Future<void> _onSendImage(
+    ChatSendImage event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    // Optimistic: show a placeholder image message
+    final optimisticMessage = MessageModel.optimistic(
+      conversationId: currentState.conversationId,
+      senderId: event.senderId,
+      senderName: event.senderName,
+      senderAvatar: event.senderAvatar,
+      content: '[Đang gửi ảnh...]',
+    );
+
+    emit(currentState.copyWith(
+      messages: [...currentState.messages, optimisticMessage],
+    ));
+
+    try {
+      final confirmed = await _repository.uploadImage(
+        currentState.conversationId,
+        event.imageFile,
+      );
+      add(ChatMessageReceived(confirmed));
+    } catch (_) {
+      // Remove optimistic message on failure
+      final failedState = state;
+      if (failedState is ChatLoaded) {
+        final messages = failedState.messages
+            .where((m) => m.id != optimisticMessage.id)
+            .toList();
+        emit(failedState.copyWith(messages: messages));
+      }
     }
   }
 

@@ -100,11 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDailyGoalSection(settings),
-                const SizedBox(height: 20),
                 _buildNotificationSection(settings),
-                const SizedBox(height: 20),
-                _buildUnitsSection(settings),
                 const SizedBox(height: 20),
                 _buildAccountSection(),
                 const SizedBox(height: 40),
@@ -113,23 +109,6 @@ class _SettingsPageState extends State<SettingsPage> {
           );
         },
       ),
-    );
-  }
-
-  // ===== DAILY GOAL SECTION =====
-  Widget _buildDailyGoalSection(UserSettings settings) {
-    return _SectionCard(
-      title: 'Mục tiêu hàng ngày',
-      icon: Icons.flag_rounded,
-      iconColor: AppColors.primary,
-      children: [
-        _GoalSlider(
-          currentGoal: settings.dailyGoalSteps,
-          onChanged: (value) {
-            context.read<SettingsCubit>().updateDailyGoal(value);
-          },
-        ),
-      ],
     );
   }
 
@@ -174,23 +153,6 @@ class _SettingsPageState extends State<SettingsPage> {
               .read<SettingsCubit>()
               .toggleNotification('weeklyReport', v),
           showDivider: false,
-        ),
-      ],
-    );
-  }
-
-  // ===== UNITS SECTION =====
-  Widget _buildUnitsSection(UserSettings settings) {
-    return _SectionCard(
-      title: 'Đơn vị đo',
-      icon: Icons.straighten_rounded,
-      iconColor: AppColors.warning,
-      children: [
-        _UnitSelector(
-          currentUnit: settings.units,
-          onChanged: (unit) {
-            context.read<SettingsCubit>().updateUnits(unit);
-          },
         ),
       ],
     );
@@ -277,112 +239,6 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _GoalSlider extends StatefulWidget {
-  final int currentGoal;
-  final ValueChanged<int> onChanged;
-
-  const _GoalSlider({required this.currentGoal, required this.onChanged});
-
-  @override
-  State<_GoalSlider> createState() => _GoalSliderState();
-}
-
-class _GoalSliderState extends State<_GoalSlider> {
-  late double _value;
-  bool _isDragging = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.currentGoal.toDouble();
-  }
-
-  @override
-  void didUpdateWidget(_GoalSlider old) {
-    super.didUpdateWidget(old);
-    if (!_isDragging && old.currentGoal != widget.currentGoal) {
-      _value = widget.currentGoal.toDouble();
-    }
-  }
-
-  String _formatSteps(double v) {
-    final n = v.round();
-    if (n >= 1000) {
-      return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
-    }
-    return n.toString();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '🎯',
-                style: const TextStyle(fontSize: 28),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${_formatSteps(_value)} bước',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primary,
-              inactiveTrackColor: AppColors.primaryLight,
-              thumbColor: AppColors.primary,
-              overlayColor: AppColors.primary.withValues(alpha: 0.15),
-              trackHeight: 6,
-              thumbShape:
-                  const RoundSliderThumbShape(enabledThumbRadius: 12),
-              overlayShape:
-                  const RoundSliderOverlayShape(overlayRadius: 20),
-            ),
-            child: Slider(
-              value: _value,
-              min: 1000,
-              max: 50000,
-              divisions: 49,
-              onChangeStart: (_) => _isDragging = true,
-              onChanged: (v) {
-                setState(() => _value = (v / 1000).round() * 1000.0);
-              },
-              onChangeEnd: (v) {
-                _isDragging = false;
-                widget.onChanged((v / 1000).round() * 1000);
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('1k', style: TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary)),
-                Text('50k', style: TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ToggleItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -444,112 +300,6 @@ class _ToggleItem extends StatelessWidget {
         if (showDivider)
           Divider(height: 1, indent: 52, color: Colors.grey.shade100),
       ],
-    );
-  }
-}
-
-class _UnitSelector extends StatelessWidget {
-  final String currentUnit;
-  final ValueChanged<String> onChanged;
-
-  const _UnitSelector({
-    required this.currentUnit,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: _UnitOption(
-              label: 'Metric',
-              subtitle: 'km, kg',
-              icon: Icons.public_rounded,
-              isSelected: currentUnit == 'metric',
-              onTap: () => onChanged('metric'),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _UnitOption(
-              label: 'Imperial',
-              subtitle: 'mi, lb',
-              icon: Icons.flag_rounded,
-              isSelected: currentUnit == 'imperial',
-              onTap: () => onChanged('imperial'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UnitOption extends StatelessWidget {
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _UnitOption({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.08)
-              : AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color:
-                    isSelected ? AppColors.primary : AppColors.textMain,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.7)
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

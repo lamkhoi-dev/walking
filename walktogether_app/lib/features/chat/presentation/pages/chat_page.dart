@@ -149,6 +149,17 @@ class _ChatPageState extends State<ChatPage> {
                     _scrollToBottom(animate: true);
                   });
                 },
+                onSendImage: (imageFile) {
+                  context.read<ChatBloc>().add(ChatSendImage(
+                        imageFile: imageFile,
+                        senderId: _currentUserId,
+                        senderName: _currentUserName,
+                        senderAvatar: _currentUserAvatar,
+                      ));
+                  Future.delayed(const Duration(milliseconds: 150), () {
+                    _scrollToBottom(animate: true);
+                  });
+                },
                 onTypingStart: () {
                   context
                       .read<ChatBloc>()

@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/conversation_model.dart';
@@ -77,6 +79,26 @@ class ChatRepository {
   /// Mark a conversation as read via REST
   Future<void> markAsRead(String conversationId) async {
     await _dioClient.put(ApiEndpoints.conversationRead(conversationId));
+  }
+
+  /// Upload an image to a conversation
+  Future<MessageModel> uploadImage(
+    String conversationId,
+    File imageFile,
+  ) async {
+    final formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(
+        imageFile.path,
+        filename: imageFile.path.split(Platform.pathSeparator).last,
+      ),
+    });
+    final response = await _dioClient.post(
+      ApiEndpoints.conversationUpload(conversationId),
+      data: formData,
+    );
+    return MessageModel.fromJson(
+      response.data['data'] as Map<String, dynamic>,
+    );
   }
 }
 

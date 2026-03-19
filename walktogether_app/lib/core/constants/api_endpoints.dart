@@ -37,7 +37,7 @@ class ApiEndpoints {
   static const String conversationDirect = '/chat/conversations/direct';
   static String messages(String conversationId) => '/chat/conversations/$conversationId/messages';
   static String conversationRead(String conversationId) => '/chat/conversations/$conversationId/read';
-  static const String uploadImage = '/chat/upload';
+  static String conversationUpload(String conversationId) => '/chat/conversations/$conversationId/upload';
 
   // === CONTESTS ===
   static const String contests = '/contests';
