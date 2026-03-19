@@ -54,4 +54,13 @@ class ApiEndpoints {
   // === SETTINGS ===
   static const String settings = '/settings';
   static const String changePassword = '/auth/change-password';
+
+  // === POSTS & FEED ===
+  static const String postsFeed = '/posts/feed';
+  static const String postsCreate = '/posts';
+  static String postDetail(String id) => '/posts/$id';
+  static String postLike(String id) => '/posts/$id/like';
+  static String postLikes(String id) => '/posts/$id/likes';
+  static String postComments(String id) => '/posts/$id/comments';
+  static String deleteComment(String id) => '/posts/comments/$id';
 }

@@ -37,6 +37,10 @@ import '../../features/settings/data/repositories/settings_repository.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/change_password_page.dart';
+import '../../features/feed/data/repositories/feed_repository.dart';
+import '../../features/feed/presentation/bloc/feed_bloc.dart';
+import '../../features/feed/presentation/pages/feed_page.dart';
+import '../../features/feed/presentation/pages/create_post_page.dart';
 import '../../core/network/dio_client.dart';
 
 /// Listenable that bridges AuthBloc state changes to GoRouter refresh
@@ -167,6 +171,18 @@ class AppRouter {
             builder: (context, state) => const ActivityPage(),
           ),
           GoRoute(
+            path: '/feed',
+            name: 'feed',
+            builder: (context, state) {
+              return BlocProvider(
+                create: (_) => FeedBloc(
+                  repository: context.read<FeedRepository>(),
+                ),
+                child: const FeedPage(),
+              );
+            },
+          ),
+          GoRoute(
             path: '/chat',
             name: 'chat',
             builder: (context, state) => const ChatTabsPage(),
@@ -203,6 +219,18 @@ class AppRouter {
         path: '/goals',
         name: 'goals',
         builder: (context, state) => const GoalsPage(),
+      ),
+
+      // ===== POST ROUTES (outside ShellRoute → no bottom nav) =====
+      GoRoute(
+        path: '/post/create',
+        name: 'create-post',
+        builder: (context, state) {
+          return RepositoryProvider.value(
+            value: context.read<FeedRepository>(),
+            child: const CreatePostPage(),
+          );
+        },
       ),
 
       // ===== GROUP SUB-ROUTES (outside ShellRoute → no bottom nav) =====

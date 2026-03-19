@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { authenticate } = require('../middleware/auth');
 const { requireApprovedCompany } = require('../middleware/companyStatus');
 const chatController = require('../controllers/chat.controller');
-const upload = require('../middleware/upload');
+const { chatUpload } = require('../middleware/upload');
 
 // All chat routes require authentication + approved company
 router.use(authenticate, requireApprovedCompany);
@@ -20,7 +20,7 @@ router.get('/conversations/:id/messages', chatController.getMessages);
 router.post('/conversations/:id/messages', chatController.createMessage);
 
 // POST   /conversations/:id/upload   → upload image message
-router.post('/conversations/:id/upload', upload.single('image'), chatController.uploadImage);
+router.post('/conversations/:id/upload', chatUpload.single('image'), chatController.uploadImage);
 
 // PUT    /conversations/:id/read     → mark as read
 router.put('/conversations/:id/read', chatController.markAsRead);

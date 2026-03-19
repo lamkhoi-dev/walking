@@ -21,6 +21,7 @@ import 'features/chat/presentation/bloc/conversation_list_bloc.dart';
 import 'features/contest/data/repositories/contest_repository.dart';
 import 'features/step_tracker/data/repositories/step_repository.dart';
 import 'features/step_tracker/presentation/bloc/step_tracker_bloc.dart';
+import 'features/feed/data/repositories/feed_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +61,7 @@ void main() async {
   final chatRepository = ChatRepository(dioClient);
   final contestRepository = ContestRepository(dio: dioClient);
   final stepRepository = StepRepository(dioClient);
+  final feedRepository = FeedRepository(dioClient);
 
   // Initialize step services
   final stepCounterService = StepCounterService();
@@ -78,6 +80,7 @@ void main() async {
       stepCounterService: stepCounterService,
       stepSyncService: stepSyncService,
       stepRepository: stepRepository,
+      feedRepository: feedRepository,
     ),
   );
 }
@@ -92,6 +95,7 @@ class WalkTogetherApp extends StatelessWidget {
   final ContestRepository contestRepository;
   final StepSyncService stepSyncService;
   final StepRepository stepRepository;
+  final FeedRepository feedRepository;
 
   const WalkTogetherApp({
     super.key,
@@ -104,6 +108,7 @@ class WalkTogetherApp extends StatelessWidget {
     required this.stepCounterService,
     required this.stepSyncService,
     required this.stepRepository,
+    required this.feedRepository,
   });
 
   @override
@@ -114,6 +119,7 @@ class WalkTogetherApp extends StatelessWidget {
         RepositoryProvider<GroupRepository>.value(value: groupRepository),
         RepositoryProvider<ChatRepository>.value(value: chatRepository),
         RepositoryProvider<ContestRepository>.value(value: contestRepository),
+        RepositoryProvider<FeedRepository>.value(value: feedRepository),
       ],
       child: MultiBlocProvider(
         providers: [

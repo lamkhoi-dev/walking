@@ -456,8 +456,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         currentState.conversationId,
         event.imageFile,
       );
-      add(ChatMessageReceived(confirmed));
-    } catch (_) {
+      // Directly replace optimistic message with confirmed one
+      final latestState = state;
+      if (latestState is ChatLoaded) {
+        final messages = latestState.messages.toList();
+        final idx = messages.indexWhere((m) => m.id == optimisticMessage.id);
+        if (idx != -1) {
+          messages[idx] = confirmed;
+        } else {
+          final exists = messages.any((m) => m.id == confirmed.id);
+          if (!exists) messages.add(confirmed);
+        }
+        emit(latestState.copyWith(messages: messages));
+      }
+    } catch (e) {
       // Remove optimistic message on failure
       final failedState = state;
       if (failedState is ChatLoaded) {

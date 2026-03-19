@@ -334,13 +334,16 @@ class _TodayGoalCard extends StatelessWidget {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Text(
-                isGoalReached ? 'Hoàn thành mục tiêu! 🎉' : 'Mục tiêu hôm nay',
-                style: AppTextStyles.heading4.copyWith(
-                  color: isGoalReached ? Colors.white : AppColors.textMain,
+              Flexible(
+                child: Text(
+                  isGoalReached ? 'Hoàn thành mục tiêu! 🎉' : 'Mục tiêu hôm nay',
+                  style: AppTextStyles.heading4.copyWith(
+                    color: isGoalReached ? Colors.white : AppColors.textMain,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               // Edit button
               GestureDetector(
                 onTap: onEditGoal,

@@ -14,8 +14,9 @@ class HomeShellPage extends StatelessWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/chat')) return 1;
-    if (location.startsWith('/profile')) return 2;
+    if (location.startsWith('/feed')) return 1;
+    if (location.startsWith('/chat')) return 2;
+    if (location.startsWith('/profile')) return 3;
     return 0; // /home
   }
 
@@ -47,6 +48,12 @@ class HomeShellPage extends StatelessWidget {
                   label: 'Hoạt động',
                   isSelected: currentIndex == 0,
                   onTap: () => context.go('/home'),
+                ),
+                _NavItem(
+                  icon: Icons.dynamic_feed_rounded,
+                  label: 'Feed',
+                  isSelected: currentIndex == 1,
+                  onTap: () => context.go('/feed'),
                 ),
                 // Center FAB — toggle step tracking
                 BlocBuilder<StepTrackerBloc, StepTrackerState>(
@@ -81,7 +88,7 @@ class HomeShellPage extends StatelessWidget {
                     return _NavItem(
                       icon: Icons.chat_bubble_outline,
                       label: 'Chat',
-                      isSelected: currentIndex == 1,
+                      isSelected: currentIndex == 2,
                       onTap: () => context.go('/chat'),
                       badgeCount: unread > 0 ? unread : null,
                     );
@@ -90,7 +97,7 @@ class HomeShellPage extends StatelessWidget {
                 _NavItem(
                   icon: Icons.person_outline,
                   label: 'Hồ sơ',
-                  isSelected: currentIndex == 2,
+                  isSelected: currentIndex == 3,
                   onTap: () => context.go('/profile'),
                 ),
               ],

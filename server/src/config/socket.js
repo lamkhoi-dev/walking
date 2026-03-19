@@ -6,6 +6,7 @@ const env = require('./env');
 const chatHandler = require('../socket/chatHandler');
 const stepHandler = require('../socket/stepHandler');
 const leaderboardHandler = require('../socket/leaderboardHandler');
+const socialHandler = require('../socket/socialHandler');
 const logger = require('../utils/logger');
 
 let io;
@@ -101,6 +102,9 @@ const initSocket = (httpServer, options = {}) => {
 
     // Register leaderboard event handlers
     leaderboardHandler(io, socket);
+
+    // Register social feed event handlers
+    socialHandler(io, socket);
 
     // ===== DISCONNECT =====
     socket.on('disconnect', async (reason) => {

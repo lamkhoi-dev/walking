@@ -95,6 +95,11 @@ class ChatRepository {
     final response = await _dioClient.post(
       ApiEndpoints.conversationUpload(conversationId),
       data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
     );
     return MessageModel.fromJson(
       response.data['data'] as Map<String, dynamic>,
