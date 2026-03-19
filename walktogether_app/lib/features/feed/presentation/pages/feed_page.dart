@@ -36,6 +36,45 @@ class _FeedPageState extends State<FeedPage> {
     super.dispose();
   }
 
+  String get _filterLabel {
+    switch (_selectedFilter) {
+      case 'all':
+        return 'Tất cả';
+      case 'public':
+        return 'Công khai';
+      default:
+        return 'Tất cả';
+    }
+  }
+
+  IconData get _filterIcon {
+    switch (_selectedFilter) {
+      case 'all':
+        return Icons.all_inclusive_rounded;
+      case 'public':
+        return Icons.public_rounded;
+      default:
+        return Icons.all_inclusive_rounded;
+    }
+  }
+
+  void _showFilterPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FilterSheet(
+        selected: _selectedFilter,
+        onSelected: (value) {
+          Navigator.pop(context);
+          if (value != _selectedFilter) {
+            setState(() => _selectedFilter = value);
+            context.read<FeedBloc>().add(FeedFilterChanged(value));
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,40 +89,36 @@ class _FeedPageState extends State<FeedPage> {
             surfaceTintColor: Colors.transparent,
             title: const Text(
               'Feed',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textMain,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textMain),
             ),
             actions: [
-              // Filter dropdown
-              Container(
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedFilter,
-                    isDense: true,
-                    icon: const Icon(Icons.filter_list_rounded, size: 18, color: AppColors.primary),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+              GestureDetector(
+                onTap: _showFilterPicker,
+                child: Container(
+                  margin: const EdgeInsets.only(right: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.secondary.withValues(alpha: 0.06),
+                      ],
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('Tất cả')),
-                      DropdownMenuItem(value: 'public', child: Text('Công khai')),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_filterIcon, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        _filterLabel,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.primary.withValues(alpha: 0.6)),
                     ],
-                    onChanged: (value) {
-                      if (value == null || value == _selectedFilter) return;
-                      setState(() => _selectedFilter = value);
-                      context.read<FeedBloc>().add(FeedFilterChanged(value));
-                    },
                   ),
                 ),
               ),
@@ -93,25 +128,21 @@ class _FeedPageState extends State<FeedPage> {
         body: BlocBuilder<FeedBloc, FeedState>(
           builder: (context, state) {
             if (state is FeedLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              );
+              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
             }
-
-            if (state is FeedError) {
-              return _buildError(state.message);
-            }
-
-            if (state is FeedLoaded) {
-              return _buildFeed(state);
-            }
-
+            if (state is FeedError) return _buildError(state.message);
+            if (state is FeedLoaded) return _buildFeed(state);
             return const SizedBox.shrink();
           },
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/post/create'),
+        onPressed: () async {
+          final result = await context.push<bool>('/post/create');
+          if (result == true && mounted) {
+            context.read<FeedBloc>().add(const FeedRefreshRequested());
+          }
+        },
         backgroundColor: AppColors.primary,
         elevation: 4,
         child: const Icon(Icons.edit_rounded, color: Colors.white),
@@ -120,9 +151,7 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   Widget _buildFeed(FeedLoaded state) {
-    if (state.posts.isEmpty) {
-      return _buildEmpty();
-    }
+    if (state.posts.isEmpty) return _buildEmpty();
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -139,29 +168,18 @@ class _FeedPageState extends State<FeedPage> {
               padding: EdgeInsets.all(24),
               child: Center(
                 child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
+                  width: 24, height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                 ),
               ),
             );
           }
-
           final post = state.posts[index];
           return PostCard(
             post: post,
-            onLike: () {
-              context.read<FeedBloc>().add(FeedPostLikeToggled(post.id));
-            },
-            onComment: () {
-              context.push('/post/${post.id}');
-            },
-            onTap: () {
-              context.push('/post/${post.id}');
-            },
+            onLike: () => context.read<FeedBloc>().add(FeedPostLikeToggled(post.id)),
+            onComment: () => context.push('/post/${post.id}'),
+            onTap: () => context.push('/post/${post.id}'),
           );
         },
       ),
@@ -174,35 +192,14 @@ class _FeedPageState extends State<FeedPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.dynamic_feed_rounded,
-              size: 40,
-              color: AppColors.primary,
-            ),
+            width: 80, height: 80,
+            decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+            child: const Icon(Icons.dynamic_feed_rounded, size: 40, color: AppColors.primary),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Chưa có bài viết nào',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMain,
-            ),
-          ),
+          const Text('Chưa có bài viết nào', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
           const SizedBox(height: 8),
-          Text(
-            'Hãy là người đầu tiên chia sẻ!',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
+          Text('Hãy là người đầu tiên chia sẻ!', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => context.push('/post/create'),
@@ -240,6 +237,138 @@ class _FeedPageState extends State<FeedPage> {
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// === FILTER BOTTOM SHEET ===
+class _FilterSheet extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  const _FilterSheet({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 20),
+          const Text('Lọc bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+          const SizedBox(height: 4),
+          Text('Hiển thị bài viết theo phạm vi', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          const SizedBox(height: 20),
+          _FilterOption(
+            icon: Icons.all_inclusive_rounded,
+            title: 'Tất cả',
+            subtitle: 'Bài viết công khai + nhóm của bạn',
+            isSelected: selected == 'all',
+            onTap: () => onSelected('all'),
+            gradient: [const Color(0xFF4CAF50), const Color(0xFF81C784)],
+          ),
+          _FilterOption(
+            icon: Icons.public_rounded,
+            title: 'Công khai',
+            subtitle: 'Chỉ bài viết công khai toàn hệ thống',
+            isSelected: selected == 'public',
+            onTap: () => onSelected('public'),
+            gradient: [const Color(0xFF2196F3), const Color(0xFF64B5F6)],
+          ),
+          // TODO: Sprint 3+ — dynamic group filters loaded from user's groups
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final List<Color> gradient;
+
+  const _FilterOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+    required this.gradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? gradient[0] : AppColors.divider.withValues(alpha: 0.6),
+                width: isSelected ? 2 : 1,
+              ),
+              color: isSelected ? gradient[0].withValues(alpha: 0.06) : null,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: gradient),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, size: 22, color: Colors.white),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+                      const SizedBox(height: 2),
+                      Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Container(
+                    width: 24, height: 24,
+                    decoration: BoxDecoration(gradient: LinearGradient(colors: gradient), shape: BoxShape.circle),
+                    child: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+                  )
+                else
+                  Container(
+                    width: 24, height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.divider, width: 2),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
