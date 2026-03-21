@@ -5,7 +5,7 @@ class ApiEndpoints {
   // Base URL - change for production
   // static const String baseUrl = 'http://10.0.2.2:5000/api/v1'; // Android emulator
   // static const String baseUrl = 'http://localhost:5000/api/v1'; // iOS simulator
-  static const String baseUrl = 'https://walktogether-api.onrender.com/api/v1'; // Production
+  static const String baseUrl = 'https://walking-production.up.railway.app/api/v1'; // Production (Railway)
 
   // === AUTH ===
   static const String login = '/auth/login';

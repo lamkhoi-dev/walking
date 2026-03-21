@@ -26,7 +26,7 @@ class SocketService {
           .setReconnectionDelay(5000)
           .setReconnectionAttempts(10)
           .setAuth({'token': token})
-          .setTimeout(90000) // Render cold start
+          .setTimeout(30000) // Railway (no cold start)
           .build(),
     );
 

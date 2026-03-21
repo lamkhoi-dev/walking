@@ -8,6 +8,9 @@ const { globalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
+// ===== TRUST PROXY (Railway/reverse proxy) =====
+app.set('trust proxy', 1);
+
 // ===== SECURITY MIDDLEWARE =====
 app.use(helmet());
 
