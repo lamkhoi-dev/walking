@@ -41,6 +41,8 @@ import '../../features/feed/data/repositories/feed_repository.dart';
 import '../../features/feed/presentation/bloc/feed_bloc.dart';
 import '../../features/feed/presentation/pages/feed_page.dart';
 import '../../features/feed/presentation/pages/create_post_page.dart';
+import '../../features/feed/presentation/pages/post_detail_page.dart';
+import '../../features/feed/presentation/bloc/post_detail_bloc.dart';
 import '../../core/network/dio_client.dart';
 
 /// Listenable that bridges AuthBloc state changes to GoRouter refresh
@@ -229,6 +231,19 @@ class AppRouter {
           return RepositoryProvider.value(
             value: context.read<FeedRepository>(),
             child: const CreatePostPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/post/:id',
+        name: 'post-detail',
+        builder: (context, state) {
+          final postId = state.pathParameters['id']!;
+          return BlocProvider(
+            create: (_) => PostDetailBloc(
+              repository: context.read<FeedRepository>(),
+            )..add(PostDetailLoadRequested(postId)),
+            child: PostDetailPage(postId: postId),
           );
         },
       ),

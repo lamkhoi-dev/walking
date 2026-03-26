@@ -44,6 +44,18 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Custom notification icons for step counter -->
+        <meta-data
+            android:name="com.runly.app.WALK_ICON"
+            android:resource="@drawable/ic_notif_walk" />
+        <meta-data
+            android:name="com.runly.app.STEPS_ICON"
+            android:resource="@drawable/ic_notif_steps" />
+        <!-- Foreground service for background step counting -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="health"
+            android:exported="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

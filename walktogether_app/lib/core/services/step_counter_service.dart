@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'step_counter_task.dart';
 
 /// Service for counting steps using device pedometer sensor.
 /// Stores data per-user in Hive for offline resilience.
@@ -76,10 +78,69 @@ class StepCounterService {
     return {};
   }
 
-  /// Initialize Hive box for step storage (no user context yet)
+  /// Initialize Hive box + foreground task config
   Future<void> init() async {
     if (_isInitialized) return;
     _isInitialized = true;
+    _initForegroundTask();
+  }
+
+  /// Configure foreground task notification & options
+  void _initForegroundTask() {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'step_counter_channel',
+        channelName: 'Đếm bước chân',
+        channelDescription: 'Hiển thị khi đang đếm bước chân.',
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+        onlyAlertOnce: true,
+        showWhen: false,
+        enableVibration: false,
+        playSound: false,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: false,
+        playSound: false,
+      ),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(5000),
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: false,
+      ),
+    );
+  }
+
+  /// Start foreground service for background step counting
+  Future<void> startForegroundService() async {
+    if (_currentUserId == null) return;
+
+    // Save userId so TaskHandler can find the Hive box
+    final metaBox = await Hive.openBox('foreground_meta');
+    await metaBox.put('userId', _currentUserId!);
+    await metaBox.close();
+
+    // Request notification permission (Android 13+)
+    if (Platform.isAndroid) {
+      final notifStatus = await Permission.notification.request();
+      debugPrint('Notification permission: $notifStatus');
+    }
+
+    final result = await FlutterForegroundTask.startService(
+      serviceId: 100,
+      notificationTitle: 'Đang đếm bước chân...',
+      notificationText: 'Đang khởi động...',
+      callback: stepCounterCallback,
+    );
+    debugPrint('Foreground service start: $result');
+  }
+
+  /// Stop foreground service
+  Future<void> stopForegroundService() async {
+    final result = await FlutterForegroundTask.stopService();
+    debugPrint('Foreground service stop: $result');
   }
 
   /// Switch to a user-specific Hive box. Call on login.
@@ -117,7 +178,7 @@ class StepCounterService {
   /// Detach from current user (on logout). Stops tracking, closes box, but preserves data.
   Future<void> detachUser() async {
     await stopTracking();
-    // Save end-of-day record before detaching
+    await stopForegroundService();
     _saveGoalRecord();
     await _box?.close();
     _box = null;
@@ -127,8 +188,10 @@ class StepCounterService {
     debugPrint('Step counter detached from user');
   }
 
-  /// Start step tracking
-  Future<void> startTracking() async {
+  /// Start step tracking.
+  /// If foreground service is handling pedometer, skip local subscription
+  /// to avoid double-counting.
+  Future<void> startTracking({bool foregroundServiceActive = false}) async {
     if (_box == null || !_box!.isOpen) {
       debugPrint('Cannot start tracking: no user box open');
       return;
@@ -155,6 +218,13 @@ class StepCounterService {
     _isTracking = true;
     await _box?.put(_keyIsTracking, true);
 
+    // If foreground service is active, it owns the pedometer subscription.
+    // We only listen to data from the service via addTaskDataCallback.
+    if (foregroundServiceActive) {
+      debugPrint('Step tracking started (foreground service owns pedometer)');
+      return;
+    }
+
     // Cancel any existing subscriptions before creating new ones
     await _stepSubscription?.cancel();
     await _statusSubscription?.cancel();
@@ -176,7 +246,7 @@ class StepCounterService {
       cancelOnError: false,
     );
 
-    debugPrint('Step tracking started');
+    debugPrint('Step tracking started (local pedometer)');
   }
 
   /// Stop step tracking
@@ -193,24 +263,27 @@ class StepCounterService {
   }
 
   /// Set today's steps from server data (called on app start to prevent data loss)
-  /// This stores server steps as an offset, so local tracking adds to it.
+  /// Uses MAX(localSteps, serverSteps) to preserve background-counted steps.
   Future<void> syncFromServer(int serverSteps) async {
     if (_box == null || !_box!.isOpen) return;
 
-    final currentTotal = todaySteps;
-    
-    // Store server steps as offset - local tracking will ADD to this
+    final localSteps = todaySteps;
+
+    if (localSteps >= serverSteps) {
+      // Local (background) has MORE or EQUAL steps → keep local, don't reset
+      debugPrint('syncFromServer: keeping local=$localSteps (server=$serverSteps)');
+      _stepController.add(localSteps);
+      return;
+    }
+
+    // Server has MORE steps (e.g., synced from another device) → update local
     await _box?.put(_keyServerOffset, serverSteps);
-    
-    // Reset local tracking counters - next sensor reading will set new baseline
     await _box?.put(_keyBaseline, 0);
     await _box?.put(_keyLastSensorSteps, 0);
-    
-    // Set todaySteps = serverOffset (local steps will be added on sensor readings)
     await _box?.put(_keyTodaySteps, serverSteps);
-    
+
     _stepController.add(serverSteps);
-    debugPrint('Synced from server: previous=$currentTotal → serverOffset=$serverSteps (local counters reset)');
+    debugPrint('syncFromServer: using server=$serverSteps (local=$localSteps was lower)');
   }
 
   /// Handle incoming step count from sensor

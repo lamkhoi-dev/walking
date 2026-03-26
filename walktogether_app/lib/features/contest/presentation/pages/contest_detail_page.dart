@@ -500,6 +500,9 @@ class _DateFilterChips extends StatelessWidget {
     final startDate = contest.startDate;
     final endDate = contest.endDate.isBefore(now) ? contest.endDate : now;
     
+    // Don't show dates for cancelled or upcoming contests
+    if (contest.status == 'cancelled' || contest.status == 'upcoming') return [];
+    
     // Only show dates if contest has started
     if (startDate.isAfter(now)) return [];
     

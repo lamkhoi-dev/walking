@@ -45,12 +45,22 @@ class FeedRepository {
     String visibility = 'public',
     List<String>? visibleToGroupIds,
     List<File>? images,
+    String? type,
+    String? sharedPostId,
+    String? sharedContestId,
+    int? achievementRank,
+    int? achievementSteps,
   }) async {
     final formData = FormData.fromMap({
       'content': content,
       'visibility': visibility,
       if (visibleToGroupIds != null && visibleToGroupIds.isNotEmpty)
         'visibleToGroups': visibleToGroupIds.join(','),
+      if (type != null) 'type': type,
+      if (sharedPostId != null) 'sharedPostId': sharedPostId,
+      if (sharedContestId != null) 'sharedContestId': sharedContestId,
+      if (achievementRank != null) 'achievementRank': achievementRank,
+      if (achievementSteps != null) 'achievementSteps': achievementSteps,
     });
 
     if (images != null) {

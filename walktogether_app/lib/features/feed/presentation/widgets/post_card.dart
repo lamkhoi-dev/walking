@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/post_model.dart';
+import 'image_gallery_viewer.dart';
 import 'package:intl/intl.dart';
 
 class PostCard extends StatelessWidget {
@@ -44,11 +46,400 @@ class PostCard extends StatelessWidget {
           children: [
             _buildHeader(context),
             if (post.content.isNotEmpty) _buildContent(),
+            // Shared post embed — tap to view original
+            if (post.type == 'shared_post' && post.sharedPost != null)
+              GestureDetector(
+                onTap: () => context.push('/post/${post.sharedPost!.id}'),
+                child: _buildSharedPostEmbed(),
+              ),
+            // Shared contest embed
+            if (post.type == 'shared_contest' && post.sharedContest != null)
+              _buildSharedContestEmbed(),
             if (post.media.isNotEmpty) _buildMediaGrid(context),
             _buildActions(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSharedPostEmbed() {
+    final shared = post.sharedPost!;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Shared post author
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryGradient,
+                ),
+                child: shared.author.avatar != null
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: shared.author.avatar!,
+                          fit: BoxFit.cover,
+                          width: 28,
+                          height: 28,
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          shared.author.fullName.isNotEmpty
+                              ? shared.author.fullName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  shared.author.fullName,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMain,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          if (shared.content.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              shared.content.length > 120
+                  ? '${shared.content.substring(0, 120)}...'
+                  : shared.content,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: AppColors.textMain.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+          if (shared.media.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: CachedNetworkImage(
+                imageUrl: shared.media.first.url,
+                height: 140,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => _imagePlaceholder(140),
+                errorWidget: (_, __, ___) => _imagePlaceholder(140),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSharedContestEmbed() {
+    final contest = post.sharedContest!;
+    final isActive = contest.status == 'active';
+    final isCompleted = contest.status == 'completed';
+
+    // Gold/green color palette
+    const goldDark = Color(0xFFB8860B);
+    const goldLight = Color(0xFFFFD700);
+    final statusColor = isActive
+        ? const Color(0xFF4CAF50)
+        : isCompleted
+            ? const Color(0xFF2196F3)
+            : Colors.grey;
+    final statusLabel = isActive
+        ? 'Đang diễn ra'
+        : isCompleted
+            ? 'Đã kết thúc'
+            : contest.status;
+
+    // Use dedicated fields (with regex fallback for old posts)
+    int? rank = post.achievementRank;
+    String? stepsText;
+    if (post.achievementSteps != null && post.achievementSteps! > 0) {
+      stepsText = _formatSteps(post.achievementSteps!);
+    }
+    // Fallback: parse from content for old posts
+    if (rank == null) {
+      final rankMatch = RegExp(r'Hạng #(\d+)').firstMatch(post.content);
+      if (rankMatch != null) rank = int.tryParse(rankMatch.group(1)!);
+    }
+    if (stepsText == null) {
+      final stepsMatch = RegExp(r'với (.+?) bước').firstMatch(post.content);
+      if (stepsMatch != null) stepsText = stepsMatch.group(1);
+    }
+
+    // Days info
+    String? daysText;
+    if (contest.startDate != null && contest.endDate != null) {
+      final days = contest.endDate!.difference(contest.startDate!).inDays;
+      daysText = '$days ngày';
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF8E1), Color(0xFFFFF3E0), Color(0xFFFFFDE7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: goldDark.withValues(alpha: 0.25), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: goldDark.withValues(alpha: 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Subtle sparkle decoration
+          Positioned(
+            top: 8, right: 12,
+            child: Icon(Icons.auto_awesome, size: 14,
+                color: goldDark.withValues(alpha: 0.15)),
+          ),
+          Positioned(
+            top: 22, right: 30,
+            child: Icon(Icons.auto_awesome, size: 10,
+                color: goldDark.withValues(alpha: 0.1)),
+          ),
+
+          // Main content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: Trophy + Contest name + Status
+                Row(
+                  children: [
+                    // Trophy with glow
+                    Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [goldDark, goldLight],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: goldLight.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.emoji_events_rounded,
+                          size: 26, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contest.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3E2723),
+                              letterSpacing: 0.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                      color: statusColor.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  statusLabel,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: statusColor,
+                                  ),
+                                ),
+                              ),
+                              if (contest.startDate != null &&
+                                  contest.endDate != null) ...[
+                                const SizedBox(width: 8),
+                                Icon(Icons.calendar_today_rounded,
+                                    size: 11,
+                                    color: const Color(0xFF3E2723).withValues(alpha: 0.4)),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${DateFormat('dd/MM').format(contest.startDate!)} – ${DateFormat('dd/MM').format(contest.endDate!)}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: const Color(0xFF3E2723).withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Rank badge (if available)
+                    if (rank != null && rank > 0)
+                      Container(
+                        width: 46, height: 46,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: rank == 1
+                                ? [const Color(0xFFFFD700), const Color(0xFFFFA000)]
+                                : rank == 2
+                                    ? [const Color(0xFFE0E0E0), const Color(0xFFBDBDBD)]
+                                    : rank == 3
+                                        ? [const Color(0xFFCD7F32), const Color(0xFFA0522D)]
+                                        : [const Color(0xFF4CAF50), const Color(0xFF388E3C)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (rank <= 3 ? goldLight : const Color(0xFF4CAF50))
+                                  .withValues(alpha: 0.25),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '#$rank',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 1,
+                              ),
+                            ),
+                            const Text(
+                              'hạng',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white70,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+
+                // Stats row
+                if (stepsText != null || daysText != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: goldDark.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        if (stepsText != null)
+                          _contestStatItem(Icons.directions_walk_rounded,
+                              stepsText, 'bước', const Color(0xFF3E2723)),
+                        if (stepsText != null && daysText != null)
+                          Container(
+                              width: 1, height: 24,
+                              color: goldDark.withValues(alpha: 0.15)),
+                        if (daysText != null)
+                          _contestStatItem(Icons.schedule_rounded,
+                              daysText, 'thời gian', const Color(0xFF3E2723)),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatSteps(int steps) {
+    if (steps >= 1000000) {
+      return '${(steps / 1000000).toStringAsFixed(1)}M';
+    } else if (steps >= 1000) {
+      return '${(steps / 1000).toStringAsFixed(1)}K';
+    }
+    return steps.toString();
+  }
+
+  Widget _contestStatItem(
+      IconData icon, String value, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color.withValues(alpha: 0.7)),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                color: color.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -165,99 +556,96 @@ class PostCard extends StatelessWidget {
   Widget _buildMediaGrid(BuildContext context) {
     final images = post.media;
     final count = images.length;
+    final heroPrefix = 'post_${post.id}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: count == 1
-            ? _singleImage(images[0])
+            ? _singleImage(context, images[0], heroPrefix)
             : count == 2
-                ? _twoImages(images)
+                ? _twoImages(context, images, heroPrefix)
                 : count == 3
-                    ? _threeImages(images)
-                    : _fourImages(images),
+                    ? _threeImages(context, images, heroPrefix)
+                    : _fourImages(context, images, heroPrefix),
       ),
     );
   }
 
-  Widget _singleImage(PostMedia media) {
-    return CachedNetworkImage(
-      imageUrl: media.url,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: 240,
-      placeholder: (_, __) => _imagePlaceholder(240),
-      errorWidget: (_, __, ___) => _imagePlaceholder(240),
+  /// Tappable image with Hero animation → opens gallery at given index
+  Widget _tappableImage(
+    BuildContext context,
+    PostMedia media,
+    int index,
+    String heroPrefix, {
+    double? height,
+    double? width,
+    BoxFit fit = BoxFit.cover,
+  }) {
+    final allUrls = post.media.map((m) => m.url).toList();
+
+    return GestureDetector(
+      onTap: () => ImageGalleryViewer.show(
+        context,
+        imageUrls: allUrls,
+        initialIndex: index,
+        heroTagPrefix: heroPrefix,
+      ),
+      child: Hero(
+        tag: '${heroPrefix}_$index',
+        child: CachedNetworkImage(
+          imageUrl: media.url,
+          fit: fit,
+          height: height,
+          width: width ?? double.infinity,
+          placeholder: (_, __) => _imagePlaceholder(height ?? 200),
+          errorWidget: (_, __, ___) => _imagePlaceholder(height ?? 200),
+        ),
+      ),
     );
   }
 
-  Widget _twoImages(List<PostMedia> images) {
+  Widget _singleImage(BuildContext ctx, PostMedia media, String heroPrefix) {
+    return _tappableImage(ctx, media, 0, heroPrefix, height: 240);
+  }
+
+  Widget _twoImages(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
     return SizedBox(
       height: 200,
       child: Row(
         children: [
           Expanded(
-            child: CachedNetworkImage(
-              imageUrl: images[0].url,
-              fit: BoxFit.cover,
-              height: 200,
-              placeholder: (_, __) => _imagePlaceholder(200),
-              errorWidget: (_, __, ___) => _imagePlaceholder(200),
-            ),
+            child: _tappableImage(ctx, images[0], 0, heroPrefix, height: 200),
           ),
           const SizedBox(width: 3),
           Expanded(
-            child: CachedNetworkImage(
-              imageUrl: images[1].url,
-              fit: BoxFit.cover,
-              height: 200,
-              placeholder: (_, __) => _imagePlaceholder(200),
-              errorWidget: (_, __, ___) => _imagePlaceholder(200),
-            ),
+            child: _tappableImage(ctx, images[1], 1, heroPrefix, height: 200),
           ),
         ],
       ),
     );
   }
 
-  Widget _threeImages(List<PostMedia> images) {
+  Widget _threeImages(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
     return SizedBox(
       height: 220,
       child: Row(
         children: [
           Expanded(
             flex: 2,
-            child: CachedNetworkImage(
-              imageUrl: images[0].url,
-              fit: BoxFit.cover,
-              height: 220,
-              placeholder: (_, __) => _imagePlaceholder(220),
-              errorWidget: (_, __, ___) => _imagePlaceholder(220),
-            ),
+            child: _tappableImage(ctx, images[0], 0, heroPrefix, height: 220),
           ),
           const SizedBox(width: 3),
           Expanded(
             child: Column(
               children: [
                 Expanded(
-                  child: CachedNetworkImage(
-                    imageUrl: images[1].url,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    placeholder: (_, __) => _imagePlaceholder(110),
-                    errorWidget: (_, __, ___) => _imagePlaceholder(110),
-                  ),
+                  child: _tappableImage(ctx, images[1], 1, heroPrefix),
                 ),
                 const SizedBox(height: 3),
                 Expanded(
-                  child: CachedNetworkImage(
-                    imageUrl: images[2].url,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    placeholder: (_, __) => _imagePlaceholder(110),
-                    errorWidget: (_, __, ___) => _imagePlaceholder(110),
-                  ),
+                  child: _tappableImage(ctx, images[2], 2, heroPrefix),
                 ),
               ],
             ),
@@ -267,7 +655,7 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _fourImages(List<PostMedia> images) {
+  Widget _fourImages(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
     return SizedBox(
       height: 220,
       child: Column(
@@ -276,21 +664,11 @@ class PostCard extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: CachedNetworkImage(
-                    imageUrl: images[0].url,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => _imagePlaceholder(110),
-                    errorWidget: (_, __, ___) => _imagePlaceholder(110),
-                  ),
+                  child: _tappableImage(ctx, images[0], 0, heroPrefix),
                 ),
                 const SizedBox(width: 3),
                 Expanded(
-                  child: CachedNetworkImage(
-                    imageUrl: images[1].url,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => _imagePlaceholder(110),
-                    errorWidget: (_, __, ___) => _imagePlaceholder(110),
-                  ),
+                  child: _tappableImage(ctx, images[1], 1, heroPrefix),
                 ),
               ],
             ),
@@ -300,34 +678,32 @@ class PostCard extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: CachedNetworkImage(
-                    imageUrl: images[2].url,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => _imagePlaceholder(110),
-                    errorWidget: (_, __, ___) => _imagePlaceholder(110),
-                  ),
+                  child: _tappableImage(ctx, images[2], 2, heroPrefix),
                 ),
                 const SizedBox(width: 3),
                 Expanded(
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CachedNetworkImage(
-                        imageUrl: images[3].url,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => _imagePlaceholder(110),
-                        errorWidget: (_, __, ___) => _imagePlaceholder(110),
-                      ),
+                      _tappableImage(ctx, images[3], 3, heroPrefix),
                       if (post.media.length > 4)
-                        Container(
-                          color: Colors.black38,
-                          child: Center(
-                            child: Text(
-                              '+${post.media.length - 4}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
+                        GestureDetector(
+                          onTap: () => ImageGalleryViewer.show(
+                            ctx,
+                            imageUrls: post.media.map((m) => m.url).toList(),
+                            initialIndex: 3,
+                            heroTagPrefix: heroPrefix,
+                          ),
+                          child: Container(
+                            color: Colors.black38,
+                            child: Center(
+                              child: Text(
+                                '+${post.media.length - 4}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),

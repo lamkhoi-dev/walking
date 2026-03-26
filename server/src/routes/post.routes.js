@@ -13,7 +13,7 @@ router.get('/feed', postController.getFeed);
 
 // === POSTS CRUD ===
 // POST   /posts                     → create post (with optional images)
-router.post('/', postUpload.array('images', 4), postController.createPost);
+router.post('/', postUpload.array('images', 8), postController.createPost);
 
 // GET    /posts/:id                 → get single post
 router.get('/:id', postController.getPostById);

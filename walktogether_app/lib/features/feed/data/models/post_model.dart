@@ -11,6 +11,9 @@ class PostModel {
   final String? sharedPostId;
   final String? sharedContestId;
   final PostModel? sharedPost;
+  final SharedContest? sharedContest;
+  final int? achievementRank;
+  final int? achievementSteps;
   final int likesCount;
   final int commentsCount;
   final bool isLiked;
@@ -29,6 +32,9 @@ class PostModel {
     this.sharedPostId,
     this.sharedContestId,
     this.sharedPost,
+    this.sharedContest,
+    this.achievementRank,
+    this.achievementSteps,
     this.likesCount = 0,
     this.commentsCount = 0,
     this.isLiked = false,
@@ -45,6 +51,11 @@ class PostModel {
     PostModel? sharedPost;
     if (json['sharedPostId'] is Map<String, dynamic>) {
       sharedPost = PostModel.fromJson(json['sharedPostId'] as Map<String, dynamic>);
+    }
+
+    SharedContest? sharedContest;
+    if (json['sharedContestId'] is Map<String, dynamic>) {
+      sharedContest = SharedContest.fromJson(json['sharedContestId'] as Map<String, dynamic>);
     }
 
     return PostModel(
@@ -65,8 +76,13 @@ class PostModel {
               .toList() ??
           [],
       sharedPostId: json['sharedPostId'] is String ? json['sharedPostId'] as String : null,
-      sharedContestId: json['sharedContestId']?.toString(),
+      sharedContestId: json['sharedContestId'] is String
+          ? json['sharedContestId'] as String
+          : (json['sharedContestId'] is Map ? json['sharedContestId']['_id']?.toString() : null),
       sharedPost: sharedPost,
+      sharedContest: sharedContest,
+      achievementRank: json['achievementRank'] as int?,
+      achievementSteps: json['achievementSteps'] as int?,
       likesCount: json['likesCount'] as int? ?? 0,
       commentsCount: json['commentsCount'] as int? ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
@@ -92,6 +108,9 @@ class PostModel {
       sharedPostId: sharedPostId,
       sharedContestId: sharedContestId,
       sharedPost: sharedPost,
+      sharedContest: sharedContest,
+      achievementRank: achievementRank,
+      achievementSteps: achievementSteps,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       isLiked: isLiked ?? this.isLiked,
@@ -140,6 +159,38 @@ class PostGroup {
   factory PostGroup.fromJson(Map<String, dynamic> json) => PostGroup(
         id: json['_id']?.toString() ?? '',
         name: json['name'] as String? ?? '',
+      );
+}
+
+/// Shared contest data populated by server
+class SharedContest {
+  final String id;
+  final String name;
+  final String? description;
+  final String status;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const SharedContest({
+    required this.id,
+    required this.name,
+    this.description,
+    this.status = 'active',
+    this.startDate,
+    this.endDate,
+  });
+
+  factory SharedContest.fromJson(Map<String, dynamic> json) => SharedContest(
+        id: json['_id']?.toString() ?? '',
+        name: json['name'] as String? ?? '',
+        description: json['description'] as String?,
+        status: json['status'] as String? ?? 'active',
+        startDate: json['startDate'] != null
+            ? DateTime.tryParse(json['startDate'] as String)
+            : null,
+        endDate: json['endDate'] != null
+            ? DateTime.tryParse(json['endDate'] as String)
+            : null,
       );
 }
 

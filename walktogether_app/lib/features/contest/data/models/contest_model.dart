@@ -61,13 +61,18 @@ class ContestModel {
       createdById = json['createdBy'] as String;
     }
 
-    // Parse participants
+    // Parse participants — handle both plain string IDs and populated objects
     List<ParticipantInfo> participants = [];
     if (json['participants'] is List) {
-      participants = (json['participants'] as List)
-          .where((p) => p is Map<String, dynamic>)
-          .map((p) => ParticipantInfo.fromJson(p as Map<String, dynamic>))
-          .toList();
+      participants = (json['participants'] as List).map((p) {
+        if (p is Map<String, dynamic>) {
+          return ParticipantInfo.fromJson(p);
+        } else if (p is String) {
+          // Plain ObjectId string (not populated)
+          return ParticipantInfo(id: p, fullName: '');
+        }
+        return ParticipantInfo(id: p.toString(), fullName: '');
+      }).toList();
     }
 
     return ContestModel(

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification icon: footsteps / shoe print (monochrome white) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <!-- Footsteps icon path -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10.74,11.72C11.21,11.21 11.5,10.5 11.5,9.65C11.5,7.54 9.93,5.16 8,5.16C6.07,5.16 4.5,7.54 4.5,9.65C4.5,10.5 4.79,11.21 5.26,11.72C3.55,12.06 2.5,13.17 2.5,14.65C2.5,16.3 3.8,17.16 6,17.16H10C12.2,17.16 13.5,16.3 13.5,14.65C13.5,13.17 12.45,12.06 10.74,11.72Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18.74,14.72C19.21,14.21 19.5,13.5 19.5,12.65C19.5,10.54 17.93,8.16 16,8.16C14.07,8.16 12.5,10.54 12.5,12.65C12.5,13.5 12.79,14.21 13.26,14.72C11.55,15.06 10.5,16.17 10.5,17.65C10.5,19.3 11.8,20.16 14,20.16H18C20.2,20.16 21.5,19.3 21.5,17.65C21.5,16.17 20.45,15.06 18.74,14.72Z" />
+</vector>

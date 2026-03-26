@@ -22,9 +22,13 @@ import 'features/contest/data/repositories/contest_repository.dart';
 import 'features/step_tracker/data/repositories/step_repository.dart';
 import 'features/step_tracker/presentation/bloc/step_tracker_bloc.dart';
 import 'features/feed/data/repositories/feed_repository.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize foreground task communication port
+  FlutterForegroundTask.initCommunicationPort();
 
   // Lock portrait orientation
   await SystemChrome.setPreferredOrientations([

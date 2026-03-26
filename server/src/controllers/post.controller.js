@@ -8,7 +8,7 @@ const { success, error } = require('../utils/response');
  */
 const createPost = async (req, res, next) => {
   try {
-    const { content, visibility, visibleToGroups, type, sharedPostId, sharedContestId } = req.body;
+    const { content, visibility, visibleToGroups, type, sharedPostId, sharedContestId, achievementRank, achievementSteps } = req.body;
 
     // Allow content-empty for shared posts/contests
     const isShared = type === 'shared_post' || type === 'shared_contest';
@@ -30,13 +30,21 @@ const createPost = async (req, res, next) => {
     const post = await postService.createPost(req.user._id, {
       content,
       visibility,
-      visibleToGroups: visibleToGroups
-        ? JSON.parse(typeof visibleToGroups === 'string' ? visibleToGroups : JSON.stringify(visibleToGroups))
-        : [],
+      visibleToGroups: (() => {
+        if (!visibleToGroups) return [];
+        if (Array.isArray(visibleToGroups)) return visibleToGroups;
+        if (typeof visibleToGroups === 'string') {
+          // Try JSON parse first, fallback to comma-separated
+          try { return JSON.parse(visibleToGroups); } catch { return visibleToGroups.split(',').filter(Boolean); }
+        }
+        return [];
+      })(),
       media,
       type,
       sharedPostId: sharedPostId || null,
       sharedContestId: sharedContestId || null,
+      achievementRank: achievementRank ? parseInt(achievementRank) : null,
+      achievementSteps: achievementSteps ? parseInt(achievementSteps) : null,
     });
 
     return success(res, 201, 'Tạo bài viết thành công', post);

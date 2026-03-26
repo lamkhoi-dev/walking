@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../group/data/repositories/group_repository.dart';
 import '../bloc/feed_bloc.dart';
 import '../widgets/post_card.dart';
 import 'package:go_router/go_router.dart';
@@ -62,8 +63,10 @@ class _FeedPageState extends State<FeedPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (_) => _FilterSheet(
         selected: _selectedFilter,
+        groupRepository: context.read<GroupRepository>(),
         onSelected: (value) {
           Navigator.pop(context);
           if (value != _selectedFilter) {
@@ -178,8 +181,18 @@ class _FeedPageState extends State<FeedPage> {
           return PostCard(
             post: post,
             onLike: () => context.read<FeedBloc>().add(FeedPostLikeToggled(post.id)),
-            onComment: () => context.push('/post/${post.id}'),
-            onTap: () => context.push('/post/${post.id}'),
+            onComment: () async {
+              await context.push('/post/${post.id}');
+              if (context.mounted) {
+                context.read<FeedBloc>().add(const FeedRefreshRequested());
+              }
+            },
+            onTap: () async {
+              await context.push('/post/${post.id}');
+              if (context.mounted) {
+                context.read<FeedBloc>().add(const FeedRefreshRequested());
+              }
+            },
           );
         },
       ),
@@ -243,15 +256,51 @@ class _FeedPageState extends State<FeedPage> {
 }
 
 // === FILTER BOTTOM SHEET ===
-class _FilterSheet extends StatelessWidget {
+class _FilterSheet extends StatefulWidget {
   final String selected;
   final ValueChanged<String> onSelected;
+  final GroupRepository groupRepository;
 
-  const _FilterSheet({required this.selected, required this.onSelected});
+  const _FilterSheet({
+    required this.selected,
+    required this.onSelected,
+    required this.groupRepository,
+  });
+
+  @override
+  State<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends State<_FilterSheet> {
+  List<_SimpleGroup> _groups = [];
+  bool _isLoadingGroups = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroups();
+  }
+
+  Future<void> _loadGroups() async {
+    try {
+      final groups = await widget.groupRepository.getGroups();
+      if (mounted) {
+        setState(() {
+          _groups = groups.map((g) => _SimpleGroup(id: g.id, name: g.name)).toList();
+          _isLoadingGroups = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingGroups = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -269,28 +318,57 @@ class _FilterSheet extends StatelessWidget {
           const SizedBox(height: 4),
           Text('Hiển thị bài viết theo phạm vi', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
           const SizedBox(height: 20),
-          _FilterOption(
-            icon: Icons.all_inclusive_rounded,
-            title: 'Tất cả',
-            subtitle: 'Bài viết công khai + nhóm của bạn',
-            isSelected: selected == 'all',
-            onTap: () => onSelected('all'),
-            gradient: [const Color(0xFF4CAF50), const Color(0xFF81C784)],
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FilterOption(
+                    icon: Icons.all_inclusive_rounded,
+                    title: 'Tất cả',
+                    subtitle: 'Bài viết công khai + nhóm của bạn',
+                    isSelected: widget.selected == 'all',
+                    onTap: () => widget.onSelected('all'),
+                    gradient: [const Color(0xFF4CAF50), const Color(0xFF81C784)],
+                  ),
+                  _FilterOption(
+                    icon: Icons.public_rounded,
+                    title: 'Công khai',
+                    subtitle: 'Chỉ bài viết công khai toàn hệ thống',
+                    isSelected: widget.selected == 'public',
+                    onTap: () => widget.onSelected('public'),
+                    gradient: [const Color(0xFF2196F3), const Color(0xFF64B5F6)],
+                  ),
+                  // Dynamic group filters
+                  if (_isLoadingGroups)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                    )
+                  else
+                    ..._groups.map((group) => _FilterOption(
+                      icon: Icons.group_rounded,
+                      title: group.name,
+                      subtitle: 'Bài viết trong nhóm này',
+                      isSelected: widget.selected == 'group:${group.id}',
+                      onTap: () => widget.onSelected('group:${group.id}'),
+                      gradient: [const Color(0xFFFF9800), const Color(0xFFFFB74D)],
+                    )),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
+              ),
+            ),
           ),
-          _FilterOption(
-            icon: Icons.public_rounded,
-            title: 'Công khai',
-            subtitle: 'Chỉ bài viết công khai toàn hệ thống',
-            isSelected: selected == 'public',
-            onTap: () => onSelected('public'),
-            gradient: [const Color(0xFF2196F3), const Color(0xFF64B5F6)],
-          ),
-          // TODO: Sprint 3+ — dynamic group filters loaded from user's groups
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
         ],
       ),
     );
   }
+}
+
+class _SimpleGroup {
+  final String id;
+  final String name;
+  const _SimpleGroup({required this.id, required this.name});
 }
 
 class _FilterOption extends StatelessWidget {

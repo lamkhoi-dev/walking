@@ -58,6 +58,14 @@ const postSchema = new mongoose.Schema(
       ref: 'Contest',
       default: null,
     },
+    achievementRank: {
+      type: Number,
+      default: null,
+    },
+    achievementSteps: {
+      type: Number,
+      default: null,
+    },
 
     // === COUNTERS (cached for performance) ===
     likesCount: {

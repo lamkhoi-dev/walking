@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/services/step_counter_service.dart';
 import '../../../../core/services/step_sync_service.dart';
@@ -146,6 +148,8 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
   final StepSyncService _syncService;
   final StepRepository? _stepRepository;
 
+  static const _notifChannel = MethodChannel('com.runly.app/notification');
+
   StreamSubscription<int>? _stepSub;
   StreamSubscription<String>? _statusSub;
   StreamSubscription<StepSyncStatus>? _syncSub;
@@ -233,9 +237,27 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
         }
       }
 
-      await _counterService.startTracking();
+      // Start foreground service only if not already running (preserves background state)
+      final isServiceRunning = await FlutterForegroundTask.isRunningService;
+      if (!isServiceRunning) {
+        await _counterService.startForegroundService();
+      } else {
+        debugPrint('Foreground service already running — just re-registering callback');
+      }
 
-      // Listen to step updates
+      // Start tracking — foreground service owns pedometer, skip local subscription
+      await _counterService.startTracking(foregroundServiceActive: true);
+
+      // Send current daily goal to TaskHandler for notification progress bar
+      FlutterForegroundTask.sendDataToTask({
+        'command': 'updateGoal',
+        'goal': _counterService.dailyGoal,
+      });
+
+      // Register callback for receiving data from foreground service TaskHandler
+      FlutterForegroundTask.addTaskDataCallback(_onForegroundTaskData);
+
+      // Listen to step updates (for foreground tracking)
       _stepSub?.cancel();
       _stepSub = _counterService.stepStream.listen(
         (steps) => add(_StepTrackerStepsUpdated(steps)),
@@ -317,6 +339,8 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     Emitter<StepTrackerState> emit,
   ) async {
     await _counterService.stopTracking();
+    await _counterService.stopForegroundService();
+    FlutterForegroundTask.removeTaskDataCallback(_onForegroundTaskData);
     _syncService.stopPeriodicSync();
 
     // Do a final sync before stopping
@@ -343,6 +367,8 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
 
     // Stop tracking and sync
     await _counterService.stopTracking();
+    await _counterService.stopForegroundService();
+    FlutterForegroundTask.removeTaskDataCallback(_onForegroundTaskData);
     _syncService.stopPeriodicSync();
 
     // Reset to initial state so next start will work
@@ -417,11 +443,67 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     }
   }
 
+  /// Callback for data from foreground service TaskHandler
+  void _onForegroundTaskData(Object data) {
+    if (data is Map) {
+      final steps = data['steps'] as int? ?? 0;
+      final status = data['status'] as String? ?? 'unknown';
+      if (steps > 0) {
+        add(_StepTrackerStepsUpdated(steps));
+        _updateNativeNotification(steps, status);
+      }
+      if (status != 'unknown') {
+        add(_StepTrackerStatusUpdated(status));
+      }
+    }
+  }
+
+  /// Call native Android to show custom RemoteViews notification with real icons
+  void _updateNativeNotification(int steps, String status) {
+    final goal = _counterService.dailyGoal;
+    final pct = goal > 0 ? (steps / goal * 100).clamp(0, 100).toInt() : 0;
+    final km = (steps * 0.762 / 1000).toStringAsFixed(1);
+    final cal = (steps * 0.04).toStringAsFixed(0);
+    final min = (steps * 0.01).toStringAsFixed(0);
+
+    String motivation;
+    if (pct >= 100) {
+      motivation = 'M\u1ee5c ti\u00eau ho\u00e0n th\u00e0nh!';
+    } else if (pct >= 75) {
+      motivation = 'S\u1eafp \u0111\u1ea1t r\u1ed3i, c\u1ed1 l\u00ean!';
+    } else if (pct >= 50) {
+      motivation = 'H\u01a1n n\u1eeda \u0111\u01b0\u1eddng r\u1ed3i!';
+    } else if (pct >= 25) {
+      motivation = '\u0110ang ti\u1ebfn b\u1ed9, c\u1ed1 l\u00ean!';
+    } else if (steps > 0) {
+      motivation = '\u0110ang \u0111\u1ebfm b\u01b0\u1edbc...';
+    } else {
+      motivation = 'S\u1eb5n s\u00e0ng \u0111\u1ebfm b\u01b0\u1edbc';
+    }
+
+    try {
+      _notifChannel.invokeMethod('showStepNotification', {
+        'steps': steps,
+        'goal': goal,
+        'distanceKm': km,
+        'calories': cal,
+        'minutes': min,
+        'progress': pct,
+        'motivation': motivation,
+        'isWalking': status == 'walking',
+      });
+    } catch (e) {
+      // Silently fail — TaskHandler's fallback notification still shows
+      debugPrint('Native notification failed: $e');
+    }
+  }
+
   @override
   Future<void> close() {
     _stepSub?.cancel();
     _statusSub?.cancel();
     _syncSub?.cancel();
+    FlutterForegroundTask.removeTaskDataCallback(_onForegroundTaskData);
     return super.close();
   }
 }
