@@ -129,6 +129,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final picked = await picker.pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 85);
     if (picked == null || !mounted) return;
 
+    // Trim path to handle space in scaled filenames from image_picker
+    final imagePath = picked.path.trim();
+
     // Show loading
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Đang tải ảnh lên...'), duration: Duration(seconds: 10)),
@@ -136,7 +139,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
     try {
       final repo = ProfileRepository(dio: _dioClient);
-      await repo.uploadAvatar(File(picked.path));
+      await repo.uploadAvatar(File(imagePath));
 
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();

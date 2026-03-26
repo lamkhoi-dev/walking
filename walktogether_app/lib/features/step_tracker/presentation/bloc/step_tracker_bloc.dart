@@ -371,6 +371,10 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
     FlutterForegroundTask.removeTaskDataCallback(_onForegroundTaskData);
     _syncService.stopPeriodicSync();
 
+    // Detach user — closes Hive box safely AFTER all tracking is stopped
+    await _counterService.detachUser();
+    _syncService.clearQueue();
+
     // Reset to initial state so next start will work
     emit(StepTrackerInitial());
     debugPrint('StepTrackerBloc reset to initial state');

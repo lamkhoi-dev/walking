@@ -524,7 +524,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       source: ImageSource.camera,
                       maxWidth: 1920, maxHeight: 1920, imageQuality: 85,
                     );
-                    if (picked != null) setState(() => _images.add(File(picked.path)));
+                    if (picked != null) {
+                      final file = File(picked.path.trim());
+                      if (file.existsSync()) setState(() => _images.add(file));
+                    }
                   }
                 : null,
           ),

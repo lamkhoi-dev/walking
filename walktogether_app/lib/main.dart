@@ -219,13 +219,10 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
           isLoggedIn = true;
           companyStatus = 'suspended';
         } else if (state is AuthUnauthenticated) {
-          // Reset step tracker bloc to initial state
+          // Reset step tracker bloc — handles detach, stop, and cleanup internally
           if (context.mounted) {
             context.read<StepTrackerBloc>().add(StepTrackerResetRequested());
           }
-          // Detach step data (preserves per-user data), stop sync, disconnect socket
-          await StepCounterService().detachUser();
-          StepSyncService().clearQueue();
           SocketService().disconnect();
         }
 

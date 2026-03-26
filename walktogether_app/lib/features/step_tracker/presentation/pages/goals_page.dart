@@ -1138,7 +1138,7 @@ class _ContestsCardState extends State<_ContestsCard> {
     final color = statusColors[contest.status] ?? AppColors.textSecondary;
 
     return InkWell(
-      onTap: () => context.push('/contest/${contest.id}'),
+      onTap: () => context.push('/contests/${contest.id}'),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
