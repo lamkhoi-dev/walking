@@ -43,8 +43,8 @@ class StepCounterService {
   Stream<String> get statusStream => _statusController.stream;
 
   bool get isTracking => _isTracking;
-  int get todaySteps => _box?.get(_keyTodaySteps, defaultValue: 0) ?? 0;
-  int get serverOffset => (_box?.get(_keyServerOffset, defaultValue: 0) ?? 0) as int;
+  int get todaySteps => (_box != null && _box!.isOpen) ? (_box?.get(_keyTodaySteps, defaultValue: 0) ?? 0) : 0;
+  int get serverOffset => (_box != null && _box!.isOpen) ? ((_box?.get(_keyServerOffset, defaultValue: 0) ?? 0) as int) : 0;
   String? get currentUserId => _currentUserId;
 
   /// Get the user's daily step goal (default 10000)
@@ -129,7 +129,7 @@ class StepCounterService {
     }
 
     final result = await FlutterForegroundTask.startService(
-      serviceId: 100,
+      serviceId: 200, // Must match StepNotificationHelper.NOTIFICATION_ID
       notificationTitle: 'Đang đếm bước chân...',
       notificationText: 'Đang khởi động...',
       callback: stepCounterCallback,
@@ -147,16 +147,21 @@ class StepCounterService {
   Future<void> switchUser(String userId) async {
     // If same user and box already open, just ensure tracking state is reset
     if (_currentUserId == userId && _box != null && _box!.isOpen) {
-      // Still need to reset in-memory tracking state because subscriptions
-      // may have been lost (app restart, hot reload, etc.)
       _isTracking = false;
       debugPrint('Step counter: same user, reset tracking state');
       return;
     }
 
-    // Stop tracking & close previous box
+    // Stop tracking & close previous box safely
     await stopTracking();
-    await _box?.close();
+    if (_box != null) {
+      try {
+        if (_box!.isOpen) await _box!.close();
+      } catch (e) {
+        debugPrint('Warning: error closing previous box: $e');
+      }
+      _box = null;
+    }
 
     _currentUserId = userId;
     final boxName = '$_boxPrefix$userId';
@@ -169,8 +174,7 @@ class StepCounterService {
     _isTracking = false;
     await _box?.put(_keyIsTracking, false);
 
-    // Emit current steps to listeners
-    _stepController.add(todaySteps);
+    // Don't emit todaySteps here — bloc will emit correct value after syncFromServer
 
     debugPrint('Step counter switched to user: $userId (box: $boxName)');
   }
@@ -180,8 +184,14 @@ class StepCounterService {
     await stopTracking();
     await stopForegroundService();
     _saveGoalRecord();
-    await _box?.close();
-    _box = null;
+    if (_box != null) {
+      try {
+        if (_box!.isOpen) await _box!.close();
+      } catch (e) {
+        debugPrint('Warning: error closing box on detach: $e');
+      }
+      _box = null;
+    }
     _currentUserId = null;
     _isTracking = false;
     _stepController.add(0);

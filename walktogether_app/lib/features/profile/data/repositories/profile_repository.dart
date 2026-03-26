@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
@@ -153,6 +155,22 @@ class ProfileRepository {
     return response.data['data'] as Map<String, dynamic>;
   }
 
+  /// Upload avatar image and update profile
+  Future<Map<String, dynamic>> uploadAvatar(File imageFile) async {
+    final formData = FormData.fromMap({
+      'avatar': await MultipartFile.fromFile(
+        imageFile.path,
+        filename: 'avatar.jpg',
+      ),
+    });
+
+    final response = await _dio.post(
+      ApiEndpoints.uploadAvatar,
+      data: formData,
+    );
+    return response.data['data'] as Map<String, dynamic>;
+  }
+
   /// Get personal statistics
   Future<PersonalStats> getStats() async {
     final response = await _dio.get(ApiEndpoints.myStats);
@@ -162,3 +180,4 @@ class ProfileRepository {
     return PersonalStats.fromJson(data);
   }
 }
+

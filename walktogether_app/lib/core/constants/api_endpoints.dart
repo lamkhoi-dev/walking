@@ -14,6 +14,7 @@ class ApiEndpoints {
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
   static const String updateMe = '/auth/me';
+  static const String uploadAvatar = '/auth/me/avatar';
   static const String myStats = '/auth/me/stats';
 
   // === COMPANY ===

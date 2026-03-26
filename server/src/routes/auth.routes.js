@@ -21,6 +21,10 @@ router.post('/refresh-token', authLimiter, validate(refreshTokenSchema), authCon
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getMe);
 router.put('/me', authenticate, authController.updateMe);
+
+const { avatarUpload } = require('../middleware/upload');
+router.post('/me/avatar', authenticate, avatarUpload.single('avatar'), authController.uploadAvatar);
+
 router.get('/me/stats', authenticate, authController.getMyStats);
 router.put('/change-password', authenticate, authController.changePassword);
 

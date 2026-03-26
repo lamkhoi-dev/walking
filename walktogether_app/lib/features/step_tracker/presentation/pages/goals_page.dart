@@ -1,10 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/services/step_counter_service.dart';
+import '../../../contest/data/models/contest_model.dart';
+import '../../../contest/data/repositories/contest_repository.dart';
 import '../bloc/step_tracker_bloc.dart';
 import '../widgets/step_stats_dialog.dart';
 
@@ -93,6 +98,10 @@ class _GoalsPageState extends State<GoalsPage> {
                 todaySteps: todaySteps,
                 goalHistory: _stepService.goalHistory,
               ),
+              const SizedBox(height: 20),
+
+              // === CONTESTS ===
+              _ContestsCard(),
               const SizedBox(height: 32),
             ],
           );
@@ -1015,4 +1024,191 @@ class _GoalRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _GoalRingPainter old) =>
       old.progress != progress || old.isCompleted != isCompleted;
+}
+
+// ============================================================
+// CONTESTS SECTION
+// ============================================================
+
+class _ContestsCard extends StatefulWidget {
+  const _ContestsCard();
+
+  @override
+  State<_ContestsCard> createState() => _ContestsCardState();
+}
+
+class _ContestsCardState extends State<_ContestsCard> {
+  List<ContestModel>? _contests;
+  bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_contests == null) _loadContests();
+  }
+
+  Future<void> _loadContests() async {
+    try {
+      final dio = context.read<DioClient>();
+      final repo = ContestRepository(dio: dio);
+      final contests = await repo.getContests();
+      // Sort: active first, then upcoming, then completed
+      contests.sort((a, b) {
+        const order = {'active': 0, 'upcoming': 1, 'completed': 2, 'cancelled': 3};
+        return (order[a.status] ?? 9).compareTo(order[b.status] ?? 9);
+      });
+      if (mounted) setState(() { _contests = contests; _isLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _contests = []; _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.emoji_events_rounded, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Text('Cuộc thi', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isLoading)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ))
+          else if (_contests == null || _contests!.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    Icon(Icons.emoji_events_outlined, size: 40, color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                    const SizedBox(height: 8),
+                    Text('Chưa tham gia cuộc thi nào', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                  ],
+                ),
+              ),
+            )
+          else
+            ...(_contests!.map((c) => _buildContestTile(c))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContestTile(ContestModel contest) {
+    final dateFormat = DateFormat('dd/MM');
+    final statusColors = {
+      'active': AppColors.success,
+      'upcoming': Colors.amber.shade700,
+      'completed': AppColors.textSecondary,
+      'cancelled': AppColors.danger,
+    };
+    final statusLabels = {
+      'active': 'Đang diễn ra',
+      'upcoming': 'Sắp diễn ra',
+      'completed': 'Đã kết thúc',
+      'cancelled': 'Đã hủy',
+    };
+    final color = statusColors[contest.status] ?? AppColors.textSecondary;
+
+    return InkWell(
+      onTap: () => context.push('/contest/${contest.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.emoji_events_rounded, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    contest.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textMain),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      if (contest.groupName != null) ...[
+                        Icon(Icons.group_rounded, size: 12, color: AppColors.textSecondary),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            contest.groupName!,
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Icon(Icons.calendar_today_rounded, size: 11, color: AppColors.textSecondary),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${dateFormat.format(contest.startDate)} - ${dateFormat.format(contest.endDate)}',
+                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                statusLabels[contest.status] ?? contest.status,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

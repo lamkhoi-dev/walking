@@ -191,7 +191,7 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         bool isLoggedIn = false;
         String? companyStatus;
         bool isConnectingServer = false;
@@ -201,8 +201,8 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
         } else if (state is AuthAuthenticated) {
           isLoggedIn = true;
           companyStatus = 'approved';
-          // Switch step counter to this user's box (async, bloc will wait)
-          StepCounterService().switchUser(state.user.id);
+          // Switch step counter to this user's box (MUST await to prevent race)
+          await StepCounterService().switchUser(state.user.id);
           // Auto-start step tracking (bloc handles waiting for switchUser)
           if (context.mounted) {
             context.read<StepTrackerBloc>().add(StepTrackerStartRequested());
@@ -224,7 +224,7 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
             context.read<StepTrackerBloc>().add(StepTrackerResetRequested());
           }
           // Detach step data (preserves per-user data), stop sync, disconnect socket
-          StepCounterService().detachUser();
+          await StepCounterService().detachUser();
           StepSyncService().clearQueue();
           SocketService().disconnect();
         }

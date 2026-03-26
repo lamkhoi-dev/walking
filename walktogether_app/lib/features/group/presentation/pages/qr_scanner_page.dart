@@ -168,7 +168,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
       // Refresh group list and navigate to group detail
       context.read<GroupListBloc>().add(GroupListLoadRequested());
-      context.go('/groups/$groupId');
+      context.push('/groups/$groupId');
     } catch (e) {
       if (!mounted) return;
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../group/data/repositories/group_repository.dart';
+import '../../data/models/post_model.dart';
+import '../../data/repositories/feed_repository.dart';
 import '../bloc/feed_bloc.dart';
 import '../widgets/post_card.dart';
 import 'package:go_router/go_router.dart';
@@ -187,6 +189,9 @@ class _FeedPageState extends State<FeedPage> {
                 context.read<FeedBloc>().add(const FeedRefreshRequested());
               }
             },
+            onShare: (post.type != 'shared_contest')
+                ? () => _sharePost(context, post)
+                : null,
             onTap: () async {
               await context.push('/post/${post.id}');
               if (context.mounted) {
@@ -252,6 +257,37 @@ class _FeedPageState extends State<FeedPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _sharePost(BuildContext context, PostModel post) async {
+    try {
+      final repo = context.read<FeedRepository>();
+      await repo.createPost(
+        content: '',
+        type: 'shared_post',
+        sharedPostId: post.id,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã chia sẻ bài viết!'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.read<FeedBloc>().add(const FeedRefreshRequested());
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi chia sẻ: $e'),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -450,4 +486,5 @@ class _FilterOption extends StatelessWidget {
       ),
     );
   }
+
 }

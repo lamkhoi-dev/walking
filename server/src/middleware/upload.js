@@ -26,6 +26,16 @@ const postStorage = new CloudinaryStorage({
   },
 });
 
+// === AVATAR IMAGES ===
+const avatarStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'walktogether/avatars',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'face', quality: 'auto' }],
+  },
+});
+
 const fileFilter = (req, file, cb) => {
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (allowedMimes.includes(file.mimetype)) {
@@ -49,7 +59,15 @@ const postUpload = multer({
   fileFilter,
 });
 
+// Avatar upload: single image, 5MB max
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter,
+});
+
 // Keep backward compatibility
 const upload = chatUpload;
 
-module.exports = { upload, chatUpload, postUpload };
+module.exports = { upload, chatUpload, postUpload, avatarUpload };
+

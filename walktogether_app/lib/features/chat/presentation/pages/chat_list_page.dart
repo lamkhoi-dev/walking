@@ -90,7 +90,12 @@ class _ChatListPageState extends State<ChatListPage> {
                 return ConversationTile(
                   conversation: conversation,
                   currentUserId: _currentUserId,
-                  onTap: () => context.push('/chat/${conversation.id}'),
+                  onTap: () async {
+                    await context.push('/chat/${conversation.id}');
+                    if (context.mounted) {
+                      context.read<ConversationListBloc>().add(ConversationListRefreshRequested());
+                    }
+                  },
                 );
               },
             ),

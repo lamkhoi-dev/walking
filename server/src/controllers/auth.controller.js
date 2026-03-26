@@ -132,6 +132,38 @@ const updateMe = async (req, res, next) => {
 };
 
 /**
+ * Upload avatar image
+ * POST /api/v1/auth/me/avatar
+ */
+const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return error(res, 400, 'Vui lòng chọn ảnh');
+    }
+
+    const avatarUrl = req.file.path; // Cloudinary URL from multer
+    const userId = req.user._id;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { avatar: avatarUrl } },
+      { new: true }
+    ).lean();
+
+    if (!user) {
+      return error(res, 404, 'Không tìm thấy người dùng');
+    }
+
+    return success(res, 200, 'Cập nhật ảnh đại diện thành công', user);
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
+/**
  * Get personal statistics
  * GET /api/v1/auth/me/stats
  */
@@ -240,6 +272,7 @@ module.exports = {
   logout,
   getMe,
   updateMe,
+  uploadAvatar,
   getMyStats,
   changePassword,
 };

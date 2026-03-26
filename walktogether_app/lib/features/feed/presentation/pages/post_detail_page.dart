@@ -968,7 +968,10 @@ class _PostDetailPageState extends State<PostDetailPage>
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 6),
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -989,20 +992,23 @@ class _PostDetailPageState extends State<PostDetailPage>
                                   ),
                                 ),
                                 if (contest.startDate != null &&
-                                    contest.endDate != null) ...[
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.calendar_today_rounded,
-                                      size: 12,
-                                      color: const Color(0xFF3E2723).withValues(alpha: 0.4)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${DateFormat('dd/MM').format(contest.startDate!)} – ${DateFormat('dd/MM').format(contest.endDate!)}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: const Color(0xFF3E2723).withValues(alpha: 0.5),
-                                    ),
+                                    contest.endDate != null)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.calendar_today_rounded,
+                                          size: 12,
+                                          color: const Color(0xFF3E2723).withValues(alpha: 0.4)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${DateFormat('dd/MM').format(contest.startDate!)} – ${DateFormat('dd/MM').format(contest.endDate!)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: const Color(0xFF3E2723).withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
                               ],
                             ),
                           ],
@@ -1308,15 +1314,16 @@ class _PostDetailPageState extends State<PostDetailPage>
                   ),
                 ),
 
-                // Share button
-                Expanded(
-                  child: _InteractionButton(
-                    icon: Icons.share_outlined,
-                    label: 'Chia sẻ',
-                    color: AppColors.textSecondary,
-                    onTap: () => _showShareSheet(post),
+                // Share button (hidden for achievement posts)
+                if (post.type != 'shared_contest')
+                  Expanded(
+                    child: _InteractionButton(
+                      icon: Icons.share_outlined,
+                      label: 'Chia sẻ',
+                      color: AppColors.textSecondary,
+                      onTap: () => _showShareSheet(post),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
