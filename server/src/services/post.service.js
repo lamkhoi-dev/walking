@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
  * Create a new post
  * Handles visibility normalization: 'all_groups' → populates visibleToGroups with author's groups
  */
-const createPost = async (authorId, { content, visibility, visibleToGroups, media, type }) => {
+const createPost = async (authorId, { content, visibility, visibleToGroups, media, type, sharedPostId, sharedContestId }) => {
   const author = await User.findById(authorId).select('companyId');
   if (!author) {
     const err = new Error('Người dùng không tồn tại');
@@ -53,10 +53,18 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
     type: postType,
     content: content || '',
     media: media || [],
+    sharedPostId: sharedPostId || undefined,
+    sharedContestId: sharedContestId || undefined,
   });
 
-  // Populate author info before returning
+  // Populate author + shared content before returning
   await post.populate('authorId', 'fullName avatar');
+  if (sharedContestId) {
+    await post.populate('sharedContestId', 'name description status startDate endDate');
+  }
+  if (sharedPostId) {
+    await post.populate({ path: 'sharedPostId', populate: { path: 'authorId', select: 'fullName avatar' } });
+  }
 
   return post;
 };

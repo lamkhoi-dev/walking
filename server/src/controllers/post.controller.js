@@ -8,9 +8,11 @@ const { success, error } = require('../utils/response');
  */
 const createPost = async (req, res, next) => {
   try {
-    const { content, visibility, visibleToGroups, type } = req.body;
+    const { content, visibility, visibleToGroups, type, sharedPostId, sharedContestId } = req.body;
 
-    if (!content && (!req.files || req.files.length === 0)) {
+    // Allow content-empty for shared posts/contests
+    const isShared = type === 'shared_post' || type === 'shared_contest';
+    if (!content && !isShared && (!req.files || req.files.length === 0)) {
       return error(res, 400, 'Nội dung hoặc ảnh không được để trống');
     }
 
@@ -33,6 +35,8 @@ const createPost = async (req, res, next) => {
         : [],
       media,
       type,
+      sharedPostId: sharedPostId || null,
+      sharedContestId: sharedContestId || null,
     });
 
     return success(res, 201, 'Tạo bài viết thành công', post);
