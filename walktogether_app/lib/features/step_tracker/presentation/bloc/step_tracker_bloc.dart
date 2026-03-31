@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -237,25 +238,34 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
         }
       }
 
-      // Start foreground service only if not already running (preserves background state)
-      final isServiceRunning = await FlutterForegroundTask.isRunningService;
-      if (!isServiceRunning) {
-        await _counterService.startForegroundService();
+      // Android: foreground service owns pedometer (background-safe)
+      // iOS: no foreground service, use local pedometer subscription
+      final useAndroidForeground = Platform.isAndroid;
+
+      if (useAndroidForeground) {
+        // Start foreground service only if not already running
+        final isServiceRunning = await FlutterForegroundTask.isRunningService;
+        if (!isServiceRunning) {
+          await _counterService.startForegroundService();
+        } else {
+          debugPrint('Foreground service already running — just re-registering callback');
+        }
+
+        await _counterService.startTracking(foregroundServiceActive: true);
+
+        // Send current daily goal to TaskHandler for notification progress bar
+        FlutterForegroundTask.sendDataToTask({
+          'command': 'updateGoal',
+          'goal': _counterService.dailyGoal,
+        });
+
+        // Register callback for receiving data from foreground service TaskHandler
+        FlutterForegroundTask.addTaskDataCallback(_onForegroundTaskData);
       } else {
-        debugPrint('Foreground service already running — just re-registering callback');
+        // iOS: subscribe local pedometer directly
+        await _counterService.startTracking(foregroundServiceActive: false);
+        debugPrint('iOS: using local pedometer subscription (no foreground service)');
       }
-
-      // Start tracking — foreground service owns pedometer, skip local subscription
-      await _counterService.startTracking(foregroundServiceActive: true);
-
-      // Send current daily goal to TaskHandler for notification progress bar
-      FlutterForegroundTask.sendDataToTask({
-        'command': 'updateGoal',
-        'goal': _counterService.dailyGoal,
-      });
-
-      // Register callback for receiving data from foreground service TaskHandler
-      FlutterForegroundTask.addTaskDataCallback(_onForegroundTaskData);
 
       // Listen to step updates (for foreground tracking)
       _stepSub?.cancel();

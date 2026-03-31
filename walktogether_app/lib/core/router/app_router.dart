@@ -204,6 +204,7 @@ class AppRouter {
         builder: (context, state) {
           final conversationId = state.pathParameters['id']!;
           final title = state.uri.queryParameters['title'];
+          final groupId = state.uri.queryParameters['groupId'];
           return BlocProvider(
             create: (_) => ChatBloc(
               repository: context.read<ChatRepository>(),
@@ -211,6 +212,7 @@ class AppRouter {
             child: ChatPage(
               conversationId: conversationId,
               title: title,
+              groupId: groupId,
             ),
           );
         },

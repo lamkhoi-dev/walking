@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -13,11 +14,13 @@ import '../widgets/chat_input_bar.dart';
 class ChatPage extends StatefulWidget {
   final String conversationId;
   final String? title;
+  final String? groupId;
 
   const ChatPage({
     super.key,
     required this.conversationId,
     this.title,
+    this.groupId,
   });
 
   @override
@@ -93,6 +96,29 @@ class _ChatPageState extends State<ChatPage> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          if (widget.groupId != null && widget.groupId!.isNotEmpty)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (value) {
+                if (value == 'group_detail') {
+                  context.push('/groups/${widget.groupId}');
+                }
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'group_detail',
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 20),
+                      SizedBox(width: 10),
+                      Text('Chi tiết nhóm'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       body: BlocConsumer<ChatBloc, ChatState>(
         listener: (context, state) {

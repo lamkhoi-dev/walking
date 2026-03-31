@@ -91,9 +91,13 @@ class _ChatListPageState extends State<ChatListPage> {
                   conversation: conversation,
                   currentUserId: _currentUserId,
                   onTap: () async {
-                    await context.push('/chat/${conversation.id}');
+                    await context.push(
+                      '/chat/${conversation.id}?title=${Uri.encodeComponent(conversation.displayName(_currentUserId))}&groupId=${conversation.groupId ?? ''}',
+                    );
                     if (context.mounted) {
-                      context.read<ConversationListBloc>().add(ConversationListRefreshRequested());
+                      context.read<ConversationListBloc>().add(
+                        ConversationListMarkRead(conversation.id),
+                      );
                     }
                   },
                 );
