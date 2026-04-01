@@ -9,6 +9,9 @@ import '../../../../shared/widgets/app_error_widget.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../chat/presentation/bloc/conversation_list_bloc.dart';
+import '../../../feed/data/models/post_model.dart';
+import '../../../feed/data/repositories/feed_repository.dart';
+import '../../../feed/presentation/widgets/post_card.dart';
 import '../../data/repositories/group_repository.dart';
 import '../bloc/group_detail_bloc.dart';
 import '../widgets/member_list_tile.dart';
@@ -31,7 +34,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     context.read<GroupDetailBloc>().add(GroupDetailLoadRequested(widget.groupId));
   }
 
@@ -234,6 +237,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 3,
                     tabs: const [
+                      Tab(text: 'Bài viết'),
                       Tab(text: 'Thành viên'),
                       Tab(text: 'Thông tin'),
                     ],
@@ -244,10 +248,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             body: TabBarView(
               controller: _tabController,
               children: [
-                // Tab 1: Members
+                // Tab 1: Group Feed (Posts)
+                _GroupFeedTab(groupId: widget.groupId),
+
+                // Tab 2: Members
                 _buildMembersTab(context, canManage, currentUserId, group),
 
-                // Tab 2: Info
+                // Tab 3: Info
                 _buildInfoTab(context, group),
               ],
             ),
@@ -716,6 +723,106 @@ class _StatItem extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Group feed tab — shows posts shared to this group
+class _GroupFeedTab extends StatefulWidget {
+  final String groupId;
+  const _GroupFeedTab({required this.groupId});
+
+  @override
+  State<_GroupFeedTab> createState() => _GroupFeedTabState();
+}
+
+class _GroupFeedTabState extends State<_GroupFeedTab> with AutomaticKeepAliveClientMixin {
+  List<PostModel> _posts = [];
+  bool _isLoading = true;
+  bool _isEmpty = false;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
+
+  Future<void> _loadPosts() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final repo = context.read<FeedRepository>();
+      final response = await repo.getFeed(filter: 'group:${widget.groupId}');
+      if (mounted) {
+        setState(() {
+          _posts = response.posts;
+          _isEmpty = _posts.isEmpty;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isEmpty = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.article_outlined, size: 56, color: AppColors.textSecondary.withValues(alpha: 0.4)),
+            const SizedBox(height: 12),
+            Text(
+              'Ch\u01b0a c\u00f3 b\u00e0i vi\u1ebft n\u00e0o',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Chia s\u1ebb b\u00e0i vi\u1ebft t\u1eeb b\u1ea3ng tin v\u00e0o nh\u00f3m n\u00e0y',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadPosts,
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: _posts.length,
+        itemBuilder: (context, index) {
+          final post = _posts[index];
+          return PostCard(
+            post: post,
+            onLike: () {},
+            onComment: () => context.push('/posts/${post.id}'),
+            onTap: () => context.push('/posts/${post.id}'),
+          );
+        },
+      ),
     );
   }
 }

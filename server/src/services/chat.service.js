@@ -92,6 +92,10 @@ const getMessages = async (conversationId, page = 1, limit = 30) => {
   const [messages, total] = await Promise.all([
     Message.find({ conversationId })
       .populate('senderId', 'fullName avatar')
+      .populate({
+        path: 'sharedPostId',
+        populate: { path: 'authorId', select: 'fullName avatar' },
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
@@ -113,13 +117,14 @@ const getMessages = async (conversationId, page = 1, limit = 30) => {
 /**
  * Create a new message in a conversation
  */
-const createMessage = async ({ conversationId, senderId, type = 'text', content, imageUrl }) => {
+const createMessage = async ({ conversationId, senderId, type = 'text', content, imageUrl, sharedPostId }) => {
   const message = await Message.create({
     conversationId,
     senderId,
     type,
     content,
     imageUrl,
+    sharedPostId: sharedPostId || undefined,
     readBy: [senderId], // Sender has read their own message
   });
 
@@ -129,9 +134,13 @@ const createMessage = async ({ conversationId, senderId, type = 'text', content,
     updatedAt: new Date(),
   });
 
-  // Populate sender info
+  // Populate sender info + shared post
   const populated = await Message.findById(message._id)
-    .populate('senderId', 'fullName avatar');
+    .populate('senderId', 'fullName avatar')
+    .populate({
+      path: 'sharedPostId',
+      populate: { path: 'authorId', select: 'fullName avatar' },
+    });
 
   return populated;
 };
@@ -185,6 +194,40 @@ const isParticipant = async (conversationId, userId) => {
   return !!conversation;
 };
 
+/**
+ * Share a post to a group conversation by groupId
+ * Finds the conversation linked to the group, then sends a shared_post message
+ */
+const sharePostToGroup = async (groupId, senderId, postId, content) => {
+  // Find conversation for this group
+  const conversation = await Conversation.findOne({
+    groupId,
+    isActive: true,
+  });
+  if (!conversation) {
+    const err = new Error('Không tìm thấy hội thoại của nhóm');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // Verify sender is a participant
+  if (!conversation.participants.some(p => p.toString() === senderId.toString())) {
+    const err = new Error('Bạn không phải thành viên nhóm');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const message = await createMessage({
+    conversationId: conversation._id,
+    senderId,
+    type: 'shared_post',
+    content: content || 'Đã chia sẻ một bài viết',
+    sharedPostId: postId,
+  });
+
+  return { message, conversationId: conversation._id };
+};
+
 module.exports = {
   getConversations,
   getOrCreateDirectConversation,
@@ -193,4 +236,5 @@ module.exports = {
   createSystemMessage,
   markAsRead,
   isParticipant,
+  sharePostToGroup,
 };

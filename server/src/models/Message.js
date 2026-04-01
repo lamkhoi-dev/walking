@@ -14,7 +14,7 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['text', 'image', 'system'],
+      enum: ['text', 'image', 'system', 'shared_post'],
       default: 'text',
     },
     content: {
@@ -23,6 +23,11 @@ const messageSchema = new mongoose.Schema(
     },
     imageUrl: {
       type: String,
+      default: null,
+    },
+    sharedPostId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
       default: null,
     },
     readBy: [

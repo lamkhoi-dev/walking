@@ -151,6 +151,51 @@ const uploadImage = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /share-post — share a post to group chat(s)
+ * Body: { postId, groupIds: [...], content? }
+ */
+const sharePostToGroups = async (req, res, next) => {
+  try {
+    const { postId, groupIds, content } = req.body;
+
+    if (!postId) {
+      return error(res, 400, 'postId là bắt buộc');
+    }
+    if (!groupIds || !Array.isArray(groupIds) || groupIds.length === 0) {
+      return error(res, 400, 'groupIds là bắt buộc');
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const groupId of groupIds) {
+      try {
+        const result = await chatService.sharePostToGroup(
+          groupId,
+          req.user._id,
+          postId,
+          content,
+        );
+        results.push({
+          groupId,
+          conversationId: result.conversationId,
+          messageId: result.message._id,
+        });
+      } catch (err) {
+        errors.push({ groupId, error: err.message });
+      }
+    }
+
+    return success(res, 201, `Đã chia sẻ đến ${results.length} nhóm`, {
+      shared: results,
+      errors,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getConversations,
   getOrCreateDirect,
@@ -158,4 +203,5 @@ module.exports = {
   createMessage,
   markAsRead,
   uploadImage,
+  sharePostToGroups,
 };

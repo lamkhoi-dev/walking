@@ -10,6 +10,7 @@ import '../../../contest/data/models/leaderboard_entry_model.dart';
 import '../../../contest/data/repositories/contest_repository.dart';
 import '../../../contest/presentation/widgets/podium_widget.dart';
 import '../../../group/data/repositories/group_repository.dart';
+import '../../../chat/data/repositories/chat_repository.dart';
 
 import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
@@ -206,7 +207,7 @@ class _PostDetailPageState extends State<PostDetailPage>
       builder: (_) => ShareToGroupSheet(
         post: post,
         groupRepository: context.read<GroupRepository>(),
-        feedRepository: context.read<FeedRepository>(),
+        chatRepository: context.read<ChatRepository>(),
         onShared: () {
           if (mounted) {
             context.read<PostDetailBloc>().add(PostDetailLoadRequested(post.id));

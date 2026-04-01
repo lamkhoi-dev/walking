@@ -37,7 +37,7 @@ const chatHandler = (io, socket) => {
   /**
    * chat:send_message — send a message to a conversation
    */
-  socket.on('chat:send_message', async ({ conversationId, type = 'text', content, imageUrl }) => {
+  socket.on('chat:send_message', async ({ conversationId, type = 'text', content, imageUrl, sharedPostId }) => {
     try {
       if (!content && type !== 'image') {
         socket.emit('chat:error', { message: 'Nội dung tin nhắn không được trống' });
@@ -56,6 +56,7 @@ const chatHandler = (io, socket) => {
         type,
         content: content || '',
         imageUrl,
+        sharedPostId,
       });
 
       // Send to all other users in the conversation room

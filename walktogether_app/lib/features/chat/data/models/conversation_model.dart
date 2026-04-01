@@ -134,9 +134,11 @@ class MessageModel {
   final String? senderId;
   final String? senderName;
   final String? senderAvatar;
-  final String type; // 'text', 'image', 'system'
+  final String type; // 'text', 'image', 'system', 'shared_post'
   final String content;
   final String? imageUrl;
+  final String? sharedPostId;
+  final SharedPostData? sharedPost;
   final List<String> readBy;
   final DateTime createdAt;
 
@@ -152,6 +154,8 @@ class MessageModel {
     required this.type,
     required this.content,
     this.imageUrl,
+    this.sharedPostId,
+    this.sharedPost,
     this.readBy = const [],
     required this.createdAt,
     this.isSending = false,
@@ -160,6 +164,7 @@ class MessageModel {
   bool isMine(String currentUserId) => senderId == currentUserId;
   bool get isSystem => type == 'system';
   bool get isImage => type == 'image';
+  bool get isSharedPost => type == 'shared_post';
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     // Parse senderId (can be populated or just a string)
@@ -181,6 +186,17 @@ class MessageModel {
       readBy = (json['readBy'] as List).map((e) => e.toString()).toList();
     }
 
+    // Parse sharedPostId
+    String? sharedPostId;
+    SharedPostData? sharedPost;
+    if (json['sharedPostId'] is Map<String, dynamic>) {
+      final sp = json['sharedPostId'] as Map<String, dynamic>;
+      sharedPostId = sp['_id'] as String?;
+      sharedPost = SharedPostData.fromJson(sp);
+    } else if (json['sharedPostId'] is String) {
+      sharedPostId = json['sharedPostId'] as String;
+    }
+
     return MessageModel(
       id: json['_id'] as String,
       conversationId: json['conversationId'] is String
@@ -192,6 +208,8 @@ class MessageModel {
       type: json['type'] as String? ?? 'text',
       content: json['content'] as String? ?? '',
       imageUrl: json['imageUrl'] as String?,
+      sharedPostId: sharedPostId,
+      sharedPost: sharedPost,
       readBy: readBy,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
@@ -221,6 +239,49 @@ class MessageModel {
       readBy: [senderId],
       createdAt: DateTime.now(),
       isSending: true,
+    );
+  }
+}
+
+/// Lightweight model for shared post preview in chat
+class SharedPostData {
+  final String id;
+  final String content;
+  final String? authorName;
+  final String? authorAvatar;
+  final List<String> media;
+  final String type;
+
+  SharedPostData({
+    required this.id,
+    required this.content,
+    this.authorName,
+    this.authorAvatar,
+    this.media = const [],
+    this.type = 'text',
+  });
+
+  factory SharedPostData.fromJson(Map<String, dynamic> json) {
+    String? authorName;
+    String? authorAvatar;
+    if (json['authorId'] is Map<String, dynamic>) {
+      final a = json['authorId'] as Map<String, dynamic>;
+      authorName = a['fullName'] as String?;
+      authorAvatar = a['avatar'] as String?;
+    }
+
+    List<String> media = [];
+    if (json['media'] is List) {
+      media = (json['media'] as List).map((e) => e.toString()).toList();
+    }
+
+    return SharedPostData(
+      id: json['_id'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+      authorName: authorName,
+      authorAvatar: authorAvatar,
+      media: media,
+      type: json['type'] as String? ?? 'text',
     );
   }
 }

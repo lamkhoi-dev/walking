@@ -25,4 +25,7 @@ router.post('/conversations/:id/upload', chatUpload.single('image'), chatControl
 // PUT    /conversations/:id/read     → mark as read
 router.put('/conversations/:id/read', chatController.markAsRead);
 
+// POST   /share-post                 → share a post to group chat(s)
+router.post('/share-post', chatController.sharePostToGroups);
+
 module.exports = router;

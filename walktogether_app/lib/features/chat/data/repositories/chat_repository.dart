@@ -105,6 +105,22 @@ class ChatRepository {
       response.data['data'] as Map<String, dynamic>,
     );
   }
+  /// Share a post to group chat(s)
+  Future<Map<String, dynamic>> sharePostToGroups({
+    required String postId,
+    required List<String> groupIds,
+    String? content,
+  }) async {
+    final response = await _dioClient.post(
+      ApiEndpoints.sharePost,
+      data: {
+        'postId': postId,
+        'groupIds': groupIds,
+        if (content != null && content.isNotEmpty) 'content': content,
+      },
+    );
+    return response.data['data'] as Map<String, dynamic>;
+  }
 }
 
 /// Response wrapper for paginated messages

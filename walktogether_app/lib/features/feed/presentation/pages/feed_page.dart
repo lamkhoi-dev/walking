@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../group/data/repositories/group_repository.dart';
+import '../../../chat/data/repositories/chat_repository.dart';
 import '../../data/models/post_model.dart';
-import '../../data/repositories/feed_repository.dart';
 import '../bloc/feed_bloc.dart';
 import '../widgets/post_card.dart';
 import '../widgets/share_to_group_sheet.dart';
@@ -268,7 +268,7 @@ class _FeedPageState extends State<FeedPage> {
       builder: (_) => ShareToGroupSheet(
         post: post,
         groupRepository: context.read<GroupRepository>(),
-        feedRepository: context.read<FeedRepository>(),
+        chatRepository: context.read<ChatRepository>(),
         onShared: () {
           if (context.mounted) {
             context.read<FeedBloc>().add(const FeedRefreshRequested());

@@ -3,27 +3,25 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../group/data/models/group_model.dart';
 import '../../../group/data/repositories/group_repository.dart';
+import '../../../chat/data/repositories/chat_repository.dart';
 import '../../data/models/post_model.dart';
-import '../../data/repositories/feed_repository.dart';
 
-/// Bottom sheet for sharing a post to groups (with preview + multi-select).
+/// Bottom sheet for sharing a post to group chats (sends a preview message).
 ///
 /// Visibility rules:
 ///   - Post visibility='public' → user can share to ANY joined group
 ///   - Post visibility='groups' + visibleToGroups=[A,B] → only share to A or B
-///
-/// Also includes a "Chia sẻ lên bảng tin" option for public sharing.
 class ShareToGroupSheet extends StatefulWidget {
   final PostModel post;
   final GroupRepository groupRepository;
-  final FeedRepository feedRepository;
+  final ChatRepository chatRepository;
   final VoidCallback? onShared;
 
   const ShareToGroupSheet({
     super.key,
     required this.post,
     required this.groupRepository,
-    required this.feedRepository,
+    required this.chatRepository,
     this.onShared,
   });
 
@@ -36,7 +34,6 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
   final Set<String> _selectedGroupIds = {};
   bool _isLoading = true;
   bool _isSubmitting = false;
-  bool _shareToFeed = false;
   String? _error;
 
   @override
@@ -77,39 +74,25 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
     }
   }
 
-  bool get _canShare => _selectedGroupIds.isNotEmpty || _shareToFeed;
+  bool get _canShare => _selectedGroupIds.isNotEmpty;
 
   Future<void> _submit() async {
     if (!_canShare || _isSubmitting) return;
     setState(() => _isSubmitting = true);
 
     try {
-      // Share to selected groups
-      if (_selectedGroupIds.isNotEmpty) {
-        await widget.feedRepository.createPost(
-          content: '',
-          type: 'shared_post',
-          sharedPostId: widget.post.id,
-          visibility: 'groups',
-          visibleToGroupIds: _selectedGroupIds.toList(),
-        );
-      }
-
-      // Share to public feed
-      if (_shareToFeed) {
-        await widget.feedRepository.createPost(
-          content: '',
-          type: 'shared_post',
-          sharedPostId: widget.post.id,
-          visibility: 'public',
-        );
-      }
+      // Send shared_post message to each selected group's chat
+      await widget.chatRepository.sharePostToGroups(
+        postId: widget.post.id,
+        groupIds: _selectedGroupIds.toList(),
+      );
 
       if (mounted) {
         Navigator.pop(context);
+        final count = _selectedGroupIds.length;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã chia sẻ bài viết!'),
+          SnackBar(
+            content: Text('Đã chia sẻ vào $count nhóm!'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -202,10 +185,6 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
                 // Post preview
                 _buildPostPreview(),
                 const SizedBox(height: 20),
-
-                // "Chia sẻ lên bảng tin" option
-                _buildFeedOption(),
-                const SizedBox(height: 16),
 
                 // Group list header
                 Row(
@@ -391,65 +370,6 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildFeedOption() {
-    return InkWell(
-      onTap: () => setState(() => _shareToFeed = !_shareToFeed),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: _shareToFeed
-              ? AppColors.primary.withValues(alpha: 0.06)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _shareToFeed ? AppColors.primary : Colors.grey.shade200,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.public_rounded, color: AppColors.info, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Chia sẻ lên bảng tin',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMain,
-                    ),
-                  ),
-                  Text(
-                    'Mọi người sẽ thấy bài viết này',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            Checkbox(
-              value: _shareToFeed,
-              onChanged: (v) => setState(() => _shareToFeed = v ?? false),
-              activeColor: AppColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            ),
-          ],
-        ),
       ),
     );
   }

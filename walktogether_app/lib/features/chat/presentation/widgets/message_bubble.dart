@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/conversation_model.dart';
 import 'package:intl/intl.dart';
@@ -112,7 +114,12 @@ class _MessageBubbleState extends State<MessageBubble>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Message content
+                // Shared post preview
+                if (widget.message.isSharedPost &&
+                    widget.message.sharedPost != null)
+                  _buildSharedPostPreview(isMine),
+
+                // Image content
                 if (widget.message.isImage && widget.message.imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -140,7 +147,8 @@ class _MessageBubbleState extends State<MessageBubble>
                     ),
                   ),
 
-                if (!widget.message.isImage)
+                // Text content (non-image, non-shared-post)
+                if (!widget.message.isImage && !widget.message.isSharedPost)
                   Text(
                     widget.message.content,
                     style: TextStyle(
@@ -184,6 +192,127 @@ class _MessageBubbleState extends State<MessageBubble>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Build a tappable shared post preview card inside the bubble
+  Widget _buildSharedPostPreview(bool isMine) {
+    final post = widget.message.sharedPost!;
+    final textColor = isMine ? Colors.white : AppColors.textMain;
+    final subColor = isMine ? Colors.white70 : AppColors.textSecondary;
+    final cardBg = isMine
+        ? Colors.white.withValues(alpha: 0.15)
+        : AppColors.background;
+
+    return GestureDetector(
+      onTap: () {
+        if (post.id.isNotEmpty) {
+          context.push('/posts/${post.id}');
+        }
+      },
+      child: Container(
+        width: 220,
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: isMine
+              ? null
+              : Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Post author row
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                  backgroundImage: post.authorAvatar != null
+                      ? CachedNetworkImageProvider(post.authorAvatar!)
+                      : null,
+                  child: post.authorAvatar == null
+                      ? Text(
+                          (post.authorName ?? '?')[0].toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    post.authorName ?? 'Người dùng',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Post content preview
+            if (post.content.isNotEmpty)
+              Text(
+                post.content,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: textColor,
+                  height: 1.3,
+                ),
+              ),
+
+            // If post has media, show thumbnail
+            if (post.media.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: post.media.first,
+                  height: 80,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => Container(
+                    height: 80,
+                    color: Colors.grey.shade200,
+                    child: const Center(
+                      child: Icon(Icons.image, color: Colors.grey),
+                    ),
+                  ),
+                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.open_in_new_rounded, size: 12, color: subColor),
+                const SizedBox(width: 4),
+                Text(
+                  'Xem bài viết',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: subColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
