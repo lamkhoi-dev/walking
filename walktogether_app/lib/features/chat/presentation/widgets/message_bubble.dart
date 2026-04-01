@@ -208,7 +208,7 @@ class _MessageBubbleState extends State<MessageBubble>
     return GestureDetector(
       onTap: () {
         if (post.id.isNotEmpty) {
-          context.push('/posts/${post.id}');
+          context.push('/post/${post.id}');
         }
       },
       child: Container(

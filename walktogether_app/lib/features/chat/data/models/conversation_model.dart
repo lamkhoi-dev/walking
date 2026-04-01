@@ -272,7 +272,10 @@ class SharedPostData {
 
     List<String> media = [];
     if (json['media'] is List) {
-      media = (json['media'] as List).map((e) => e.toString()).toList();
+      media = (json['media'] as List)
+          .map((e) => e is Map<String, dynamic> ? (e['url'] as String? ?? '') : e.toString())
+          .where((url) => url.isNotEmpty)
+          .toList();
     }
 
     return SharedPostData(
