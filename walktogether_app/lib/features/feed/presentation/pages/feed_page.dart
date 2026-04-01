@@ -6,6 +6,7 @@ import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
 import '../bloc/feed_bloc.dart';
 import '../widgets/post_card.dart';
+import '../widgets/share_to_group_sheet.dart';
 import 'package:go_router/go_router.dart';
 
 class FeedPage extends StatefulWidget {
@@ -259,35 +260,22 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
-  Future<void> _sharePost(BuildContext context, PostModel post) async {
-    try {
-      final repo = context.read<FeedRepository>();
-      await repo.createPost(
-        content: '',
-        type: 'shared_post',
-        sharedPostId: post.id,
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã chia sẻ bài viết!'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        context.read<FeedBloc>().add(const FeedRefreshRequested());
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi chia sẻ: $e'),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
+  void _sharePost(BuildContext context, PostModel post) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ShareToGroupSheet(
+        post: post,
+        groupRepository: context.read<GroupRepository>(),
+        feedRepository: context.read<FeedRepository>(),
+        onShared: () {
+          if (context.mounted) {
+            context.read<FeedBloc>().add(const FeedRefreshRequested());
+          }
+        },
+      ),
+    );
   }
 }
 

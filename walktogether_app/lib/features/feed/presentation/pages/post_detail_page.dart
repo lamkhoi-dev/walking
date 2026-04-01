@@ -9,12 +9,14 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../contest/data/models/leaderboard_entry_model.dart';
 import '../../../contest/data/repositories/contest_repository.dart';
 import '../../../contest/presentation/widgets/podium_widget.dart';
+import '../../../group/data/repositories/group_repository.dart';
 
 import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
 import '../bloc/post_detail_bloc.dart';
 import '../widgets/comment_tile.dart';
 import '../widgets/like_animation_widget.dart';
+import '../widgets/share_to_group_sheet.dart';
 import 'package:intl/intl.dart';
 
 class PostDetailPage extends StatefulWidget {
@@ -106,6 +108,15 @@ class _PostDetailPageState extends State<PostDetailPage>
                 ),
               ),
               const SizedBox(height: 16),
+              if (isOwner && post.type != 'shared_post' && post.type != 'shared_contest')
+                _BottomSheetItem(
+                  icon: Icons.edit_rounded,
+                  label: 'Chỉnh sửa bài viết',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showEditSheet(post);
+                  },
+                ),
               if (isOwner)
                 _BottomSheetItem(
                   icon: Icons.delete_outline_rounded,
@@ -190,96 +201,139 @@ class _PostDetailPageState extends State<PostDetailPage>
   void _showShareSheet(PostModel post) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.share_rounded, color: AppColors.primary, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Chia sẻ bài viết',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textMain,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _BottomSheetItem(
-                icon: Icons.repeat_rounded,
-                label: 'Chia sẻ lên bảng tin',
-                subtitle: 'Chia sẻ bài viết này cho mọi người thấy',
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareToFeed(post);
-                },
-              ),
-              _BottomSheetItem(
-                icon: Icons.link_rounded,
-                label: 'Sao chép liên kết',
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: 'walktogether://post/${post.id}'));
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã sao chép liên kết'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
+      builder: (_) => ShareToGroupSheet(
+        post: post,
+        groupRepository: context.read<GroupRepository>(),
+        feedRepository: context.read<FeedRepository>(),
+        onShared: () {
+          if (mounted) {
+            context.read<PostDetailBloc>().add(PostDetailLoadRequested(post.id));
+          }
+        },
       ),
     );
   }
 
-  Future<void> _shareToFeed(PostModel post) async {
-    try {
-      final repo = context.read<FeedRepository>();
-      await repo.createPost(
-        content: '',
-        type: 'shared_post',
-        sharedPostId: post.id,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã chia sẻ bài viết!'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
+  void _showEditSheet(PostModel post) {
+    final editController = TextEditingController(text: post.content);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
-        );
-      }
-    }
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Ch\u1ec9nh s\u1eeda b\u00e0i vi\u1ebft',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: editController,
+                    maxLines: null,
+                    minLines: 4,
+                    maxLength: 2000,
+                    textCapitalization: TextCapitalization.sentences,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'N\u1ed9i dung b\u00e0i vi\u1ebft...',
+                      hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    style: const TextStyle(fontSize: 15, height: 1.5),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final newContent = editController.text.trim();
+                        if (newContent.isEmpty) return;
+                        Navigator.pop(ctx);
+                        try {
+                          final repo = context.read<FeedRepository>();
+                          await repo.updatePost(post.id, content: newContent);
+                          if (mounted) {
+                            context.read<PostDetailBloc>().add(PostDetailLoadRequested(post.id));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('\u0110\u00e3 c\u1eadp nh\u1eadt b\u00e0i vi\u1ebft!'),
+                                backgroundColor: AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('L\u1ed7i: $e'), backgroundColor: AppColors.danger),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: const Text('L\u01b0u thay \u0111\u1ed5i', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _toggleLike() {
@@ -1496,6 +1550,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 controller: _commentController,
                 focusNode: _focusNode,
                 maxLines: null,
+                textCapitalization: TextCapitalization.sentences,
                 textInputAction: TextInputAction.newline,
                 style: const TextStyle(fontSize: 14.5, height: 1.3),
                 decoration: InputDecoration(

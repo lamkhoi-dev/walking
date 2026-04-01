@@ -301,6 +301,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     maxLines: null,
                     minLines: 5,
                     maxLength: 2000,
+                    textCapitalization: TextCapitalization.sentences,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: 'Bạn đang nghĩ gì?',

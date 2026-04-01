@@ -5,6 +5,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/step_sync_service.dart';
+import '../../../contest/data/models/contest_model.dart';
+import '../../../contest/data/repositories/contest_repository.dart';
 import '../bloc/step_tracker_bloc.dart';
 import '../widgets/step_progress_ring.dart';
 import '../widgets/step_stat_card.dart';
@@ -171,6 +173,10 @@ class _ActivityPageState extends State<ActivityPage> {
 
           // Hourly chart
           _buildHourlyChart(state.hourlySteps, state.todaySteps),
+          const SizedBox(height: 24),
+
+          // Active contests section
+          _ActiveContestsSection(),
           const SizedBox(height: 32),
         ],
       ),
@@ -432,5 +438,226 @@ class _ActivityPageState extends State<ActivityPage> {
       'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
     ];
     return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month]}';
+  }
+}
+
+/// Active contests section widget
+class _ActiveContestsSection extends StatefulWidget {
+  @override
+  State<_ActiveContestsSection> createState() => _ActiveContestsSectionState();
+}
+
+class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
+  List<ContestModel> _activeContests = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContests();
+  }
+
+  Future<void> _loadContests() async {
+    try {
+      final repo = context.read<ContestRepository>();
+      final contests = await repo.getContests();
+      final active = contests.where((c) => c.status == 'active').toList();
+      if (mounted) {
+        setState(() {
+          _activeContests = active.take(3).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox.shrink();
+    }
+    if (_activeContests.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.pendingOrange.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                size: 18,
+                color: AppColors.pendingOrange,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Cuộc thi đang diễn ra',
+                style: AppTextStyles.labelLarge.copyWith(fontSize: 15),
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/goals'),
+              child: Text(
+                'Xem tất cả',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Contest cards
+        ..._activeContests.map((contest) => _buildContestCard(context, contest)),
+      ],
+    );
+  }
+
+  Widget _buildContestCard(BuildContext context, ContestModel contest) {
+    final now = DateTime.now();
+    final total = contest.endDate.difference(contest.startDate).inHours;
+    final elapsed = now.difference(contest.startDate).inHours;
+    final progress = total > 0 ? (elapsed / total).clamp(0.0, 1.0) : 0.0;
+    final daysLeft = contest.endDate.difference(now).inDays;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/contests/${contest.id}'),
+          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+              border: Border.all(color: AppColors.divider),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.directions_run_rounded, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contest.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textMain,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            contest.groupName ?? 'Nhóm',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: daysLeft <= 1
+                            ? AppColors.danger.withValues(alpha: 0.1)
+                            : AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        daysLeft > 0 ? 'Còn $daysLeft ngày' : 'Hôm nay',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: daysLeft <= 1 ? AppColors.danger : AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Progress bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 6,
+                          backgroundColor: AppColors.divider,
+                          valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.group_rounded, size: 14, color: AppColors.textSecondary),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${contest.participants.length} người tham gia',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

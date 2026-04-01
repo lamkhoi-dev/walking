@@ -89,6 +89,15 @@ class FeedRepository {
     return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
+  /// Update a post's content
+  Future<PostModel> updatePost(String postId, {required String content}) async {
+    final response = await _dioClient.put(
+      ApiEndpoints.postUpdate(postId),
+      data: {'content': content},
+    );
+    return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
   /// Toggle like on a post
   Future<LikeResponse> toggleLike(String postId) async {
     final response = await _dioClient.post(ApiEndpoints.postLike(postId));
