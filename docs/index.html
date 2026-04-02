@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính sách bảo mật - Runly</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: #44C548;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        h2 {
+            color: #1a1a2e;
+            font-size: 20px;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #44C54820;
+        }
+        p { margin-bottom: 12px; }
+        ul {
+            margin: 8px 0 16px 24px;
+        }
+        li { margin-bottom: 6px; }
+        .highlight {
+            background: #44C54810;
+            border-left: 3px solid #44C548;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #888;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏃 Chính sách bảo mật — Runly</h1>
+        <p class="subtitle">Cập nhật lần cuối: 02/04/2026</p>
+
+        <div class="highlight">
+            Runly cam kết bảo vệ quyền riêng tư của bạn. Chính sách này giải thích cách chúng tôi thu thập, sử dụng và bảo vệ thông tin cá nhân khi bạn sử dụng ứng dụng Runly.
+        </div>
+
+        <h2>1. Thông tin chúng tôi thu thập</h2>
+        <p>Khi sử dụng Runly, chúng tôi có thể thu thập các loại thông tin sau:</p>
+        <ul>
+            <li><strong>Thông tin tài khoản:</strong> Email, số điện thoại, họ tên, ảnh đại diện khi bạn đăng ký.</li>
+            <li><strong>Dữ liệu bước chân:</strong> Số bước đi, khoảng cách, lượng calo tiêu thụ được ghi nhận từ cảm biến chuyển động của thiết bị.</li>
+            <li><strong>Nội dung do bạn tạo:</strong> Tin nhắn trong nhóm chat, bài viết, bình luận, ảnh bạn đăng tải.</li>
+            <li><strong>Thông tin thiết bị:</strong> Loại thiết bị, phiên bản hệ điều hành (để đảm bảo tương thích).</li>
+        </ul>
+
+        <h2>2. Cách chúng tôi sử dụng thông tin</h2>
+        <ul>
+            <li>Cung cấp và duy trì các tính năng của ứng dụng (đếm bước, bảng xếp hạng, cuộc thi).</li>
+            <li>Hiển thị thống kê sức khỏe cá nhân (bước chân, khoảng cách, calo).</li>
+            <li>Cho phép giao tiếp với các thành viên trong nhóm và công ty.</li>
+            <li>Cải thiện trải nghiệm người dùng và hiệu suất ứng dụng.</li>
+        </ul>
+
+        <h2>3. Chia sẻ thông tin</h2>
+        <p>Chúng tôi <strong>KHÔNG</strong> bán, cho thuê hoặc chia sẻ thông tin cá nhân của bạn cho bên thứ ba vì mục đích thương mại.</p>
+        <p>Thông tin bước chân và thành tích của bạn chỉ được hiển thị:</p>
+        <ul>
+            <li>Cho các thành viên trong cùng nhóm/cuộc thi mà bạn tham gia.</li>
+            <li>Trên bảng xếp hạng trong phạm vi nhóm.</li>
+            <li>Trong bài viết bạn chủ động chia sẻ.</li>
+        </ul>
+
+        <h2>4. Quyền truy cập thiết bị</h2>
+        <p>Ứng dụng yêu cầu các quyền sau:</p>
+        <ul>
+            <li><strong>Cảm biến chuyển động (Motion):</strong> Để đếm số bước chân. Dữ liệu được xử lý trên thiết bị và chỉ đồng bộ tổng số bước lên máy chủ.</li>
+            <li><strong>Camera:</strong> Để quét mã QR tham gia nhóm. Không lưu trữ hình ảnh từ camera.</li>
+            <li><strong>Thư viện ảnh:</strong> Để chọn ảnh đại diện và đăng ảnh trong bài viết/chat.</li>
+        </ul>
+
+        <h2>5. Bảo mật dữ liệu</h2>
+        <ul>
+            <li>Mật khẩu được mã hóa bằng bcrypt (salt 12 rounds) trước khi lưu trữ.</li>
+            <li>Kết nối sử dụng HTTPS để bảo vệ dữ liệu truyền tải.</li>
+            <li>Token xác thực (JWT) có thời hạn giới hạn.</li>
+            <li>Dữ liệu được lưu trữ trên MongoDB Atlas với mã hóa ở trạng thái nghỉ.</li>
+        </ul>
+
+        <h2>6. Lưu trữ dữ liệu</h2>
+        <p>Dữ liệu của bạn được lưu trữ trên máy chủ đám mây (MongoDB Atlas) trong khu vực được bảo mật. Ảnh đăng tải được lưu trữ trên Cloudinary.</p>
+        <p>Bạn có thể yêu cầu xóa tài khoản và toàn bộ dữ liệu liên quan bất cứ lúc nào bằng cách liên hệ với chúng tôi.</p>
+
+        <h2>7. Quyền của bạn</h2>
+        <ul>
+            <li>Truy cập và xem dữ liệu cá nhân trong ứng dụng.</li>
+            <li>Chỉnh sửa thông tin cá nhân (tên, ảnh đại diện).</li>
+            <li>Xóa bài viết và bình luận do bạn tạo.</li>
+            <li>Yêu cầu xóa toàn bộ tài khoản và dữ liệu.</li>
+        </ul>
+
+        <h2>8. Trẻ em</h2>
+        <p>Runly không dành cho trẻ em dưới 13 tuổi. Chúng tôi không cố ý thu thập thông tin từ trẻ em dưới 13 tuổi.</p>
+
+        <h2>9. Thay đổi chính sách</h2>
+        <p>Chúng tôi có thể cập nhật chính sách này theo thời gian. Mọi thay đổi sẽ được thông báo trong ứng dụng hoặc qua email.</p>
+
+        <h2>10. Liên hệ</h2>
+        <p>Nếu bạn có câu hỏi về chính sách bảo mật, vui lòng liên hệ:</p>
+        <div class="highlight">
+            📧 Email: <strong>support@runly.app</strong><br>
+            🏢 Ứng dụng: Runly — Đếm bước chân cùng đồng nghiệp
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Runly. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>
