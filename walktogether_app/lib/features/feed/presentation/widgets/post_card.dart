@@ -13,6 +13,8 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onShare;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onReport;
+  final VoidCallback? onBlock;
 
   const PostCard({
     super.key,
@@ -22,6 +24,8 @@ class PostCard extends StatelessWidget {
     this.onShare,
     this.onTap,
     this.onDelete,
+    this.onReport,
+    this.onBlock,
   });
 
   @override
@@ -506,16 +510,50 @@ class PostCard extends StatelessWidget {
             ),
           ),
 
-          // Menu
-          if (onDelete != null)
+          // Menu — always show if any action available
+          if (onDelete != null || onReport != null)
             PopupMenuButton<String>(
               icon: Icon(Icons.more_horiz_rounded, color: AppColors.textSecondary, size: 22),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (value) {
                 if (value == 'delete') onDelete?.call();
+                if (value == 'report') onReport?.call();
+                if (value == 'block') onBlock?.call();
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'delete', child: Text('Xóa bài viết')),
+                if (onDelete != null)
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                        SizedBox(width: 10),
+                        Text('Xóa bài viết', style: TextStyle(color: AppColors.danger)),
+                      ],
+                    ),
+                  ),
+                if (onReport != null)
+                  const PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(Icons.flag_outlined, size: 18, color: AppColors.warning),
+                        SizedBox(width: 10),
+                        Text('Báo cáo bài viết'),
+                      ],
+                    ),
+                  ),
+                if (onBlock != null)
+                  const PopupMenuItem(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        Icon(Icons.person_off_outlined, size: 18, color: AppColors.danger),
+                        SizedBox(width: 10),
+                        Text('Chặn người dùng', style: TextStyle(color: AppColors.danger)),
+                      ],
+                    ),
+                  ),
               ],
             ),
         ],

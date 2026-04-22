@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -183,6 +184,14 @@ class _SettingsPageState extends State<SettingsPage> {
           icon: Icons.description_outlined,
           label: 'Điều khoản sử dụng',
           onTap: () => context.push('/terms'),
+        ),
+        _ActionItem(
+          icon: Icons.shield_outlined,
+          label: 'Chính sách bảo mật',
+          onTap: () => launchUrl(
+            Uri.parse('https://lamkhoi-dev.github.io/walking/'),
+            mode: LaunchMode.externalApplication,
+          ),
         ),
       ],
     );
