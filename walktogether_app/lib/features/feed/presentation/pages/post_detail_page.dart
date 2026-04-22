@@ -11,6 +11,8 @@ import '../../../contest/data/repositories/contest_repository.dart';
 import '../../../contest/presentation/widgets/podium_widget.dart';
 import '../../../group/data/repositories/group_repository.dart';
 import '../../../chat/data/repositories/chat_repository.dart';
+import '../../../settings/data/repositories/settings_repository.dart';
+import '../../../../shared/widgets/report_dialog.dart';
 
 import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
@@ -149,12 +151,22 @@ class _PostDetailPageState extends State<PostDetailPage>
                   color: AppColors.warning,
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Cảm ơn bạn đã báo cáo'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
+                    ReportDialog.show(
+                      context,
+                      targetType: 'post',
+                      targetId: post.id,
+                      repository: context.read<SettingsRepository>(),
                     );
+                  },
+                ),
+              if (!isOwner)
+                _BottomSheetItem(
+                  icon: Icons.person_off_outlined,
+                  label: 'Chặn người dùng này',
+                  color: AppColors.danger,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _confirmBlockUser(post);
                   },
                 ),
               const SizedBox(height: 8),
@@ -193,6 +205,51 @@ class _PostDetailPageState extends State<PostDetailPage>
               }
             },
             child: const Text('Xóa', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmBlockUser(PostModel post) {
+    final authorName = post.author?.fullName ?? 'người dùng này';
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Chặn người dùng?'),
+        content: Text('Bạn sẽ không thấy bài viết từ $authorName nữa. Bạn có thể bỏ chặn trong Cài đặt.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final repo = context.read<SettingsRepository>();
+                await repo.blockUser(post.author.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã chặn $authorName'),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                  context.pop(true);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                  );
+                }
+              }
+            },
+            child: const Text('Chặn', style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

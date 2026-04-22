@@ -28,4 +28,10 @@ router.post('/me/avatar', authenticate, avatarUpload.single('avatar'), authContr
 router.get('/me/stats', authenticate, authController.getMyStats);
 router.put('/change-password', authenticate, authController.changePassword);
 
+// Account safety routes
+router.delete('/account', authenticate, authController.deleteAccount);
+router.get('/blocked', authenticate, authController.getBlockedUsers);
+router.post('/block/:id', authenticate, authController.blockUser);
+router.delete('/block/:id', authenticate, authController.unblockUser);
+
 module.exports = router;

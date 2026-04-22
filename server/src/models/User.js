@@ -52,6 +52,20 @@ const userSchema = new mongoose.Schema(
     lastOnline: {
       type: Date,
     },
+    acceptedTermsAt: {
+      type: Date,
+      default: null,
+    },
+    blockedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

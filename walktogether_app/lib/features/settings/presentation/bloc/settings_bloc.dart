@@ -170,6 +170,27 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
+  /// Delete user account (soft delete)
+  Future<bool> deleteAccount(String password) async {
+    emit(state.copyWith(isSaving: true, clearError: true, clearSuccess: true));
+    try {
+      await _repository.deleteAccount(password);
+      emit(state.copyWith(
+        isSaving: false,
+        successMessage: 'Tài khoản đã được xóa',
+      ));
+      return true;
+    } catch (e) {
+      debugPrint('SettingsCubit.deleteAccount error: $e');
+      String message = 'Không thể xóa tài khoản';
+      if (e.toString().contains('401')) {
+        message = 'Mật khẩu không đúng';
+      }
+      emit(state.copyWith(isSaving: false, error: message));
+      return false;
+    }
+  }
+
   /// Clear messages
   void clearMessages() {
     emit(state.copyWith(clearError: true, clearSuccess: true));

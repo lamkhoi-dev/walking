@@ -22,6 +22,7 @@ import 'features/contest/data/repositories/contest_repository.dart';
 import 'features/step_tracker/data/repositories/step_repository.dart';
 import 'features/step_tracker/presentation/bloc/step_tracker_bloc.dart';
 import 'features/feed/data/repositories/feed_repository.dart';
+import 'features/settings/data/repositories/settings_repository.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 void main() async {
@@ -66,6 +67,7 @@ void main() async {
   final contestRepository = ContestRepository(dio: dioClient);
   final stepRepository = StepRepository(dioClient);
   final feedRepository = FeedRepository(dioClient);
+  final settingsRepository = SettingsRepository(dio: dioClient);
 
   // Initialize step services
   final stepCounterService = StepCounterService();
@@ -85,6 +87,7 @@ void main() async {
       stepSyncService: stepSyncService,
       stepRepository: stepRepository,
       feedRepository: feedRepository,
+      settingsRepository: settingsRepository,
     ),
   );
 }
@@ -100,6 +103,7 @@ class WalkTogetherApp extends StatelessWidget {
   final StepSyncService stepSyncService;
   final StepRepository stepRepository;
   final FeedRepository feedRepository;
+  final SettingsRepository settingsRepository;
 
   const WalkTogetherApp({
     super.key,
@@ -113,6 +117,7 @@ class WalkTogetherApp extends StatelessWidget {
     required this.stepSyncService,
     required this.stepRepository,
     required this.feedRepository,
+    required this.settingsRepository,
   });
 
   @override
@@ -124,6 +129,7 @@ class WalkTogetherApp extends StatelessWidget {
         RepositoryProvider<ChatRepository>.value(value: chatRepository),
         RepositoryProvider<ContestRepository>.value(value: contestRepository),
         RepositoryProvider<FeedRepository>.value(value: feedRepository),
+        RepositoryProvider<SettingsRepository>.value(value: settingsRepository),
       ],
       child: MultiBlocProvider(
         providers: [

@@ -85,8 +85,16 @@ const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
     isActive: true,
   }).select('_id');
   const userGroupIds = userGroups.map((g) => g._id);
+  // Get user's blocked list for filtering
+  const currentUser = await User.findById(userId).select('blockedUsers').lean();
+  const blockedUserIds = currentUser?.blockedUsers || [];
 
   let query = { isActive: true };
+
+  // Exclude posts from blocked users
+  if (blockedUserIds.length > 0) {
+    query.authorId = { $nin: blockedUserIds };
+  }
 
   if (filter === 'public') {
     // Only public posts (system-wide)

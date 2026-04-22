@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Company = require('../models/Company');
+const Report = require('../models/Report');
+const UserSettings = require('../models/UserSettings');
+const StepRecord = require('../models/StepRecord');
+const Group = require('../models/Group');
 const config = require('../config/env');
 const generateCompanyCode = require('../utils/generateCompanyCode');
 const logger = require('../utils/logger');
@@ -79,6 +83,7 @@ class AuthService {
       role: 'member',
       companyId: company?._id || undefined,
       companyCode: company?.code || undefined,
+      acceptedTermsAt: new Date(),
     });
 
     // Update company member count (only if company exists)
@@ -281,6 +286,99 @@ class AuthService {
       user: user.toJSON(),
       company,
     };
+  }
+
+  /**
+   * Soft-delete user account
+   */
+  async softDeleteAccount(userId, password) {
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      const err = new Error('Người dùng không tồn tại');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      const err = new Error('Mật khẩu không đúng');
+      err.statusCode = 401;
+      throw err;
+    }
+
+    // Soft-delete: deactivate + clear personal data
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        isActive: false,
+        deletedAt: new Date(),
+        fullName: 'Tài khoản đã xóa',
+        avatar: null,
+        email: null,
+        phone: null,
+        deviceToken: null,
+        blockedUsers: [],
+      },
+    });
+
+    // Clean up related data
+    await Promise.all([
+      UserSettings.deleteOne({ userId }),
+      StepRecord.deleteMany({ userId }),
+      Group.updateMany({ members: userId }, { $pull: { members: userId } }),
+    ]);
+
+    logger.info(`Account soft-deleted: ${userId}`);
+    return { success: true };
+  }
+
+  /**
+   * Block a user
+   */
+  async blockUser(blockerId, targetId) {
+    if (blockerId.toString() === targetId.toString()) {
+      const err = new Error('Không thể tự chặn chính mình');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    await User.findByIdAndUpdate(blockerId, {
+      $addToSet: { blockedUsers: targetId },
+    });
+
+    // Auto-create report
+    try {
+      await Report.create({
+        reporterId: blockerId,
+        targetType: 'user',
+        targetId,
+        reason: 'harassment',
+      });
+    } catch (e) {
+      // Ignore duplicate report error
+    }
+
+    logger.info(`User ${blockerId} blocked ${targetId}`);
+    return { success: true };
+  }
+
+  /**
+   * Unblock a user
+   */
+  async unblockUser(blockerId, targetId) {
+    await User.findByIdAndUpdate(blockerId, {
+      $pull: { blockedUsers: targetId },
+    });
+    return { success: true };
+  }
+
+  /**
+   * Get list of blocked users
+   */
+  async getBlockedUsers(userId) {
+    const user = await User.findById(userId)
+      .populate('blockedUsers', 'fullName avatar')
+      .lean();
+    return user?.blockedUsers || [];
   }
 }
 

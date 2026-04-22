@@ -25,6 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
   final _companyCodeController = TextEditingController();
   bool _showCompanyCode = false;
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -37,6 +38,16 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _handleRegister() {
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Vui lòng đồng ý với Điều khoản sử dụng'),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (_formKey.currentState?.validate() ?? false) {
       final identifier = _emailController.text.trim();
       final isEmail = identifier.contains('@');
@@ -221,7 +232,53 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
+
+                // EULA checkbox
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: _acceptedTerms,
+                        onChanged: (v) => setState(() => _acceptedTerms = v ?? false),
+                        activeColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => context.push('/terms'),
+                        child: RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            ),
+                            children: const [
+                              TextSpan(text: 'Tôi đồng ý với '),
+                              TextSpan(
+                                text: 'Điều khoản sử dụng',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
 
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {

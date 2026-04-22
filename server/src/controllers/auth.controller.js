@@ -264,6 +264,74 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+/**
+ * Delete (soft) user account
+ * DELETE /api/v1/auth/account
+ */
+const deleteAccount = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return error(res, 400, 'Vui lòng nhập mật khẩu');
+    }
+    await authService.softDeleteAccount(req.user._id, password);
+    return success(res, 200, 'Tài khoản đã được xóa');
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
+/**
+ * Block a user
+ * POST /api/v1/auth/block/:id
+ */
+const blockUser = async (req, res, next) => {
+  try {
+    await authService.blockUser(req.user._id, req.params.id);
+    return success(res, 200, 'Đã chặn người dùng');
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
+/**
+ * Unblock a user
+ * DELETE /api/v1/auth/block/:id
+ */
+const unblockUser = async (req, res, next) => {
+  try {
+    await authService.unblockUser(req.user._id, req.params.id);
+    return success(res, 200, 'Đã bỏ chặn');
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
+/**
+ * Get blocked users list
+ * GET /api/v1/auth/blocked
+ */
+const getBlockedUsers = async (req, res, next) => {
+  try {
+    const users = await authService.getBlockedUsers(req.user._id);
+    return success(res, 200, 'Danh sách người đã chặn', users);
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   registerCompany,
@@ -275,4 +343,8 @@ module.exports = {
   uploadAvatar,
   getMyStats,
   changePassword,
+  deleteAccount,
+  blockUser,
+  unblockUser,
+  getBlockedUsers,
 };

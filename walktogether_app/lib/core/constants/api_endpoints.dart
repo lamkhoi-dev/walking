@@ -66,4 +66,11 @@ class ApiEndpoints {
   static String postLikes(String id) => '/posts/$id/likes';
   static String postComments(String id) => '/posts/$id/comments';
   static String deleteComment(String id) => '/posts/comments/$id';
+
+  // === REPORTS & SAFETY ===
+  static const String reports = '/reports';
+  static const String deleteAccount = '/auth/account';
+  static const String blockedUsers = '/auth/blocked';
+  static String blockUser(String id) => '/auth/block/$id';
+  static String unblockUser(String id) => '/auth/block/$id';
 }

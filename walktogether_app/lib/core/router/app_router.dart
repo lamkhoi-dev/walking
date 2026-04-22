@@ -37,6 +37,8 @@ import '../../features/settings/data/repositories/settings_repository.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/change_password_page.dart';
+import '../../features/settings/presentation/pages/terms_page.dart';
+import '../../features/settings/presentation/pages/blocked_users_page.dart';
 import '../../features/feed/data/repositories/feed_repository.dart';
 import '../../features/feed/presentation/bloc/feed_bloc.dart';
 import '../../features/feed/presentation/pages/feed_page.dart';
@@ -373,6 +375,16 @@ class AppRouter {
             child: const ChangePasswordPage(),
           );
         },
+      ),
+      GoRoute(
+        path: '/terms',
+        name: 'terms',
+        builder: (context, state) => const TermsPage(),
+      ),
+      GoRoute(
+        path: '/settings/blocked',
+        name: 'blocked-users',
+        builder: (context, state) => const BlockedUsersPage(),
       ),
     ],
   );

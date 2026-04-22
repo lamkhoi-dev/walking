@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../bloc/settings_bloc.dart';
 
@@ -103,6 +105,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildNotificationSection(settings),
                 const SizedBox(height: 20),
                 _buildAccountSection(),
+                const SizedBox(height: 20),
+                _buildDangerZone(),
                 const SizedBox(height: 40),
               ],
             ),
@@ -170,7 +174,96 @@ class _SettingsPageState extends State<SettingsPage> {
           label: 'Đổi mật khẩu',
           onTap: () => context.push('/settings/change-password'),
         ),
+        _ActionItem(
+          icon: Icons.person_off_outlined,
+          label: 'Người đã chặn',
+          onTap: () => context.push('/settings/blocked'),
+        ),
+        _ActionItem(
+          icon: Icons.description_outlined,
+          label: 'Điều khoản sử dụng',
+          onTap: () => context.push('/terms'),
+        ),
       ],
+    );
+  }
+
+  // ===== DANGER ZONE =====
+  Widget _buildDangerZone() {
+    return _SectionCard(
+      title: 'Vùng nguy hiểm',
+      icon: Icons.warning_amber_outlined,
+      iconColor: AppColors.danger,
+      children: [
+        _ActionItem(
+          icon: Icons.delete_forever_outlined,
+          label: 'Xóa tài khoản',
+          color: AppColors.danger,
+          onTap: _showDeleteAccountDialog,
+        ),
+      ],
+    );
+  }
+
+  void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_outlined, color: AppColors.danger, size: 24),
+            const SizedBox(width: 8),
+            const Text('Xóa tài khoản?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hành động này không thể hoàn tác. Tất cả dữ liệu cá nhân, bước chân và cài đặt sẽ bị xóa.',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Nhập mật khẩu xác nhận',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.danger),
+                ),
+                prefixIcon: const Icon(Icons.lock_outline),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final password = passwordController.text.trim();
+              if (password.isEmpty) return;
+              Navigator.pop(ctx);
+              final success = await context.read<SettingsCubit>().deleteAccount(password);
+              if (success && mounted) {
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+                context.go('/');
+              }
+            },
+            child: const Text('Xóa tài khoản', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -308,15 +401,18 @@ class _ActionItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color? color;
 
   const _ActionItem({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final itemColor = color ?? AppColors.textMain;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -326,21 +422,21 @@ class _ActionItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: AppColors.textMain),
+              Icon(icon, size: 22, color: itemColor),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textMain,
+                    color: itemColor,
                   ),
                 ),
               ),
               Icon(
                 Icons.chevron_right,
-                color: AppColors.textMain.withValues(alpha: 0.4),
+                color: itemColor.withValues(alpha: 0.4),
               ),
             ],
           ),

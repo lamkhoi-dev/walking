@@ -124,4 +124,48 @@ class SettingsRepository {
       },
     );
   }
+
+  /// Delete (soft) user account
+  Future<void> deleteAccount(String password) async {
+    await _dio.delete(
+      ApiEndpoints.deleteAccount,
+      data: {'password': password},
+    );
+  }
+
+  /// Block a user
+  Future<void> blockUser(String userId) async {
+    await _dio.post(ApiEndpoints.blockUser(userId));
+  }
+
+  /// Unblock a user
+  Future<void> unblockUser(String userId) async {
+    await _dio.delete(ApiEndpoints.unblockUser(userId));
+  }
+
+  /// Get list of blocked users
+  Future<List<Map<String, dynamic>>> getBlockedUsers() async {
+    final response = await _dio.get(ApiEndpoints.blockedUsers);
+    final data = response.data['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  /// Report content (post, comment, or user)
+  Future<void> reportContent({
+    required String targetType,
+    required String targetId,
+    required String reason,
+    String? description,
+  }) async {
+    await _dio.post(
+      ApiEndpoints.reports,
+      data: {
+        'targetType': targetType,
+        'targetId': targetId,
+        'reason': reason,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+      },
+    );
+  }
 }
