@@ -313,11 +313,13 @@ class AuthService {
         deletedAt: new Date(),
         fullName: 'Tài khoản đã xóa',
         avatar: null,
-        email: null,
-        phone: null,
         deviceToken: null,
         blockedUsers: [],
       },
+      $unset: {
+        email: 1,
+        phone: 1,
+      }
     });
 
     // Clean up related data
