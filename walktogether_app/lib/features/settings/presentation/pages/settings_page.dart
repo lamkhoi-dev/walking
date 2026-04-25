@@ -265,8 +265,8 @@ class _SettingsPageState extends State<SettingsPage> {
               Navigator.pop(ctx);
               final success = await context.read<SettingsCubit>().deleteAccount(password);
               if (success && mounted) {
+                // Let the AuthBloc handle routing automatically via GoRouter's refreshListenable
                 context.read<AuthBloc>().add(AuthLogoutRequested());
-                context.go('/');
               }
             },
             child: const Text('Xóa tài khoản', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600)),
