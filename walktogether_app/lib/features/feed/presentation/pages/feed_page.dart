@@ -298,38 +298,40 @@ class _FeedPageState extends State<FeedPage> {
     final authorName = post.author.fullName;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Chặn người dùng?'),
         content: Text('Bạn sẽ không thấy bài viết từ $authorName nữa. Bạn có thể bỏ chặn trong Cài đặt.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.of(dialogContext).pop();
+              // Wait for dialog to fully dismiss before proceeding
+              await Future.delayed(const Duration(milliseconds: 300));
+              if (!mounted) return;
               try {
                 final repo = context.read<SettingsRepository>();
                 await repo.blockUser(post.author.id);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Đã chặn $authorName'),
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
-                  context.read<FeedBloc>().add(const FeedRefreshRequested());
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Đã chặn $authorName'),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                );
+                if (!mounted) return;
+                context.read<FeedBloc>().add(const FeedRefreshRequested());
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
-                  );
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                );
               }
             },
             child: const Text('Chặn', style: TextStyle(color: AppColors.danger)),
@@ -338,6 +340,7 @@ class _FeedPageState extends State<FeedPage> {
       ),
     );
   }
+
 }
 
 // === FILTER BOTTOM SHEET ===
