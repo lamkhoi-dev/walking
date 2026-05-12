@@ -382,7 +382,7 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Widget _buildError(String message) {
-    final isPermissionError = message.contains('quyền') || message.contains('Motion') || message.contains('cảm biến') || message.contains('permission');
+    final isPermissionError = message.contains('quyền') || message.contains('cảm biến') || message.contains('permission');
 
     return Center(
       child: Padding(
@@ -395,88 +395,64 @@ class _ActivityPageState extends State<ActivityPage> {
               height: 80,
               decoration: BoxDecoration(
                 color: isPermissionError
-                    ? AppColors.pendingOrange.withValues(alpha: 0.12)
+                    ? AppColors.textSecondary.withValues(alpha: 0.1)
                     : AppColors.danger.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isPermissionError ? Icons.directions_walk_rounded : Icons.error_outline,
                 size: 40,
-                color: isPermissionError ? AppColors.pendingOrange : AppColors.danger,
+                color: isPermissionError ? AppColors.textSecondary : AppColors.danger,
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              isPermissionError ? 'Cần quyền đếm bước' : 'Lỗi bộ đếm bước',
+              isPermissionError ? 'Đếm bước chưa hoạt động' : 'Lỗi bộ đếm bước',
               style: AppTextStyles.heading4,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               isPermissionError
-                  ? 'Để đếm bước chân, vui lòng cho phép ứng dụng truy cập cảm biến chuyển động trong Cài đặt.'
+                  ? 'Tính năng đếm bước cần quyền truy cập cảm biến chuyển động để hoạt động. Bạn có thể bật quyền này trong Cài đặt bất cứ lúc nào.'
                   : message,
               style: AppTextStyles.bodySmall.copyWith(height: 1.5),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 28),
-            if (isPermissionError) ...[
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    // Open iOS/Android app settings
-                    final opened = await openAppSettings();
-                    if (!opened && mounted) {
-                      // Fallback: try starting again
-                      context.read<StepTrackerBloc>().add(StepTrackerStartRequested());
-                    }
-                  },
-                  icon: const Icon(Icons.settings_rounded, size: 20),
-                  label: const Text('Mở Cài đặt', style: TextStyle(fontWeight: FontWeight.w600)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
+            // Primary action: try again (re-request permission)
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
                 onPressed: () {
                   context.read<StepTrackerBloc>().add(StepTrackerStartRequested());
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text('Thử lại', style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ),
+            if (isPermissionError) ...[
+              const SizedBox(height: 16),
+              // Secondary: subtle text link to Settings (user-initiated, not automatic)
+              GestureDetector(
+                onTap: () => openAppSettings(),
                 child: Text(
-                  'Tôi đã cấp quyền, thử lại',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                  'Mở Cài đặt',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),
-            ] else
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.read<StepTrackerBloc>().add(StepTrackerStartRequested());
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('Thử lại', style: TextStyle(fontWeight: FontWeight.w600)),
-                ),
-              ),
+            ],
           ],
         ),
       ),
