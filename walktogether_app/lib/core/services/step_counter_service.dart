@@ -218,14 +218,10 @@ class StepCounterService {
     }
 
     if (Platform.isIOS) {
-      var status = await Permission.sensors.request();
+      final status = await Permission.sensors.request();
       if (!status.isGranted) {
         debugPrint('Motion permission denied on iOS: $status');
-        // If permanently denied, try to open settings
-        if (status.isPermanentlyDenied) {
-          await openAppSettings();
-        }
-        throw Exception('Vui lòng cấp quyền "Motion & Fitness" trong Cài đặt → Quyền riêng tư → Chuyển động & Thể chất để đếm bước chân.');
+        throw Exception('Tính năng đếm bước cần quyền truy cập cảm biến chuyển động. Bạn có thể bật trong Cài đặt nếu muốn sử dụng.');
       }
     }
 
