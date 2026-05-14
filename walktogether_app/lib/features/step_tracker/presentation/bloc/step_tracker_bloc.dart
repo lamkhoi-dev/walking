@@ -271,6 +271,11 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       _stepSub?.cancel();
       _stepSub = _counterService.stepStream.listen(
         (steps) => add(_StepTrackerStepsUpdated(steps)),
+        onError: (e) {
+          debugPrint('Step stream error (e.g. permission denied): $e');
+          emit(StepTrackerError(e.toString().replaceAll('Exception: ', '')));
+        },
+        cancelOnError: false,
       );
 
       // Listen to pedestrian status

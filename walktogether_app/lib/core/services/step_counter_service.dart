@@ -217,13 +217,10 @@ class StepCounterService {
       }
     }
 
-    if (Platform.isIOS) {
-      final status = await Permission.sensors.request();
-      if (!status.isGranted) {
-        debugPrint('Motion permission denied on iOS: $status');
-        throw Exception('Tính năng đếm bước cần quyền truy cập cảm biến chuyển động. Bạn có thể bật trong Cài đặt nếu muốn sử dụng.');
-      }
-    }
+    // On iOS, CMPedometer (used by pedometer_2) handles its own
+    // Motion & Fitness permission dialog natively on first use.
+    // Do NOT call Permission.sensors.request() — it requests a different
+    // sensor permission type and interferes with CMPedometer's own flow.
 
     _isTracking = true;
     await _box?.put(_keyIsTracking, true);
@@ -343,6 +340,18 @@ class StepCounterService {
 
   void _onStepCountError(dynamic error) {
     debugPrint('Step count error: $error');
+    // CMPedometer throws CMErrorMotionActivityNotAuthorized (code 104)
+    // or similar when Motion & Fitness access is denied.
+    // Re-throw via the service so BLOC can catch and show recovery UI.
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('not authorized') ||
+        msg.contains('104') ||
+        msg.contains('denied') ||
+        msg.contains('restricted')) {
+      _stepController.addError(
+        Exception('Tính năng đếm bước cần quyền "Motion & Fitness". Bạn có thể bật trong Cài đặt bất cứ lúc nào.'),
+      );
+    }
   }
 
   void _onPedestrianStatus(PedestrianStatus event) {
