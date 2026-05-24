@@ -476,17 +476,70 @@ class _CreatePostPageState extends State<CreatePostPage> {
     });
   }
 
+  bool _isVideoFile(File file) {
+    final ext = file.path.split('.').last.toLowerCase();
+    return ['mp4', 'mov', 'webm', 'avi', 'm4v', '3gp'].contains(ext);
+  }
+
   Widget _buildImageGrid() {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: List.generate(_images.length, (index) {
+        final file = _images[index];
+        final isVideo = _isVideoFile(file);
+
         return Stack(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.file(_images[index], width: 100, height: 100, fit: BoxFit.cover),
+              child: isVideo
+                  ? Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            file.path.split('/').last.length > 12
+                                ? '${file.path.split('/').last.substring(0, 10)}...'
+                                : file.path.split('/').last,
+                            style: const TextStyle(color: Colors.white70, fontSize: 9),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : Image.file(file, width: 100, height: 100, fit: BoxFit.cover),
             ),
+            // Video badge
+            if (isVideo)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('VIDEO', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            // Remove button
             Positioned(
               top: 4,
               right: 4,
