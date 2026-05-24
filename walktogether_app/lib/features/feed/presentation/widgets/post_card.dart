@@ -12,6 +12,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback onComment;
   final VoidCallback? onShare;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onReport;
   final VoidCallback? onBlock;
@@ -23,6 +24,7 @@ class PostCard extends StatelessWidget {
     required this.onComment,
     this.onShare,
     this.onTap,
+    this.onEdit,
     this.onDelete,
     this.onReport,
     this.onBlock,
@@ -496,6 +498,19 @@ class PostCard extends StatelessWidget {
                         color: AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
+                    if (post.editedAt != null) ...[
+                      const SizedBox(width: 4),
+                      Text('·', style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5))),
+                      const SizedBox(width: 4),
+                      Text(
+                        'đã sửa',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.textSecondary.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 4),
                     Text('·', style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5))),
                     const SizedBox(width: 4),
@@ -511,16 +526,28 @@ class PostCard extends StatelessWidget {
           ),
 
           // Menu — always show if any action available
-          if (onDelete != null || onReport != null)
+          if (onEdit != null || onDelete != null || onReport != null)
             PopupMenuButton<String>(
               icon: Icon(Icons.more_horiz_rounded, color: AppColors.textSecondary, size: 22),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (value) {
+                if (value == 'edit') onEdit?.call();
                 if (value == 'delete') onDelete?.call();
                 if (value == 'report') onReport?.call();
                 if (value == 'block') onBlock?.call();
               },
               itemBuilder: (_) => [
+                if (onEdit != null)
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded, size: 18, color: AppColors.primary),
+                        SizedBox(width: 10),
+                        Text('Chỉnh sửa'),
+                      ],
+                    ),
+                  ),
                 if (onDelete != null)
                   const PopupMenuItem(
                     value: 'delete',

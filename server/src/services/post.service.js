@@ -224,6 +224,9 @@ const updatePost = async (postId, authorId, updates) => {
   }
 
   Object.assign(post, filteredUpdates);
+  if (filteredUpdates.content !== undefined) {
+    post.editedAt = new Date();
+  }
   await post.save();
   await post.populate('authorId', 'fullName avatar');
 
@@ -243,7 +246,7 @@ const deletePost = async (postId, userId, userRole) => {
   }
 
   const isAuthor = post.authorId.toString() === userId.toString();
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const isAdmin = userRole === 'company_admin' || userRole === 'super_admin';
 
   if (!isAuthor && !isAdmin) {
     const err = new Error('Bạn không có quyền xóa bài viết này');

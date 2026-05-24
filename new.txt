@@ -1,0 +1,6 @@
+- Ngôn ngữ: EN/VN (mặc định EN/ có thể đổi sang VN hoặc ip VN thì mặc định VN, nước khác mặc định EN. Sao dễ tiện cho em thì ok)
+- Feed: thêm tính năng edit bài viết (có thể sai lỗi chính tả, muốn edit lại...)
+- Chưa đăng được Video
+- Kết bạn như fb
+- Chỉ bạn bè mới thấy được bài đăng của nhau (hoặc cùng nhóm mới thấy bài đăng của nhau) trong Feed. Còn vô thẳng profile thì xem bt, nhưng tuỳ vào chế độ đăng của bài viết đó.
+- Chỉ admin/official account đăng thì tất cả các users sẽ thấy trên Feed. Account này có quyền ghim bài viết lên đầu như thông báo nổi bật.

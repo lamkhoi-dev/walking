@@ -53,6 +53,14 @@ class FeedNewPostCreated extends FeedEvent {
   List<Object?> get props => [post];
 }
 
+class FeedPostEdited extends FeedEvent {
+  final String postId;
+  final String newContent;
+  const FeedPostEdited({required this.postId, required this.newContent});
+  @override
+  List<Object?> get props => [postId, newContent];
+}
+
 // ===== STATES =====
 abstract class FeedState extends Equatable {
   const FeedState();
@@ -120,6 +128,7 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
     on<FeedPostLikeToggled>(_onLikeToggled);
     on<FeedPostDeleted>(_onPostDeleted);
     on<FeedNewPostCreated>(_onNewPostCreated);
+    on<FeedPostEdited>(_onPostEdited);
   }
 
   Future<void> _onLoad(FeedLoadRequested event, Emitter<FeedState> emit) async {
@@ -244,5 +253,24 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
         posts: [event.post, ...currentState.posts],
       ));
     }
+  }
+
+  Future<void> _onPostEdited(FeedPostEdited event, Emitter<FeedState> emit) async {
+    final currentState = state;
+    if (currentState is! FeedLoaded) return;
+
+    try {
+      final updated = await _repository.updatePost(event.postId, content: event.newContent);
+      final posts = currentState.posts.map((post) {
+        if (post.id == event.postId) {
+          return post.copyWith(
+            content: updated.content,
+            editedAt: updated.editedAt ?? DateTime.now(),
+          );
+        }
+        return post;
+      }).toList();
+      emit(currentState.copyWith(posts: posts));
+    } catch (_) {}
   }
 }

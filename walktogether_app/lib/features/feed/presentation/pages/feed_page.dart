@@ -206,6 +206,12 @@ class _FeedPageState extends State<FeedPage> {
                 context.read<FeedBloc>().add(const FeedRefreshRequested());
               }
             },
+            onEdit: isOwner && post.type != 'shared_post' && post.type != 'shared_contest'
+                ? () => _showEditSheet(post)
+                : null,
+            onDelete: isOwner
+                ? () => _confirmDeletePost(post)
+                : null,
             onReport: isOwner ? null : () {
               ReportDialog.show(
                 context,
@@ -310,7 +316,6 @@ class _FeedPageState extends State<FeedPage> {
           TextButton(
             onPressed: () async {
               Navigator.of(dialogContext).pop();
-              // Wait for dialog to fully dismiss before proceeding
               await Future.delayed(const Duration(milliseconds: 300));
               if (!mounted) return;
               try {
@@ -335,6 +340,140 @@ class _FeedPageState extends State<FeedPage> {
               }
             },
             child: const Text('Chặn', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditSheet(PostModel post) {
+    final editController = TextEditingController(text: post.content);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Chỉnh sửa bài viết',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: editController,
+                    maxLines: null,
+                    minLines: 4,
+                    maxLength: 2000,
+                    textCapitalization: TextCapitalization.sentences,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Nội dung bài viết...',
+                      hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    style: const TextStyle(fontSize: 15, height: 1.5),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final newContent = editController.text.trim();
+                        if (newContent.isEmpty) return;
+                        Navigator.pop(ctx);
+                        context.read<FeedBloc>().add(
+                          FeedPostEdited(postId: post.id, newContent: newContent),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã cập nhật bài viết!'),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Lưu thay đổi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeletePost(PostModel post) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Xóa bài viết?'),
+        content: const Text('Bạn có chắc muốn xóa bài viết này? Hành động này không thể hoàn tác.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<FeedBloc>().add(FeedPostDeleted(post.id));
+            },
+            child: const Text('Xóa', style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

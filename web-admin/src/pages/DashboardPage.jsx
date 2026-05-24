@@ -117,7 +117,12 @@ export default function DashboardPage() {
       {/* Users Stats */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} sm={12} lg={8}>
-          <Card style={{ borderRadius: 12 }} bodyStyle={{ padding: '20px 16px' }}>
+          <Card
+            hoverable
+            style={{ borderRadius: 12 }}
+            bodyStyle={{ padding: '20px 16px' }}
+            onClick={() => navigate('/users')}
+          >
             <Statistic
               title={<span style={{ fontSize: 13, color: '#8c8c8c' }}>Tổng người dùng</span>}
               value={stats.users.total}
@@ -127,7 +132,12 @@ export default function DashboardPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={8}>
-          <Card style={{ borderRadius: 12 }} bodyStyle={{ padding: '20px 16px' }}>
+          <Card
+            hoverable
+            style={{ borderRadius: 12 }}
+            bodyStyle={{ padding: '20px 16px' }}
+            onClick={() => navigate('/users?isActive=true')}
+          >
             <Statistic
               title={<span style={{ fontSize: 13, color: '#8c8c8c' }}>Đang hoạt động</span>}
               value={stats.users.active}

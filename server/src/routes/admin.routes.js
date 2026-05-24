@@ -18,4 +18,11 @@ router.put('/companies/:id/reject', adminController.rejectCompany);
 router.put('/companies/:id/suspend', adminController.suspendCompany);
 router.put('/companies/:id/reactivate', adminController.reactivateCompany);
 
+// User management
+router.get('/users', adminController.getUsers);
+router.get('/users/:id', adminController.getUserById);
+router.put('/users/:id/role', adminController.updateUserRole);
+router.put('/users/:id/toggle-active', adminController.toggleUserActive);
+
 module.exports = router;
+

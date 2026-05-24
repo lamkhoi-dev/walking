@@ -67,6 +67,12 @@ const postSchema = new mongoose.Schema(
       default: null,
     },
 
+    // === EDIT TRACKING ===
+    editedAt: {
+      type: Date,
+      default: null,
+    },
+
     // === COUNTERS (cached for performance) ===
     likesCount: {
       type: Number,

@@ -243,15 +243,21 @@ class StepTrackerBloc extends Bloc<StepTrackerEvent, StepTrackerState> {
       final useAndroidForeground = Platform.isAndroid;
 
       if (useAndroidForeground) {
-        // Start foreground service only if not already running
+        // CRITICAL ORDER on Android:
+        // 1. startTracking() FIRST → requests ACTIVITY_RECOGNITION permission
+        // 2. startForegroundService() AFTER permission is granted
+        //
+        // The TaskHandler subscribes to pedometer immediately on onStart().
+        // If permission isn't granted yet, the service isolate crashes silently.
+        await _counterService.startTracking(foregroundServiceActive: true);
+
+        // Start foreground service only AFTER permission is confirmed
         final isServiceRunning = await FlutterForegroundTask.isRunningService;
         if (!isServiceRunning) {
           await _counterService.startForegroundService();
         } else {
           debugPrint('Foreground service already running — just re-registering callback');
         }
-
-        await _counterService.startTracking(foregroundServiceActive: true);
 
         // Send current daily goal to TaskHandler for notification progress bar
         FlutterForegroundTask.sendDataToTask({

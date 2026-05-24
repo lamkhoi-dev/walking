@@ -7,6 +7,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +26,11 @@ const menuItems = [
     icon: <BankOutlined />,
     label: 'Quản lý công ty',
   },
+  {
+    key: '/users',
+    icon: <TeamOutlined />,
+    label: 'Quản lý người dùng',
+  },
 ];
 
 export default function AdminLayout() {
@@ -34,7 +40,9 @@ export default function AdminLayout() {
   const { user, logout } = useAuth();
 
   // Determine active menu key
-  const selectedKey = location.pathname.startsWith('/companies') ? '/companies' : '/';
+  const selectedKey = location.pathname.startsWith('/companies') ? '/companies'
+    : location.pathname.startsWith('/users') ? '/users'
+    : '/';
 
   const handleMenuClick = ({ key }) => {
     navigate(key);

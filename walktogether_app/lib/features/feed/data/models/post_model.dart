@@ -17,6 +17,7 @@ class PostModel {
   final int likesCount;
   final int commentsCount;
   final bool isLiked;
+  final DateTime? editedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -38,6 +39,7 @@ class PostModel {
     this.likesCount = 0,
     this.commentsCount = 0,
     this.isLiked = false,
+    this.editedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -86,15 +88,20 @@ class PostModel {
       likesCount: json['likesCount'] as int? ?? 0,
       commentsCount: json['commentsCount'] as int? ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
+      editedAt: json['editedAt'] != null
+          ? DateTime.tryParse(json['editedAt'] as String)
+          : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 
   PostModel copyWith({
+    String? content,
     int? likesCount,
     int? commentsCount,
     bool? isLiked,
+    DateTime? editedAt,
   }) {
     return PostModel(
       id: id,
@@ -103,7 +110,7 @@ class PostModel {
       visibility: visibility,
       visibleToGroups: visibleToGroups,
       type: type,
-      content: content,
+      content: content ?? this.content,
       media: media,
       sharedPostId: sharedPostId,
       sharedContestId: sharedContestId,
@@ -114,6 +121,7 @@ class PostModel {
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       isLiked: isLiked ?? this.isLiked,
+      editedAt: editedAt ?? this.editedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
