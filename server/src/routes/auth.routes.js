@@ -34,4 +34,7 @@ router.get('/blocked', authenticate, authController.getBlockedUsers);
 router.post('/block/:id', authenticate, authController.blockUser);
 router.delete('/block/:id', authenticate, authController.unblockUser);
 
+// User profile (view other users)
+router.get('/users/:id', authenticate, authController.getUserProfile);
+
 module.exports = router;

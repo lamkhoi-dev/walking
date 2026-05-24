@@ -1,6 +1,9 @@
 const authService = require('../services/auth.service');
 const stepService = require('../services/step.service');
+const postService = require('../services/post.service');
+const friendService = require('../services/friend.service');
 const User = require('../models/User');
+const Company = require('../models/Company');
 const { success, error } = require('../utils/response');
 
 /**
@@ -332,6 +335,63 @@ const getBlockedUsers = async (req, res, next) => {
   }
 };
 
+/**
+ * Get another user's profile
+ * GET /api/v1/auth/users/:id
+ */
+const getUserProfile = async (req, res, next) => {
+  try {
+    const targetId = req.params.id;
+    const viewerId = req.user.id;
+
+    const user = await User.findById(targetId)
+      .select('fullName avatar role companyId createdAt lastOnline')
+      .lean();
+
+    if (!user || user.deletedAt) {
+      return error(res, 404, 'Người dùng không tồn tại');
+    }
+
+    // Get company info
+    let company = null;
+    if (user.companyId) {
+      company = await Company.findById(user.companyId)
+        .select('name logo status')
+        .lean();
+    }
+
+    // Get friendship status
+    const friendshipInfo = await friendService.getFriendshipStatus(viewerId, targetId);
+
+    // Get friend count
+    const friendCount = await friendService.getFriendCount(targetId);
+
+    // Get posts (visibility-filtered)
+    const { page, limit } = req.query;
+    const posts = await postService.getUserPosts(targetId, viewerId, {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
+    });
+
+    return success(res, 200, 'Thông tin người dùng', {
+      user: {
+        ...user,
+        _id: user._id,
+        company,
+      },
+      friendship: friendshipInfo,
+      friendCount,
+      posts: posts.posts,
+      postsPagination: posts.pagination,
+    });
+  } catch (err) {
+    if (err.statusCode) {
+      return error(res, err.statusCode, err.message);
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   registerCompany,
@@ -347,4 +407,5 @@ module.exports = {
   blockUser,
   unblockUser,
   getBlockedUsers,
+  getUserProfile,
 };

@@ -184,6 +184,43 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 child: _buildQuickStats(),
               ),
 
+              // Friends button
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: InkWell(
+                    onTap: () => context.push('/friends'),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.people_rounded, size: 20, color: AppColors.secondary),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text('Bạn bè', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textMain)),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
               // Tab Bar
               SliverPersistentHeader(
                 pinned: true,

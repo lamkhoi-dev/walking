@@ -45,6 +45,9 @@ import '../../features/feed/presentation/pages/feed_page.dart';
 import '../../features/feed/presentation/pages/create_post_page.dart';
 import '../../features/feed/presentation/pages/post_detail_page.dart';
 import '../../features/feed/presentation/bloc/post_detail_bloc.dart';
+import '../../features/friend/presentation/pages/user_profile_page.dart';
+import '../../features/friend/presentation/pages/friends_page.dart';
+import '../../features/friend/presentation/pages/friend_search_page.dart';
 import '../../core/network/dio_client.dart';
 
 /// Listenable that bridges AuthBloc state changes to GoRouter refresh
@@ -385,6 +388,26 @@ class AppRouter {
         path: '/settings/blocked',
         name: 'blocked-users',
         builder: (context, state) => const BlockedUsersPage(),
+      ),
+
+      // ===== FRIEND ROUTES (outside ShellRoute → no bottom nav) =====
+      GoRoute(
+        path: '/user/:id',
+        name: 'user-profile',
+        builder: (context, state) {
+          final userId = state.pathParameters['id']!;
+          return UserProfilePage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/friends',
+        name: 'friends',
+        builder: (context, state) => const FriendsPage(),
+      ),
+      GoRoute(
+        path: '/friends/search',
+        name: 'friend-search',
+        builder: (context, state) => const FriendSearchPage(),
       ),
     ],
   );

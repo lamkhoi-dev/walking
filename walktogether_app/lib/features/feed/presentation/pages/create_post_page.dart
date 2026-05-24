@@ -49,6 +49,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     switch (_visibility) {
       case 'public':
         return 'Công khai';
+      case 'friends':
+        return 'Bạn bè';
       case 'all_groups':
         return 'Tất cả nhóm';
       case 'groups':
@@ -64,6 +66,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     switch (_visibility) {
       case 'public':
         return Icons.public_rounded;
+      case 'friends':
+        return Icons.people_rounded;
       case 'all_groups':
         return Icons.groups_rounded;
       case 'groups':
@@ -620,6 +624,14 @@ class _VisibilitySheet extends StatelessWidget {
             isSelected: selected == 'public',
             onTap: () => onSelected('public'),
             gradient: [const Color(0xFF4CAF50), const Color(0xFF81C784)],
+          ),
+          _VisibilityOption(
+            icon: Icons.people_rounded,
+            title: 'Bạn bè',
+            subtitle: 'Chỉ bạn bè của bạn mới xem được',
+            isSelected: selected == 'friends',
+            onTap: () => onSelected('friends'),
+            gradient: [const Color(0xFF009688), const Color(0xFF4DB6AC)],
           ),
           _VisibilityOption(
             icon: Icons.groups_rounded,

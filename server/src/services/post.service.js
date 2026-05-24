@@ -2,6 +2,7 @@ const Post = require('../models/Post');
 const Like = require('../models/Like');
 const Group = require('../models/Group');
 const User = require('../models/User');
+const friendService = require('./friend.service');
 const logger = require('../utils/logger');
 
 /**
@@ -84,14 +85,14 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
 const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
   const skip = (page - 1) * limit;
 
-  // Get user's groups for group-visibility filtering
-  const userGroups = await Group.find({
-    members: userId,
-    isActive: true,
-  }).select('_id');
+  // Parallelize prerequisite queries for performance
+  const [userGroups, currentUser, friendIds] = await Promise.all([
+    Group.find({ members: userId, isActive: true }).select('_id').lean(),
+    User.findById(userId).select('blockedUsers').lean(),
+    friendService.getFriendIds(userId),
+  ]);
+
   const userGroupIds = userGroups.map((g) => g._id);
-  // Get user's blocked list for filtering
-  const currentUser = await User.findById(userId).select('blockedUsers').lean();
   const blockedUserIds = currentUser?.blockedUsers || [];
 
   let query = { isActive: true };
@@ -104,15 +105,26 @@ const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
   if (filter === 'public') {
     // Only public posts (system-wide)
     query.visibility = 'public';
+  } else if (filter === 'friends') {
+    // Posts from friends (public + friends-only)
+    if (friendIds.length > 0) {
+      query.authorId = { ...query.authorId, $in: friendIds };
+    } else {
+      // No friends → return empty
+      query._id = null;
+    }
   } else if (filter && filter.startsWith('group:')) {
     // Posts visible to a specific group
     const groupId = filter.replace('group:', '');
     query.visibleToGroups = groupId;
   } else {
-    // Default "all" feed: public + user's groups
+    // Default "all" feed: public + user's groups + friends' friends-only posts
     query.$or = [
       { visibility: 'public' },
       { visibleToGroups: { $in: userGroupIds } },
+      ...(friendIds.length > 0
+        ? [{ visibility: 'friends', authorId: { $in: friendIds } }]
+        : []),
     ];
   }
 
@@ -374,6 +386,54 @@ const togglePin = async (postId, userId) => {
   return post;
 };
 
+/**
+ * Get posts by a specific user (for profile page)
+ * Visibility-filtered based on viewer's relationship
+ */
+const getUserPosts = async (authorId, viewerId, { page = 1, limit = 20 } = {}) => {
+  const skip = (page - 1) * limit;
+  const isOwnProfile = authorId.toString() === viewerId.toString();
+
+  let visibilityFilter;
+  if (isOwnProfile) {
+    // Own profile: see all own posts
+    visibilityFilter = {};
+  } else {
+    // Check friendship
+    const { status } = await friendService.getFriendshipStatus(viewerId, authorId);
+    if (status === 'friends') {
+      // Friend: see public + friends posts
+      visibilityFilter = { visibility: { $in: ['public', 'friends'] } };
+    } else {
+      // Stranger: only public posts
+      visibilityFilter = { visibility: 'public' };
+    }
+  }
+
+  const query = { authorId, isActive: true, ...visibilityFilter };
+
+  const [posts, total] = await Promise.all([
+    Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('authorId', 'fullName avatar')
+      .populate('visibleToGroups', 'name')
+      .lean(),
+    Post.countDocuments(query),
+  ]);
+
+  // Check likes
+  const postIds = posts.map((p) => p._id);
+  const userLikes = await Like.find({ userId: viewerId, postId: { $in: postIds } }).select('postId');
+  const likedPostIds = new Set(userLikes.map((l) => l.postId.toString()));
+
+  return {
+    posts: posts.map((post) => ({ ...post, isLiked: likedPostIds.has(post._id.toString()) })),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  };
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -383,4 +443,5 @@ module.exports = {
   toggleLike,
   getLikes,
   togglePin,
+  getUserPosts,
 };

@@ -16,7 +16,7 @@ const postSchema = new mongoose.Schema(
     // === VISIBILITY ===
     visibility: {
       type: String,
-      enum: ['public', 'groups'],
+      enum: ['public', 'groups', 'friends'],
       default: 'public',
     },
     visibleToGroups: [

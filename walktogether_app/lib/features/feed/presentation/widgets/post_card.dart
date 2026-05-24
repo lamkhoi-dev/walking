@@ -478,24 +478,27 @@ class PostCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 0),
       child: Row(
         children: [
-          // Avatar
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
+          // Avatar — tap to view profile
+          GestureDetector(
+            onTap: () => context.push('/user/${post.author.id}'),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.primaryGradient,
+              ),
+              child: post.author.avatar != null
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: post.author.avatar!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => _avatarPlaceholder(),
+                        errorWidget: (_, __, ___) => _avatarPlaceholder(),
+                      ),
+                    )
+                  : _avatarPlaceholder(),
             ),
-            child: post.author.avatar != null
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: post.author.avatar!,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => _avatarPlaceholder(),
-                      errorWidget: (_, __, ___) => _avatarPlaceholder(),
-                    ),
-                  )
-                : _avatarPlaceholder(),
           ),
           const SizedBox(width: 10),
 
@@ -543,7 +546,11 @@ class PostCard extends StatelessWidget {
                     Text('·', style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5))),
                     const SizedBox(width: 4),
                     Icon(
-                      post.visibility == 'public' ? Icons.public_rounded : Icons.group_rounded,
+                      post.visibility == 'public'
+                          ? Icons.public_rounded
+                          : post.visibility == 'friends'
+                              ? Icons.people_rounded
+                              : Icons.group_rounded,
                       size: 14,
                       color: AppColors.textSecondary.withValues(alpha: 0.6),
                     ),

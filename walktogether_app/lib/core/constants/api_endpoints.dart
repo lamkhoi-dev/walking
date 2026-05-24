@@ -74,4 +74,20 @@ class ApiEndpoints {
   static const String blockedUsers = '/auth/blocked';
   static String blockUser(String id) => '/auth/block/$id';
   static String unblockUser(String id) => '/auth/block/$id';
+
+  // === FRIENDS ===
+  static const String friends = '/friends';
+  static const String friendRequests = '/friends/requests';
+  static const String friendSent = '/friends/sent';
+  static const String friendSearch = '/friends/search';
+  static const String friendCount = '/friends/count';
+  static String friendRequest(String id) => '/friends/request/$id';
+  static String friendAccept(String id) => '/friends/accept/$id';
+  static String friendReject(String id) => '/friends/reject/$id';
+  static String friendCancel(String id) => '/friends/request/$id';
+  static String friendStatus(String id) => '/friends/status/$id';
+  static String unfriend(String id) => '/friends/$id';
+
+  // === USER PROFILE ===
+  static String userProfile(String id) => '/auth/users/$id';
 }
