@@ -36,7 +36,11 @@
 	<key>NSMotionUsageDescription</key>
 	<string>Runly cần truy cập cảm biến chuyển động để đếm số bước chân của bạn.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Runly cần truy cập thư viện ảnh để chọn ảnh đại diện.</string>
+	<string>Runly cần truy cập thư viện ảnh để chọn ảnh và video cho bài viết.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Runly cần quyền lưu ảnh và video vào thư viện.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Runly cần truy cập microphone để quay video.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

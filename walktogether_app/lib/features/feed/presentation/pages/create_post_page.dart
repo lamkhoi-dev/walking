@@ -74,24 +74,32 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Future<void> _pickImages() async {
-    if (_images.length >= 8) return;
-    final picked = await _picker.pickMultiImage(
+    if (_images.length >= 4) return;
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
       maxWidth: 1920,
       maxHeight: 1920,
       imageQuality: 85,
     );
-    if (picked.isNotEmpty) {
-      setState(() {
-        for (final xFile in picked) {
-          if (_images.length < 8) {
-            // Trim path to handle space in scaled filenames from image_picker
-            final file = File(xFile.path.trim());
-            if (file.existsSync()) {
-              _images.add(file);
-            }
-          }
-        }
-      });
+    if (picked != null) {
+      final file = File(picked.path.trim());
+      if (file.existsSync()) {
+        setState(() => _images.add(file));
+      }
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    if (_images.length >= 4) return;
+    final picked = await _picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(minutes: 3),
+    );
+    if (picked != null) {
+      final file = File(picked.path.trim());
+      if (file.existsSync()) {
+        setState(() => _images.add(file));
+      }
     }
   }
 
@@ -529,6 +537,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   }
                 : null,
             tooltip: 'Chụp ảnh',
+          ),
+          const SizedBox(width: 12),
+          _ToolbarIconButton(
+            icon: Icons.videocam_rounded,
+            color: const Color(0xFFE53935),
+            onTap: _images.length < 4 ? _pickVideo : null,
+            tooltip: 'Chọn video',
           ),
           const SizedBox(width: 12),
           _ToolbarIconButton(
