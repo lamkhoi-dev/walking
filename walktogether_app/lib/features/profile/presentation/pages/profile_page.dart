@@ -249,10 +249,21 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(gradient: AppColors.profileGradient),
-          child: Stack(
-            children: [
+        background: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(28),
+            bottomRight: Radius.circular(28),
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: AppColors.profileGradient,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
+            ),
+            child: Stack(
+              children: [
               // Radial glow overlay (mesh effect)
               Positioned.fill(
                 child: DecoratedBox(
@@ -436,6 +447,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               ),
             ],
           ),
+        ),
         ),
       ),
     );

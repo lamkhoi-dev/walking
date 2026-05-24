@@ -228,22 +228,33 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(gradient: AppColors.profileGradient),
-                child: Stack(
-                  children: [
-                    // Mesh glow overlays
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            center: const Alignment(-0.3, -0.5),
-                            radius: 1.2,
-                            colors: [AppColors.primary.withValues(alpha: 0.15), Colors.transparent],
+              background: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.profileGradient,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Mesh glow overlays
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              center: const Alignment(-0.3, -0.5),
+                              radius: 1.2,
+                              colors: [AppColors.primary.withValues(alpha: 0.15), Colors.transparent],
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
@@ -324,6 +335,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                     ),
                   ],
                 ),
+              ),
               ),
             ),
           ),
