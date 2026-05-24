@@ -1,3 +1,8 @@
 admin@walktogether.com	Admin@123456
 admin@abc.vn    Test@123
 hoa@abc.vn    Test@123
+
+cd /Users/an/Workspace/Code/Runner-App/walktogether_app && flutter run --release -d R92W60YXB1A
+
+
+cd /Users/an/Workspace/Code/Runner-App/walktogether_app && flutter build apk --release

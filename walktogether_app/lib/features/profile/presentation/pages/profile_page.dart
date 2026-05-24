@@ -31,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -176,52 +176,20 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           backgroundColor: AppColors.background,
           body: NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              // Gradient Header with Profile
+              // Mesh Gradient Header with Profile
               _buildHeader(user, innerBoxIsScrolled),
               
-              // Quick Stats Cards
+              // Floating Social Stats Card (overlapping gradient)
+              SliverToBoxAdapter(
+                child: _buildFloatingStatsCard(),
+              ),
+
+              // Quick Running Stats Row
               SliverToBoxAdapter(
                 child: _buildQuickStats(),
               ),
 
-              // Friends button
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: InkWell(
-                    onTap: () => context.push('/friends'),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.people_rounded, size: 20, color: AppColors.secondary),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text('Bạn bè', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textMain)),
-                          ),
-                          const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Tab Bar
+              // Tab Bar — 3 tabs
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _SliverTabBarDelegate(
@@ -231,7 +199,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                     unselectedLabelColor: AppColors.textSecondary,
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 3,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     tabs: const [
+                      Tab(text: 'Bài viết'),
                       Tab(text: 'Thông tin'),
                       Tab(text: 'Thống kê'),
                     ],
@@ -242,6 +212,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             body: TabBarView(
               controller: _tabController,
               children: [
+                _buildPostsTab(user),
                 _buildInfoTab(user, company),
                 _buildStatsTab(),
               ],
@@ -254,11 +225,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   Widget _buildHeader(dynamic user, bool innerBoxIsScrolled) {
     return SliverAppBar(
-      expandedHeight: 280,
+      expandedHeight: 300,
       pinned: true,
       forceElevated: innerBoxIsScrolled,
       automaticallyImplyLeading: false,
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.navy,
       surfaceTintColor: Colors.transparent,
       actions: [
         IconButton(
@@ -268,133 +239,233 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF667EEA),
-                Color(0xFF764BA2),
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 16),
-                // Avatar with edit button
-                GestureDetector(
-                  onTap: () => _pickAndUploadAvatar(),
-                  child: Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: AvatarWidget(
-                          imageUrl: user.avatar,
-                          name: user.fullName,
-                          size: 90,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 18,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Name
-                Text(
-                  user.fullName,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Role badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: const BoxDecoration(gradient: AppColors.profileGradient),
+          child: Stack(
+            children: [
+              // Radial glow overlay (mesh effect)
+              Positioned.fill(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        user.role == 'company_admin' ? Icons.shield : Icons.person,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _roleLabel(user.role),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Streak badge if > 0
-                if (_stats != null && _stats!.streak > 0) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('🔥', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_stats!.streak} ngày liên tiếp',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    gradient: RadialGradient(
+                      center: const Alignment(-0.3, -0.5),
+                      radius: 1.2,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.15),
+                        Colors.transparent,
                       ],
                     ),
                   ),
-                ],
+                ),
+              ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0.6, 0.3),
+                      radius: 0.9,
+                      colors: [
+                        AppColors.indigo.withValues(alpha: 0.2),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Content
+              SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Avatar with online indicator
+                    GestureDetector(
+                      onTap: () => _pickAndUploadAvatar(),
+                      child: Stack(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: AvatarWidget(
+                              imageUrl: user.avatar,
+                              name: user.fullName,
+                              size: 96,
+                            ),
+                          ),
+                          // Online indicator
+                          Positioned(
+                            bottom: 4,
+                            right: 6,
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: AppColors.success,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.success.withValues(alpha: 0.4),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Camera icon
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6),
+                                ],
+                              ),
+                              child: const Icon(Icons.camera_alt, size: 14, color: AppColors.indigo),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    // Name
+                    Text(
+                      user.fullName,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
+                    ),
+                    const SizedBox(height: 8),
+                    // Role badge (glass morphism)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            user.role == 'company_admin' ? Icons.verified_rounded : Icons.person,
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            _roleLabel(user.role),
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Streak + Level badges row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_stats != null && _stats!.streak > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('🔥', style: TextStyle(fontSize: 13)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_stats!.streak} ngày',
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (_stats != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(_getRunningLevelEmoji(_stats!.allTime.totalSteps), style: const TextStyle(fontSize: 13)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _getRunningLevel(_stats!.allTime.totalSteps),
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  /// Floating social stats card — overlaps gradient header
+  Widget _buildFloatingStatsCard() {
+    return Transform.translate(
+      offset: const Offset(0, -24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.indigo.withValues(alpha: 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                _SocialStatColumn(
+                  count: '0',
+                  label: 'Bạn bè',
+                  onTap: () => context.push('/friends'),
+                ),
+                VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                _SocialStatColumn(
+                  count: '0',
+                  label: 'Bài viết',
+                ),
+                VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                _SocialStatColumn(
+                  count: '0',
+                  label: 'Nhóm',
+                ),
               ],
             ),
           ),
@@ -548,34 +619,34 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Achievement Badges
+          _buildAchievementBadges(),
+          const SizedBox(height: 24),
+
+          // Weekly Activity Chart
+          _buildWeeklyActivityChart(),
+          const SizedBox(height: 24),
+
           // Today Stats
           _buildSectionTitle('Hôm nay', Icons.today),
           const SizedBox(height: 12),
           _buildTodayCard(stats.today),
-
           const SizedBox(height: 24),
 
           // This Week
           _buildSectionTitle('Tuần này', Icons.date_range),
           const SizedBox(height: 12),
           _buildPeriodCard(stats.week, 'tuần'),
-
           const SizedBox(height: 24),
 
           // This Month
           _buildSectionTitle('Tháng này', Icons.calendar_month),
           const SizedBox(height: 12),
           _buildPeriodCard(stats.month, 'tháng'),
-
           const SizedBox(height: 24),
 
-          // Best Day
-          if (stats.allTime.bestDay != null) ...[
-            _buildSectionTitle('Kỷ lục cá nhân', Icons.emoji_events),
-            const SizedBox(height: 12),
-            _buildBestDayCard(stats.allTime.bestDay!),
-          ],
-
+          // Personal Records
+          _buildPersonalRecordsCard(),
           const SizedBox(height: 40),
         ],
       ),
@@ -934,7 +1005,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          colors: [AppColors.indigo, AppColors.navy],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -1022,7 +1093,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             children: [
               Expanded(
                 child: _buildPeriodStatItem(
-                  '${_formatNumber(period.totalSteps)}',
+                  _formatNumber(period.totalSteps),
                   'Tổng bước',
                   AppColors.primary,
                 ),
@@ -1041,7 +1112,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             children: [
               Expanded(
                 child: _buildPeriodStatItem(
-                  '${_formatNumber(period.avgStepsPerDay)}',
+                  _formatNumber(period.avgStepsPerDay),
                   'TB/ngày',
                   Colors.blue,
                 ),
@@ -1082,72 +1153,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildBestDayCard(BestDayStats bestDay) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.amber.shade100,
-            Colors.orange.shade100,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.orange.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text('🏆', style: TextStyle(fontSize: 30)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ngày tốt nhất',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.orange.shade700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_formatNumber(bestDay.steps)} bước',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange.shade800,
-                  ),
-                ),
-                Text(
-                  _formatDateString(bestDay.date),
-                  style: TextStyle(
-                    color: Colors.orange.shade600,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showEditProfileDialog(dynamic user) {
     final nameController = TextEditingController(text: user.fullName);
@@ -1341,13 +1346,252 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
-  String _formatDateString(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      return _formatDate(date);
-    } catch (_) {
-      return dateStr;
-    }
+  // === Running Level System ===
+  String _getRunningLevel(int totalSteps) {
+    if (totalSteps >= 500000) return 'Champion';
+    if (totalSteps >= 200000) return 'Athlete';
+    if (totalSteps >= 50000) return 'Runner';
+    if (totalSteps >= 10000) return 'Walker';
+    return 'Beginner';
+  }
+
+  String _getRunningLevelEmoji(int totalSteps) {
+    if (totalSteps >= 500000) return '🏆';
+    if (totalSteps >= 200000) return '💪';
+    if (totalSteps >= 50000) return '🏃';
+    if (totalSteps >= 10000) return '🚶';
+    return '🌱';
+  }
+
+  // === Posts Tab ===
+  Widget _buildPostsTab(dynamic user) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.article_outlined, size: 48, color: AppColors.primary),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Bài viết của bạn',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Các bài viết bạn chia sẻ sẽ hiển thị ở đây',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // === Achievement Badges ===
+  Widget _buildAchievementBadges() {
+    final stats = _stats;
+    if (stats == null) return const SizedBox.shrink();
+
+    final badges = <Map<String, dynamic>>[
+      {'emoji': '🎯', 'title': 'Bước đầu tiên', 'achieved': stats.allTime.totalSteps > 0, 'desc': 'Ghi nhận bước đầu tiên'},
+      {'emoji': '🏃', 'title': '10K Club', 'achieved': stats.allTime.totalSteps >= 10000, 'desc': '10,000 bước tổng cộng'},
+      {'emoji': '🔥', 'title': 'Streak Master', 'achieved': stats.streak >= 7, 'desc': '7 ngày liên tiếp'},
+      {'emoji': '⭐', 'title': 'Tuần lễ vàng', 'achieved': stats.week.daysTracked >= 7, 'desc': 'Hoạt động cả tuần'},
+      {'emoji': '🏆', 'title': 'Marathon', 'achieved': stats.allTime.totalDistance >= 42195, 'desc': 'Tổng 42.195 km'},
+      {'emoji': '💪', 'title': 'Calorie Burner', 'achieved': stats.allTime.totalCalories >= 10000, 'desc': 'Đốt 10,000 calo'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Huy hiệu thành tích', Icons.military_tech_rounded),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 2.2,
+          ),
+          itemCount: badges.length,
+          itemBuilder: (ctx, i) {
+            final b = badges[i];
+            final achieved = b['achieved'] as bool;
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: achieved ? AppColors.primary.withValues(alpha: 0.08) : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: achieved ? AppColors.primary.withValues(alpha: 0.2) : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(b['emoji'] as String, style: TextStyle(fontSize: 24, color: achieved ? null : Colors.grey.shade400)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          b['title'] as String,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: achieved ? AppColors.textMain : AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          b['desc'] as String,
+                          style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // === Weekly Activity Mini Chart ===
+  Widget _buildWeeklyActivityChart() {
+    final stats = _stats;
+    if (stats == null) return const SizedBox.shrink();
+
+    final avg = stats.week.avgStepsPerDay;
+    final dayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    // Simulate daily steps distribution around avg (since API gives avg only)
+    final maxVal = avg > 0 ? avg * 1.5 : 1000.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Hoạt động tuần này', Icons.bar_chart_rounded),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Text('Trung bình: ', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  Text('${_formatNumber(avg)} bước/ngày', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 100,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(7, (i) {
+                    // Distribute tracked days — assume first N days tracked
+                    final isTracked = i < stats.week.daysTracked;
+                    final barHeight = isTracked ? (avg / maxVal * 80).clamp(8.0, 80.0) : 8.0;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              height: barHeight,
+                              decoration: BoxDecoration(
+                                color: isTracked ? AppColors.primary : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(dayLabels[i], style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // === Personal Records Card ===
+  Widget _buildPersonalRecordsCard() {
+    final stats = _stats;
+    if (stats == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Kỷ lục cá nhân', Icons.emoji_events_rounded),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.amber.shade50, Colors.orange.shade50],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orange.shade100),
+          ),
+          child: Column(
+            children: [
+              if (stats.allTime.bestDay != null)
+                _recordRow('🏅', 'Bước cao nhất/ngày', '${_formatNumber(stats.allTime.bestDay!.steps)} bước'),
+              _recordRow('📏', 'Tổng quãng đường', _formatDistance(stats.allTime.totalDistance)),
+              _recordRow('🔥', 'Chuỗi liên tiếp', '${stats.streak} ngày'),
+              _recordRow('📅', 'Ngày hoạt động', '${stats.allTime.daysTracked} ngày'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _recordRow(String emoji, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 20)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: Colors.orange.shade800))),
+          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.orange.shade900)),
+        ],
+      ),
+    );
   }
 }
 
@@ -1441,5 +1685,43 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
     return false;
+  }
+}
+
+class _SocialStatColumn extends StatelessWidget {
+  final String count;
+  final String label;
+  final VoidCallback? onTap;
+
+  const _SocialStatColumn({required this.count, required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              count,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textMain),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                if (onTap != null) ...[
+                  const SizedBox(width: 2),
+                  const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textSecondary),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

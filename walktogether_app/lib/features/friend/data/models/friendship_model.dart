@@ -88,6 +88,8 @@ class UserProfile {
   final FriendshipStatus friendshipStatus;
   final String? friendshipId;
   final int friendCount;
+  final int postCount;
+  final int groupCount;
 
   const UserProfile({
     required this.user,
@@ -95,6 +97,8 @@ class UserProfile {
     this.friendshipStatus = FriendshipStatus.none,
     this.friendshipId,
     this.friendCount = 0,
+    this.postCount = 0,
+    this.groupCount = 0,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -109,6 +113,8 @@ class UserProfile {
       friendshipStatus: friendshipStatusFromString(friendshipData?['status'] as String?),
       friendshipId: friendshipData?['friendshipId']?.toString(),
       friendCount: (json['friendCount'] as num?)?.toInt() ?? 0,
+      postCount: (json['postCount'] as num?)?.toInt() ?? 0,
+      groupCount: (json['groupCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

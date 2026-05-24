@@ -4,6 +4,8 @@ const postService = require('../services/post.service');
 const friendService = require('../services/friend.service');
 const User = require('../models/User');
 const Company = require('../models/Company');
+const Post = require('../models/Post');
+const Group = require('../models/Group');
 const { success, error } = require('../utils/response');
 
 /**
@@ -363,15 +365,16 @@ const getUserProfile = async (req, res, next) => {
     // Get friendship status
     const friendshipInfo = await friendService.getFriendshipStatus(viewerId, targetId);
 
-    // Get friend count
-    const friendCount = await friendService.getFriendCount(targetId);
-
-    // Get posts (visibility-filtered)
-    const { page, limit } = req.query;
-    const posts = await postService.getUserPosts(targetId, viewerId, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 20,
-    });
+    // Get friend count, post count, group count in parallel
+    const [friendCount, postCount, groupCount, postsResult] = await Promise.all([
+      friendService.getFriendCount(targetId),
+      Post.countDocuments({ author: targetId, deletedAt: null }),
+      Group.countDocuments({ members: targetId }),
+      postService.getUserPosts(targetId, viewerId, {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
+      }),
+    ]);
 
     return success(res, 200, 'Thông tin người dùng', {
       user: {
@@ -381,8 +384,10 @@ const getUserProfile = async (req, res, next) => {
       },
       friendship: friendshipInfo,
       friendCount,
-      posts: posts.posts,
-      postsPagination: posts.pagination,
+      postCount,
+      groupCount,
+      posts: postsResult.posts,
+      postsPagination: postsResult.pagination,
     });
   } catch (err) {
     if (err.statusCode) {

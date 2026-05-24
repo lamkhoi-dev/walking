@@ -29,6 +29,11 @@ class AppColors {
   static const Color danger = Color(0xFFEF4444);
   static const Color info = Color(0xFF3B82F6);
 
+  // === ACCENT ===
+  static const Color indigo = Color(0xFF4B41E1);
+  static const Color navy = Color(0xFF131B2E);
+  static const Color teal = Color(0xFF0D9488);
+
   // === GRADIENT ===
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primary, secondary],
@@ -46,6 +51,13 @@ class AppColors {
     colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  /// Mesh gradient for profile header — deep indigo to navy
+  static const LinearGradient profileGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [indigo, navy],
   );
 
   // === CHAT ===

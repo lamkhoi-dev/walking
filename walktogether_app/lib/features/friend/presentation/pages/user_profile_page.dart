@@ -28,15 +28,13 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
   bool _isLoading = true;
   String? _error;
   bool _isOwnProfile = false;
-  bool _postsLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _friendRepo = FriendRepository(dio: context.read<DioClient>());
 
-    // Check if this is own profile
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       _isOwnProfile = authState.user.id == widget.userId;
@@ -61,7 +59,6 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
         _friendshipStatus = profile.friendshipStatus;
         _friendshipId = profile.friendshipId;
         _isLoading = false;
-        _postsLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -75,9 +72,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     try {
       await _friendRepo.sendRequest(widget.userId);
       if (!mounted) return;
-      setState(() {
-        _friendshipStatus = FriendshipStatus.pendingSent;
-      });
+      setState(() => _friendshipStatus = FriendshipStatus.pendingSent);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đã gửi lời mời kết bạn'), backgroundColor: AppColors.success),
       );
@@ -197,11 +192,11 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
       backgroundColor: AppColors.background,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxScrolled) => [
-          // === HEADER with gradient ===
+          // === MESH GRADIENT HEADER ===
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.navy,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
               onPressed: () => context.pop(),
@@ -212,11 +207,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                   icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   onSelected: (v) {
-                    if (v == 'block') {
-                      // TODO: block user
-                    } else if (v == 'report') {
-                      // TODO: report user
-                    }
+                    // TODO: block/report
                   },
                   itemBuilder: (_) => [
                     const PopupMenuItem(value: 'block', child: Text('Chặn người dùng')),
@@ -226,155 +217,186 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.headerGradient,
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 24),
-                      // Avatar
-                      Container(
-                        width: 90,
-                        height: 90,
+                decoration: const BoxDecoration(gradient: AppColors.profileGradient),
+                child: Stack(
+                  children: [
+                    // Mesh glow overlays
+                    Positioned.fill(
+                      child: DecoratedBox(
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 12,
+                          gradient: RadialGradient(
+                            center: const Alignment(-0.3, -0.5),
+                            radius: 1.2,
+                            colors: [AppColors.primary.withValues(alpha: 0.15), Colors.transparent],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: const Alignment(0.6, 0.3),
+                            radius: 0.9,
+                            colors: [AppColors.indigo.withValues(alpha: 0.2), Colors.transparent],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Content
+                    SafeArea(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 24),
+                          // Avatar
+                          Container(
+                            width: 96,
+                            height: 96,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8)),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: user.avatar != null
-                              ? CachedNetworkImage(
-                                  imageUrl: user.avatar!,
-                                  fit: BoxFit.cover,
-                                  placeholder: (_, __) => Container(
-                                    color: AppColors.primaryLight,
-                                    child: const Icon(Icons.person, size: 40, color: AppColors.primary),
-                                  ),
-                                  errorWidget: (_, __, ___) => Container(
-                                    color: AppColors.primaryLight,
-                                    child: const Icon(Icons.person, size: 40, color: AppColors.primary),
-                                  ),
-                                )
-                              : Container(
-                                  color: AppColors.primaryLight,
-                                  child: const Icon(Icons.person, size: 40, color: AppColors.primary),
-                                ),
-                        ),
+                            child: ClipOval(
+                              child: user.avatar != null
+                                  ? CachedNetworkImage(
+                                      imageUrl: user.avatar!,
+                                      fit: BoxFit.cover,
+                                      placeholder: (_, __) => Container(
+                                        color: AppColors.primaryLight,
+                                        child: const Icon(Icons.person, size: 40, color: AppColors.primary),
+                                      ),
+                                      errorWidget: (_, __, ___) => Container(
+                                        color: AppColors.primaryLight,
+                                        child: const Icon(Icons.person, size: 40, color: AppColors.primary),
+                                      ),
+                                    )
+                                  : Container(
+                                      color: AppColors.primaryLight,
+                                      child: const Icon(Icons.person, size: 40, color: AppColors.primary),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          // Name
+                          Text(
+                            user.fullName,
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
+                          ),
+                          const SizedBox(height: 6),
+                          // Role badge
+                          if (user.role != null && user.role == 'company_admin')
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.verified_rounded, size: 14, color: Colors.white70),
+                                  SizedBox(width: 4),
+                                  Text('Quản trị viên', style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          // Company name
+                          if (_profile!.company != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                _profile!.company!.name,
+                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
+                              ),
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      // Name
-                      Text(
-                        user.fullName,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Role badge
-                      if (user.role != null && user.role == 'company_admin')
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.shield_rounded, size: 14, color: Colors.white70),
-                              SizedBox(width: 4),
-                              Text('Company Admin', style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                      // Company name
-                      if (_profile!.company != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            _profile!.company!.name,
-                            style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          // === STATS + ACTIONS ===
+          // === FLOATING STATS + ACTION BUTTONS + TABS ===
           SliverToBoxAdapter(
-            child: Container(
-              color: AppColors.surface,
-              child: Column(
-                children: [
-                  // Stats row
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: Row(
-                      children: [
-                        _StatItem(
-                          count: _profile!.friendCount,
-                          label: 'Bạn bè',
-                          onTap: () => context.push('/friends'),
+            child: Column(
+              children: [
+                // Floating social stats card
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.indigo.withValues(alpha: 0.12),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            _SocialStat(count: _profile!.friendCount.toString(), label: 'Bạn bè'),
+                            VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                            _SocialStat(count: _profile!.postCount.toString(), label: 'Bài viết'),
+                            VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                            _SocialStat(count: _profile!.groupCount.toString(), label: 'Nhóm'),
+                          ],
                         ),
-                        _divider(),
-                        _StatItem(
-                          count: 0, // TODO: post count from pagination
-                          label: 'Bài viết',
-                        ),
-                      ],
+                      ),
                     ),
                   ),
+                ),
 
-                  // Action buttons (only for other users)
-                  if (!_isOwnProfile) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: _buildFriendActionButton(),
-                    ),
-                  ],
-
-                  // Tab bar
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppColors.divider.withValues(alpha: 0.5))),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: AppColors.textSecondary,
-                      labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                      indicatorColor: AppColors.primary,
-                      indicatorWeight: 3,
-                      tabs: const [
-                        Tab(text: 'Bài viết'),
-                        Tab(text: 'Thông tin'),
-                      ],
-                    ),
+                // Action buttons (only for other users)
+                if (!_isOwnProfile) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: _buildFriendActionButton(),
                   ),
                 ],
-              ),
+
+                // Tab bar
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: AppColors.divider.withValues(alpha: 0.5))),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: AppColors.primary,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    indicatorColor: AppColors.primary,
+                    indicatorWeight: 3,
+                    tabs: const [
+                      Tab(text: 'Bài viết'),
+                      Tab(text: 'Thông tin'),
+                      Tab(text: 'Thống kê'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
         body: TabBarView(
           controller: _tabController,
           children: [
-            // Posts tab
             _buildPostsTab(),
-            // Info tab
             _buildInfoTab(),
+            _buildStatsTab(),
           ],
         ),
       ),
@@ -485,17 +507,28 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
   }
 
   Widget _buildPostsTab() {
-    // For now show a simple message; posts will be loaded from profile endpoint
     return Center(
-      child: _postsLoading
-          ? const CircularProgressIndicator(color: AppColors.primary)
-          : const Padding(
-              padding: EdgeInsets.all(32),
-              child: Text(
-                'Bài viết sẽ hiển thị ở đây',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+              child: const Icon(Icons.article_outlined, size: 48, color: AppColors.primary),
             ),
+            const SizedBox(height: 16),
+            const Text('Bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+            const SizedBox(height: 8),
+            const Text(
+              'Bài viết sẽ hiển thị ở đây',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -509,57 +542,62 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
           _InfoTile(icon: Icons.badge_rounded, label: 'Vai trò', value: user.role == 'company_admin' ? 'Quản trị viên' : 'Thành viên'),
         if (_profile!.company != null)
           _InfoTile(icon: Icons.business_rounded, label: 'Công ty', value: _profile!.company!.name),
-        _InfoTile(
-          icon: Icons.people_rounded,
-          label: 'Bạn bè',
-          value: '${_profile!.friendCount} bạn bè',
-        ),
+        _InfoTile(icon: Icons.people_rounded, label: 'Bạn bè', value: '${_profile!.friendCount} bạn bè'),
       ],
     );
   }
 
-  Widget _divider() => Container(
-        width: 1,
-        height: 30,
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        color: AppColors.divider,
-      );
+  Widget _buildStatsTab() {
+    // Public stats — shown to everyone
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.indigo.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.bar_chart_rounded, size: 48, color: AppColors.indigo),
+            ),
+            const SizedBox(height: 16),
+            const Text('Thống kê', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+            const SizedBox(height: 8),
+            Text(
+              _friendshipStatus == FriendshipStatus.friends
+                  ? 'Thống kê hoạt động sẽ hiển thị ở đây'
+                  : 'Kết bạn để xem thống kê hoạt động',
+              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // === Supporting Widgets ===
 
-class _StatItem extends StatelessWidget {
-  final int count;
+class _SocialStat extends StatelessWidget {
+  final String count;
   final String label;
-  final VoidCallback? onTap;
 
-  const _StatItem({required this.count, required this.label, this.onTap});
+  const _SocialStat({required this.count, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          children: [
-            Text(
-              '$count',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                if (onTap != null) ...[
-                  const SizedBox(width: 2),
-                  const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textSecondary),
-                ],
-              ],
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(count, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
