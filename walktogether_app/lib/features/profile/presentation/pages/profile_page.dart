@@ -187,12 +187,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           backgroundColor: AppColors.background,
           body: NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              // Mesh Gradient Header with Profile
-              _buildHeader(user, innerBoxIsScrolled),
-              
-              // Floating Social Stats Card (overlapping gradient)
+              // Combined gradient header + floating stats card
               SliverToBoxAdapter(
-                child: _buildFloatingStatsCard(user),
+                child: _buildProfileHeader(user),
               ),
 
               // Quick Running Stats Row
@@ -234,269 +231,177 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildHeader(dynamic user, bool innerBoxIsScrolled) {
-    return SliverAppBar(
-      expandedHeight: 300,
-      pinned: true,
-      forceElevated: innerBoxIsScrolled,
-      automaticallyImplyLeading: false,
-      backgroundColor: AppColors.navy,
-      surfaceTintColor: Colors.transparent,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.edit_outlined, color: Colors.white),
-          onPressed: () => _showEditProfileDialog(user),
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(28),
-            bottomRight: Radius.circular(28),
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: AppColors.profileGradient,
-              borderRadius: BorderRadius.only(
+
+  Widget _buildProfileHeader(dynamic user) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Gradient header with rounded bottom corners
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(28),
                 bottomRight: Radius.circular(28),
               ),
-            ),
-            child: Stack(
-              children: [
-              // Radial glow overlay (mesh effect)
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(-0.3, -0.5),
-                      radius: 1.2,
-                      colors: [
-                        AppColors.primary.withValues(alpha: 0.15),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(0.6, 0.3),
-                      radius: 0.9,
-                      colors: [
-                        AppColors.indigo.withValues(alpha: 0.2),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Content
-              SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: topPadding + 16, bottom: 52),
+                decoration: const BoxDecoration(gradient: AppColors.profileGradient),
+                child: Stack(
                   children: [
-                    const SizedBox(height: 16),
-                    // Avatar with online indicator
-                    GestureDetector(
-                      onTap: () => _pickAndUploadAvatar(),
-                      child: Stack(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: AvatarWidget(
-                              imageUrl: user.avatar,
-                              name: user.fullName,
-                              size: 96,
-                            ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: const Alignment(-0.3, -0.5),
+                            radius: 1.2,
+                            colors: [AppColors.primary.withValues(alpha: 0.15), Colors.transparent],
                           ),
-                          // Online indicator
-                          Positioned(
-                            bottom: 4,
-                            right: 6,
-                            child: Container(
-                              width: 22,
-                              height: 22,
-                              decoration: BoxDecoration(
-                                color: AppColors.success,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 3),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.success.withValues(alpha: 0.4),
-                                    blurRadius: 6,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          // Camera icon
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(5),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6),
-                                ],
-                              ),
-                              child: const Icon(Icons.camera_alt, size: 14, color: AppColors.indigo),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    // Name
-                    Text(
-                      user.fullName,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
-                    ),
-                    const SizedBox(height: 8),
-                    // Role badge (glass morphism)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: const Alignment(0.6, 0.3),
+                            radius: 0.9,
+                            colors: [AppColors.indigo.withValues(alpha: 0.2), Colors.transparent],
+                          ),
+                        ),
                       ),
-                      child: Row(
+                    ),
+                    Center(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            user.role == 'company_admin' ? Icons.verified_rounded : Icons.person,
-                            size: 14,
-                            color: Colors.white.withValues(alpha: 0.9),
+                          GestureDetector(
+                            onTap: () => _pickAndUploadAvatar(),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 3),
+                                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                                  ),
+                                  child: AvatarWidget(imageUrl: user.avatar, name: user.fullName, size: 96),
+                                ),
+                                Positioned(
+                                  bottom: 4, right: 6,
+                                  child: Container(
+                                    width: 22, height: 22,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success, shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 3),
+                                      boxShadow: [BoxShadow(color: AppColors.success.withValues(alpha: 0.4), blurRadius: 6)],
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0, left: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white, shape: BoxShape.circle,
+                                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6)],
+                                    ),
+                                    child: const Icon(Icons.camera_alt, size: 14, color: AppColors.indigo),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            _roleLabel(user.role),
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13),
+                          const SizedBox(height: 14),
+                          Text(user.fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(user.role == 'company_admin' ? Icons.verified_rounded : Icons.person, size: 14, color: Colors.white.withValues(alpha: 0.9)),
+                                const SizedBox(width: 5),
+                                Text(_roleLabel(user.role), style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_stats != null && _stats!.streak > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.orange.withValues(alpha: 0.3))),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    const Text('🔥', style: TextStyle(fontSize: 13)),
+                                    const SizedBox(width: 4),
+                                    Text('${_stats!.streak} ngày', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                                  ]),
+                                ),
+                              if (_stats != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.3))),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Text(_getRunningLevelEmoji(_stats!.allTime.totalSteps), style: const TextStyle(fontSize: 13)),
+                                    const SizedBox(width: 4),
+                                    Text(_getRunningLevel(_stats!.allTime.totalSteps), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                                  ]),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Streak + Level badges row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_stats != null && _stats!.streak > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('🔥', style: TextStyle(fontSize: 13)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${_stats!.streak} ngày',
-                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (_stats != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(_getRunningLevelEmoji(_stats!.allTime.totalSteps), style: const TextStyle(fontSize: 13)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _getRunningLevel(_stats!.allTime.totalSteps),
-                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-        ),
-      ),
-    );
-  }
-  /// Floating social stats card — overlaps gradient header
-  Widget _buildFloatingStatsCard(dynamic user) {
-    return Transform.translate(
-      offset: const Offset(0, -24),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.indigo.withValues(alpha: 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                _SocialStatColumn(
-                  count: '${user.friendCount}',
-                  label: 'Bạn bè',
-                  onTap: () => context.push('/friends'),
-                ),
-                VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                _SocialStatColumn(
-                  count: '${user.postCount}',
-                  label: 'Bài viết',
-                  onTap: () => _tabController.animateTo(0),
-                ),
-                VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                _SocialStatColumn(
-                  count: '${user.groupCount}',
-                  label: 'Nhóm',
-                ),
-              ],
             ),
-          ),
+            // Edit button
+            Positioned(
+              top: topPadding + 4, right: 4,
+              child: IconButton(icon: const Icon(Icons.edit_outlined, color: Colors.white), onPressed: () => _showEditProfileDialog(user)),
+            ),
+            // Floating stats card
+            Positioned(
+              left: 20, right: 20, bottom: -28,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: AppColors.indigo.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+                ),
+                child: IntrinsicHeight(
+                  child: Row(children: [
+                    _SocialStatColumn(count: '${user.friendCount}', label: 'Bạn bè', onTap: () => context.push('/friends')),
+                    VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                    _SocialStatColumn(count: '${user.postCount}', label: 'Bài viết', onTap: () => _tabController.animateTo(0)),
+                    VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                    _SocialStatColumn(count: '${user.groupCount}', label: 'Nhóm'),
+                  ]),
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: 36),
+      ],
     );
   }
+
 
   Widget _buildQuickStats() {
     debugPrint('ProfilePage: _buildQuickStats - isLoading: $_isLoadingStats, stats: $_stats');

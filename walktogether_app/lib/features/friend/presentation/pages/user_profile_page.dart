@@ -205,187 +205,21 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
       backgroundColor: AppColors.background,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxScrolled) => [
-          // === MESH GRADIENT HEADER ===
-          SliverAppBar(
-            expandedHeight: 280,
-            pinned: true,
-            backgroundColor: AppColors.navy,
-            surfaceTintColor: Colors.transparent,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-              onPressed: () => context.pop(),
-            ),
-            actions: [
-              if (!_isOwnProfile)
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  onSelected: (v) {},
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'block', child: Text('Chặn người dùng')),
-                    const PopupMenuItem(value: 'report', child: Text('Báo cáo')),
-                  ],
-                ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.profileGradient,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(28),
-                      bottomRight: Radius.circular(28),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Mesh glow overlays
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: RadialGradient(
-                              center: const Alignment(-0.3, -0.5),
-                              radius: 1.2,
-                              colors: [AppColors.primary.withValues(alpha: 0.15), Colors.transparent],
-                            ),
-                          ),
-                        ),
-                      ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            center: const Alignment(0.6, 0.3),
-                            radius: 0.9,
-                            colors: [AppColors.indigo.withValues(alpha: 0.2), Colors.transparent],
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Content — centered avatar + name
-                    SafeArea(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 16),
-                            // Avatar with border
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 3),
-                                boxShadow: [
-                                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8)),
-                                ],
-                              ),
-                              child: AvatarWidget(
-                                imageUrl: user.avatar,
-                                name: user.fullName,
-                                size: 96,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            // Name
-                            Text(
-                              user.fullName,
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
-                            ),
-                            const SizedBox(height: 6),
-                            // Role badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    user.role == 'company_admin' ? Icons.verified_rounded : Icons.person,
-                                    size: 14,
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    user.role == 'company_admin' ? 'Quản trị viên' : 'Thành viên',
-                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Company name
-                            if (_profile!.company != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  _profile!.company!.name,
-                                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ),
-            ),
+          // === COMBINED HEADER + STATS ===
+          SliverToBoxAdapter(
+            child: _buildUserProfileHeader(user),
           ),
 
-          // === FLOATING STATS + ACTION BUTTONS + TABS ===
+          // === ACTION BUTTONS + TABS ===
           SliverToBoxAdapter(
             child: Column(
               children: [
-                // Floating social stats card
-                Transform.translate(
-                  offset: const Offset(0, -20),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.indigo.withValues(alpha: 0.12),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          children: [
-                            _SocialStat(count: _profile!.friendCount.toString(), label: 'Bạn bè'),
-                            VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                            _SocialStat(count: _profile!.postCount.toString(), label: 'Bài viết'),
-                            VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                            _SocialStat(count: _profile!.groupCount.toString(), label: 'Nhóm'),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Action buttons (only for other users)
                 if (!_isOwnProfile) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: _buildFriendActionButton(),
                   ),
                 ],
-
-                // Tab bar
                 Container(
                   decoration: BoxDecoration(
                     border: Border(bottom: BorderSide(color: AppColors.divider.withValues(alpha: 0.5))),
@@ -417,6 +251,141 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildUserProfileHeader(FriendUser user) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Gradient header with rounded bottom corners
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: topPadding + 16, bottom: 52),
+                decoration: const BoxDecoration(gradient: AppColors.profileGradient),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: const Alignment(-0.3, -0.5),
+                            radius: 1.2,
+                            colors: [AppColors.primary.withValues(alpha: 0.15), Colors.transparent],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: const Alignment(0.6, 0.3),
+                            radius: 0.9,
+                            colors: [AppColors.indigo.withValues(alpha: 0.2), Colors.transparent],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                            ),
+                            child: AvatarWidget(imageUrl: user.avatar, name: user.fullName, size: 96),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(user.fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(user.role == 'company_admin' ? Icons.verified_rounded : Icons.person, size: 14, color: Colors.white.withValues(alpha: 0.9)),
+                                const SizedBox(width: 5),
+                                Text(user.role == 'company_admin' ? 'Quản trị viên' : 'Thành viên', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          if (_profile!.company != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(_profile!.company!.name, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7))),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Back button
+            Positioned(
+              top: topPadding + 4, left: 4,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                onPressed: () => context.pop(),
+              ),
+            ),
+            // More button
+            if (!_isOwnProfile)
+              Positioned(
+                top: topPadding + 4, right: 4,
+                child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (v) {},
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(value: 'block', child: Text('Chặn người dùng')),
+                    const PopupMenuItem(value: 'report', child: Text('Báo cáo')),
+                  ],
+                ),
+              ),
+            // Floating stats card
+            Positioned(
+              left: 20, right: 20, bottom: -28,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: AppColors.indigo.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+                ),
+                child: IntrinsicHeight(
+                  child: Row(children: [
+                    _SocialStat(count: _profile!.friendCount.toString(), label: 'Bạn bè'),
+                    VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                    _SocialStat(count: _profile!.postCount.toString(), label: 'Bài viết'),
+                    VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
+                    _SocialStat(count: _profile!.groupCount.toString(), label: 'Nhóm'),
+                  ]),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 36),
+      ],
     );
   }
 
