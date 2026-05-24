@@ -16,13 +16,21 @@ const chatStorage = new CloudinaryStorage({
   },
 });
 
-// === POST IMAGES ===
+// === POST MEDIA (images + videos) ===
 const postStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'walktogether/posts',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 1920, height: 1920, crop: 'limit', quality: 'auto' }],
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    return {
+      folder: 'walktogether/posts',
+      resource_type: isVideo ? 'video' : 'image',
+      allowed_formats: isVideo
+        ? ['mp4', 'mov', 'webm', 'avi']
+        : ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      transformation: isVideo
+        ? [{ quality: 'auto', fetch_format: 'mp4' }]
+        : [{ width: 1920, height: 1920, crop: 'limit', quality: 'auto' }],
+    };
   },
 });
 
@@ -37,11 +45,14 @@ const avatarStorage = new CloudinaryStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedMimes = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo',
+  ];
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ hỗ trợ file ảnh (jpg, png, gif, webp)'), false);
+    cb(new Error('Chỉ hỗ trợ file ảnh (jpg, png, gif, webp) hoặc video (mp4, mov, webm)'), false);
   }
 };
 
@@ -52,10 +63,10 @@ const chatUpload = multer({
   fileFilter,
 });
 
-// Post upload: up to 4 images, 10MB max each
+// Post upload: up to 4 files (images or video), 50MB max each
 const postUpload = multer({
   storage: postStorage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter,
 });
 

@@ -24,6 +24,9 @@ router.put('/:id', postController.updatePost);
 // DELETE /posts/:id                 → soft delete post
 router.delete('/:id', postController.deletePost);
 
+// PUT    /posts/:id/pin             → toggle pin (company_admin only)
+router.put('/:id/pin', postController.pinPost);
+
 // === LIKES ===
 // POST   /posts/:id/like            → toggle like
 router.post('/:id/like', postController.toggleLike);

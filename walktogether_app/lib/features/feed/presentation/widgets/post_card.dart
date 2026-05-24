@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/post_model.dart';
 import 'image_gallery_viewer.dart';
@@ -16,6 +17,8 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onReport;
   final VoidCallback? onBlock;
+  final VoidCallback? onPin;
+  final bool isCompanyAdmin;
 
   const PostCard({
     super.key,
@@ -28,6 +31,8 @@ class PostCard extends StatelessWidget {
     this.onDelete,
     this.onReport,
     this.onBlock,
+    this.onPin,
+    this.isCompanyAdmin = false,
   });
 
   @override
@@ -50,6 +55,25 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Pinned indicator
+            if (post.isPinned)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.push_pin_rounded, size: 14, color: const Color(0xFFFF9800)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Bài viết được ghim',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFE65100)),
+                    ),
+                  ],
+                ),
+              ),
             _buildHeader(context),
             if (post.content.isNotEmpty) _buildContent(),
             // Shared post embed — tap to view original
@@ -488,6 +512,10 @@ class PostCard extends StatelessWidget {
                     color: AppColors.textMain,
                   ),
                 ),
+                if (post.isOfficial) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.verified_rounded, size: 16, color: Color(0xFF1DA1F2)),
+                ],
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -526,7 +554,7 @@ class PostCard extends StatelessWidget {
           ),
 
           // Menu — always show if any action available
-          if (onEdit != null || onDelete != null || onReport != null)
+          if (onEdit != null || onDelete != null || onReport != null || onPin != null)
             PopupMenuButton<String>(
               icon: Icon(Icons.more_horiz_rounded, color: AppColors.textSecondary, size: 22),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -535,8 +563,24 @@ class PostCard extends StatelessWidget {
                 if (value == 'delete') onDelete?.call();
                 if (value == 'report') onReport?.call();
                 if (value == 'block') onBlock?.call();
+                if (value == 'pin') onPin?.call();
               },
               itemBuilder: (_) => [
+                if (onPin != null)
+                  PopupMenuItem(
+                    value: 'pin',
+                    child: Row(
+                      children: [
+                        Icon(
+                          post.isPinned ? Icons.push_pin_outlined : Icons.push_pin_rounded,
+                          size: 18,
+                          color: const Color(0xFFFF9800),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(post.isPinned ? 'Bỏ ghim' : 'Ghim bài viết'),
+                      ],
+                    ),
+                  ),
                 if (onEdit != null)
                   const PopupMenuItem(
                     value: 'edit',
@@ -638,7 +682,7 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  /// Tappable image with Hero animation → opens gallery at given index
+  /// Tappable image/video with Hero animation → opens gallery at given index
   Widget _tappableImage(
     BuildContext context,
     PostMedia media,
@@ -648,13 +692,66 @@ class PostCard extends StatelessWidget {
     double? width,
     BoxFit fit = BoxFit.cover,
   }) {
-    final allUrls = post.media.map((m) => m.url).toList();
+    final allUrls = post.media.where((m) => !m.isVideo).map((m) => m.url).toList();
 
+    if (media.isVideo) {
+      // Video thumbnail with play button
+      return GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => _VideoPlayerPage(url: media.url)),
+        ),
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            if (media.thumbnail != null)
+              CachedNetworkImage(
+                imageUrl: media.thumbnail!,
+                fit: fit,
+                height: height,
+                width: width ?? double.infinity,
+                placeholder: (_, __) => _imagePlaceholder(height ?? 200),
+                errorWidget: (_, __, ___) => _videoPlaceholder(height ?? 200),
+              )
+            else
+              _videoPlaceholder(height ?? 200),
+            Positioned.fill(
+              child: Center(
+                child: Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+                ),
+              ),
+            ),
+            if (media.duration > 0)
+              Positioned(
+                right: 8, bottom: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _formatDuration(media.duration),
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Image
     return GestureDetector(
       onTap: () => ImageGalleryViewer.show(
         context,
         imageUrls: allUrls,
-        initialIndex: index,
+        initialIndex: allUrls.indexOf(media.url).clamp(0, allUrls.length - 1),
         heroTagPrefix: heroPrefix,
       ),
       child: Hero(
@@ -669,6 +766,22 @@ class PostCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static Widget _videoPlaceholder(double height) {
+    return Container(
+      height: height,
+      color: const Color(0xFF1A1A2E),
+      child: const Center(
+        child: Icon(Icons.videocam_rounded, color: Colors.white38, size: 48),
+      ),
+    );
+  }
+
+  static String _formatDuration(int seconds) {
+    final min = seconds ~/ 60;
+    final sec = seconds % 60;
+    return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
   Widget _singleImage(BuildContext ctx, PostMedia media, String heroPrefix) {
@@ -881,6 +994,99 @@ class _ActionButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Full-screen video player page
+class _VideoPlayerPage extends StatefulWidget {
+  final String url;
+  const _VideoPlayerPage({required this.url});
+
+  @override
+  State<_VideoPlayerPage> createState() => _VideoPlayerPageState();
+}
+
+class _VideoPlayerPageState extends State<_VideoPlayerPage> {
+  late VideoPlayerController _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() => _initialized = true);
+          _controller.play();
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Video', style: TextStyle(fontSize: 16)),
+      ),
+      body: Center(
+        child: _initialized
+            ? AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    VideoPlayer(_controller),
+                    // Tap to play/pause
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _controller.value.isPlaying
+                              ? _controller.pause()
+                              : _controller.play();
+                        });
+                      },
+                      child: AnimatedOpacity(
+                        opacity: !_controller.value.isPlaying ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Container(
+                          width: 64, height: 64,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 40),
+                        ),
+                      ),
+                    ),
+                    // Progress
+                    Positioned(
+                      bottom: 0, left: 0, right: 0,
+                      child: VideoProgressIndicator(
+                        _controller,
+                        allowScrubbing: true,
+                        colors: const VideoProgressColors(
+                          playedColor: AppColors.primary,
+                          bufferedColor: Colors.white24,
+                          backgroundColor: Colors.white12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const CircularProgressIndicator(color: AppColors.primary),
       ),
     );
   }

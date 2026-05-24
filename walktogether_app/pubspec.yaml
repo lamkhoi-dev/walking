@@ -74,6 +74,8 @@ dependencies:
   intl: ^0.19.0
   json_annotation: ^4.9.0
   freezed_annotation: ^2.4.4
+  hugeicons: ^1.1.7
+  video_player: ^2.11.1
   # google_fonts: 4.0.0  # Temporarily disabled due to SDK compatibility
 
 dev_dependencies:

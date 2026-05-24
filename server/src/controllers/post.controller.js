@@ -19,12 +19,18 @@ const createPost = async (req, res, next) => {
     // Build media array from uploaded files
     let media = [];
     if (req.files && req.files.length > 0) {
-      media = req.files.map((file) => ({
-        url: file.path,
-        publicId: file.filename,
-        width: 0,
-        height: 0,
-      }));
+      media = req.files.map((file) => {
+        const isVideo = file.mimetype?.startsWith('video/');
+        return {
+          url: file.path,
+          publicId: file.filename,
+          width: 0,
+          height: 0,
+          type: isVideo ? 'video' : 'image',
+          thumbnail: isVideo ? file.path.replace(/\.[^.]+$/, '.jpg') : null,
+          duration: 0,
+        };
+      });
     }
 
     const post = await postService.createPost(req.user._id, {
@@ -213,4 +219,13 @@ module.exports = {
   createComment,
   getComments,
   deleteComment,
+  pinPost: async (req, res, next) => {
+    try {
+      const post = await postService.togglePin(req.params.id, req.user._id);
+      return success(res, 200, post.isPinned ? 'Đã ghim bài viết' : 'Đã bỏ ghim bài viết', post);
+    } catch (err) {
+      if (err.statusCode) return error(res, err.statusCode, err.message);
+      next(err);
+    }
+  },
 };

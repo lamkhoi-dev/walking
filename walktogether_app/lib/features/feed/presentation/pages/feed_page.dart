@@ -188,8 +188,11 @@ class _FeedPageState extends State<FeedPage> {
           final authState = context.read<AuthBloc>().state;
           final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
           final isOwner = post.author.id == currentUserId;
+          final isCompanyAdmin = authState is AuthAuthenticated && authState.user.role == 'company_admin';
+          final isSameCompany = authState is AuthAuthenticated && authState.user.companyId == post.companyId;
           return PostCard(
             post: post,
+            isCompanyAdmin: isCompanyAdmin,
             onLike: () => context.read<FeedBloc>().add(FeedPostLikeToggled(post.id)),
             onComment: () async {
               await context.push('/post/${post.id}');
@@ -211,6 +214,9 @@ class _FeedPageState extends State<FeedPage> {
                 : null,
             onDelete: isOwner
                 ? () => _confirmDeletePost(post)
+                : null,
+            onPin: isCompanyAdmin && isSameCompany
+                ? () => context.read<FeedBloc>().add(FeedPostPinToggled(post.id))
                 : null,
             onReport: isOwner ? null : () {
               ReportDialog.show(
@@ -459,18 +465,18 @@ class _FeedPageState extends State<FeedPage> {
   void _confirmDeletePost(PostModel post) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Xóa bài viết?'),
         content: const Text('Bạn có chắc muốn xóa bài viết này? Hành động này không thể hoàn tác.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               context.read<FeedBloc>().add(FeedPostDeleted(post.id));
             },
             child: const Text('Xóa', style: TextStyle(color: AppColors.danger)),

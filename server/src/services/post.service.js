@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
  * Handles visibility normalization: 'all_groups' → populates visibleToGroups with author's groups
  */
 const createPost = async (authorId, { content, visibility, visibleToGroups, media, type, sharedPostId, sharedContestId, achievementRank, achievementSteps }) => {
-  const author = await User.findById(authorId).select('companyId');
+  const author = await User.findById(authorId).select('companyId role');
   if (!author) {
     const err = new Error('Người dùng không tồn tại');
     err.statusCode = 404;
@@ -42,8 +42,12 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
   // Determine post type
   let postType = type || 'text';
   if (!type && media && media.length > 0) {
-    postType = 'image';
+    const hasVideo = media.some((m) => m.type === 'video');
+    postType = hasVideo ? 'video' : 'image';
   }
+
+  // Auto-set isOfficial for company_admin
+  const isOfficial = author.role === 'company_admin';
 
   const post = await Post.create({
     authorId,
@@ -53,6 +57,7 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
     type: postType,
     content: content || '',
     media: media || [],
+    isOfficial,
     sharedPostId: sharedPostId || undefined,
     sharedContestId: sharedContestId || undefined,
     achievementRank: achievementRank || undefined,
@@ -113,7 +118,7 @@ const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
 
   const [posts, total] = await Promise.all([
     Post.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ isPinned: -1, pinnedAt: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate('authorId', 'fullName avatar')
@@ -308,6 +313,67 @@ const getLikes = async (postId, page = 1, limit = 20) => {
   };
 };
 
+/**
+ * Toggle pin on a post (company_admin only, max 3 per company)
+ */
+const togglePin = async (postId, userId) => {
+  const user = await User.findById(userId).select('role companyId');
+  if (!user || user.role !== 'company_admin') {
+    const err = new Error('Chỉ admin công ty mới có thể ghim bài viết');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const post = await Post.findOne({ _id: postId, isActive: true });
+  if (!post) {
+    const err = new Error('Bài viết không tồn tại');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // Must be same company
+  if (!post.companyId || post.companyId.toString() !== user.companyId?.toString()) {
+    const err = new Error('Bạn chỉ có thể ghim bài trong công ty của mình');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (post.isPinned) {
+    // Unpin
+    post.isPinned = false;
+    post.pinnedAt = null;
+    await post.save();
+  } else {
+    // Check pin limit (max 3)
+    const pinnedCount = await Post.countDocuments({
+      companyId: post.companyId,
+      isPinned: true,
+      isActive: true,
+    });
+
+    if (pinnedCount >= 3) {
+      // Auto-unpin the oldest
+      const oldest = await Post.findOne({
+        companyId: post.companyId,
+        isPinned: true,
+        isActive: true,
+      }).sort({ pinnedAt: 1 });
+      if (oldest) {
+        oldest.isPinned = false;
+        oldest.pinnedAt = null;
+        await oldest.save();
+      }
+    }
+
+    post.isPinned = true;
+    post.pinnedAt = new Date();
+    await post.save();
+  }
+
+  await post.populate('authorId', 'fullName avatar');
+  return post;
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -316,4 +382,5 @@ module.exports = {
   deletePost,
   toggleLike,
   getLikes,
+  togglePin,
 };

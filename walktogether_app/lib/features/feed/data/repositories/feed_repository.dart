@@ -145,6 +145,12 @@ class FeedRepository {
   Future<void> deletePost(String postId) async {
     await _dioClient.delete(ApiEndpoints.postDetail(postId));
   }
+
+  /// Toggle pin a post
+  Future<PostModel> togglePin(String postId) async {
+    final response = await _dioClient.put(ApiEndpoints.postPin(postId));
+    return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
 }
 
 class FeedResponse {

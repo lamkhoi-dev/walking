@@ -29,7 +29,7 @@ const postSchema = new mongoose.Schema(
     // === CONTENT ===
     type: {
       type: String,
-      enum: ['text', 'image', 'shared_post', 'shared_contest'],
+      enum: ['text', 'image', 'video', 'shared_post', 'shared_contest'],
       default: 'text',
     },
     content: {
@@ -44,6 +44,9 @@ const postSchema = new mongoose.Schema(
         publicId: { type: String, default: null },
         width: { type: Number, default: 0 },
         height: { type: Number, default: 0 },
+        type: { type: String, enum: ['image', 'video'], default: 'image' },
+        thumbnail: { type: String, default: null },
+        duration: { type: Number, default: 0 },
       },
     ],
 
@@ -73,6 +76,21 @@ const postSchema = new mongoose.Schema(
       default: null,
     },
 
+    // === OFFICIAL & PIN ===
+    isOfficial: {
+      type: Boolean,
+      default: false,
+    },
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
+    pinnedAt: {
+      type: Date,
+      default: null,
+    },
+
+
     // === COUNTERS (cached for performance) ===
     likesCount: {
       type: Number,
@@ -98,6 +116,7 @@ postSchema.index({ visibility: 1, createdAt: -1 });
 postSchema.index({ visibleToGroups: 1, createdAt: -1 });
 postSchema.index({ companyId: 1, createdAt: -1 });
 postSchema.index({ authorId: 1, createdAt: -1 });
+postSchema.index({ companyId: 1, isPinned: -1, pinnedAt: -1, createdAt: -1 });
 
 postSchema.set('toJSON', {
   transform: (doc, ret) => {

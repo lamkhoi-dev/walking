@@ -75,12 +75,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImages() async {
     if (_images.length >= 8) return;
-    final remaining = 8 - _images.length;
     final picked = await _picker.pickMultiImage(
       maxWidth: 1920,
       maxHeight: 1920,
       imageQuality: 85,
-      limit: remaining,
     );
     if (picked.isNotEmpty) {
       setState(() {
@@ -507,18 +505,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
       ),
       child: Row(
         children: [
-          _ToolbarButton(
+          _ToolbarIconButton(
             icon: Icons.photo_library_rounded,
-            label: 'Ảnh',
-            color: AppColors.success,
+            color: const Color(0xFF4CAF50),
             badgeCount: _images.length,
             onTap: _images.length < 4 ? _pickImages : null,
+            tooltip: 'Chọn ảnh',
           ),
-          const SizedBox(width: 16),
-          _ToolbarButton(
+          const SizedBox(width: 12),
+          _ToolbarIconButton(
             icon: Icons.camera_alt_rounded,
-            label: 'Camera',
-            color: AppColors.info,
+            color: const Color(0xFF2196F3),
             onTap: _images.length < 4
                 ? () async {
                     final picked = await _picker.pickImage(
@@ -531,23 +528,34 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     }
                   }
                 : null,
+            tooltip: 'Chụp ảnh',
           ),
-          const SizedBox(width: 16),
-          _ToolbarButton(
+          const SizedBox(width: 12),
+          _ToolbarIconButton(
             icon: Icons.emoji_events_rounded,
-            label: 'Thành tích',
-            color: AppColors.warning,
+            color: const Color(0xFFFF9800),
             onTap: () => _showAchievementPicker(),
+            tooltip: 'Thành tích',
           ),
           const Spacer(),
-          Text(
-            '${_images.length}/4 ảnh',
-            style: TextStyle(
-              fontSize: 12,
-              color: _images.length >= 4 ? AppColors.warning : AppColors.textSecondary.withValues(alpha: 0.6),
-              fontWeight: FontWeight.w500,
+          if (_images.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _images.length >= 4
+                    ? AppColors.warning.withValues(alpha: 0.12)
+                    : AppColors.textSecondary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${_images.length}/4',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _images.length >= 4 ? AppColors.warning : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -919,39 +927,43 @@ class _GroupItem {
   const _GroupItem({required this.id, required this.name, required this.memberCount});
 }
 
-class _ToolbarButton extends StatelessWidget {
+class _ToolbarIconButton extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color color;
   final int badgeCount;
   final VoidCallback? onTap;
+  final String tooltip;
 
-  const _ToolbarButton({
+  const _ToolbarIconButton({
     required this.icon,
-    required this.label,
     required this.color,
     this.badgeCount = 0,
     this.onTap,
+    this.tooltip = '',
   });
 
   @override
   Widget build(BuildContext context) {
     final isDisabled = onTap == null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: isDisabled ? 0.4 : 1.0,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Badge(
-              isLabelVisible: badgeCount > 0,
-              label: Text('$badgeCount'),
-              child: Icon(icon, size: 24, color: color),
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Opacity(
+          opacity: isDisabled ? 0.35 : 1.0,
+          child: Badge(
+            isLabelVisible: badgeCount > 0,
+            label: Text('$badgeCount', style: const TextStyle(fontSize: 10)),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, size: 22, color: color),
             ),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
-          ],
+          ),
         ),
       ),
     );

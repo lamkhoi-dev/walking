@@ -66,6 +66,7 @@ class ApiEndpoints {
   static String postLikes(String id) => '/posts/$id/likes';
   static String postComments(String id) => '/posts/$id/comments';
   static String deleteComment(String id) => '/posts/comments/$id';
+  static String postPin(String id) => '/posts/$id/pin';
 
   // === REPORTS & SAFETY ===
   static const String reports = '/reports';
