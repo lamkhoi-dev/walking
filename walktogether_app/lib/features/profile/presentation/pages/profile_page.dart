@@ -12,6 +12,9 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../data/repositories/profile_repository.dart';
+import '../../../feed/data/repositories/feed_repository.dart';
+import '../../../feed/data/models/post_model.dart';
+import '../../../feed/presentation/widgets/post_card.dart';
 
 /// Enhanced Profile page with stats, edit functionality, and beautiful UI
 class ProfilePage extends StatefulWidget {
@@ -28,6 +31,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   bool _statsLoaded = false;
   late DioClient _dioClient;
 
+  // Posts tab state
+  List<PostModel> _myPosts = [];
+  bool _isLoadingPosts = true;
+  int _postsPage = 1;
+  int _postsTotalPages = 1;
+  bool _isLoadingMorePosts = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +51,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       _statsLoaded = true;
       _dioClient = context.read<DioClient>();
       _loadStats();
+      _loadMyPosts();
     }
   }
 
@@ -181,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               
               // Floating Social Stats Card (overlapping gradient)
               SliverToBoxAdapter(
-                child: _buildFloatingStatsCard(),
+                child: _buildFloatingStatsCard(user),
               ),
 
               // Quick Running Stats Row
@@ -430,7 +441,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
   /// Floating social stats card — overlaps gradient header
-  Widget _buildFloatingStatsCard() {
+  Widget _buildFloatingStatsCard(dynamic user) {
     return Transform.translate(
       offset: const Offset(0, -24),
       child: Padding(
@@ -452,18 +463,19 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             child: Row(
               children: [
                 _SocialStatColumn(
-                  count: '0',
+                  count: '${user.friendCount}',
                   label: 'Bạn bè',
                   onTap: () => context.push('/friends'),
                 ),
                 VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
                 _SocialStatColumn(
-                  count: '0',
+                  count: '${user.postCount}',
                   label: 'Bài viết',
+                  onTap: () => _tabController.animateTo(0),
                 ),
                 VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
                 _SocialStatColumn(
-                  count: '0',
+                  count: '${user.groupCount}',
                   label: 'Nhóm',
                 ),
               ],
@@ -1363,35 +1375,247 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     return '🌱';
   }
 
-  // === Posts Tab ===
+  // === Posts Tab — loads user's own posts ===
+  Future<void> _loadMyPosts({bool refresh = false}) async {
+    if (refresh) {
+      setState(() {
+        _postsPage = 1;
+        _isLoadingPosts = true;
+      });
+    }
+    try {
+      final repo = FeedRepository(_dioClient);
+      final result = await repo.getFeed(filter: 'mine', page: _postsPage, limit: 20);
+      if (mounted) {
+        setState(() {
+          if (refresh || _postsPage == 1) {
+            _myPosts = result.posts;
+          } else {
+            _myPosts.addAll(result.posts);
+          }
+          _postsTotalPages = result.totalPages;
+          _isLoadingPosts = false;
+          _isLoadingMorePosts = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading my posts: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingPosts = false;
+          _isLoadingMorePosts = false;
+        });
+      }
+    }
+  }
+
+  void _loadMorePosts() {
+    if (_isLoadingMorePosts || _postsPage >= _postsTotalPages) return;
+    _postsPage++;
+    _isLoadingMorePosts = true;
+    _loadMyPosts();
+  }
+
   Widget _buildPostsTab(dynamic user) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                shape: BoxShape.circle,
+    if (_isLoadingPosts) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_myPosts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.edit_note_rounded, size: 48, color: AppColors.primary),
               ),
-              child: const Icon(Icons.article_outlined, size: 48, color: AppColors.primary),
+              const SizedBox(height: 20),
+              const Text(
+                'Chưa có bài viết nào',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Chia sẻ khoảnh khắc đầu tiên của bạn!',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () async {
+                  await context.push('/post/create');
+                  _loadMyPosts(refresh: true);
+                  // Refresh social counts too
+                  if (mounted) context.read<AuthBloc>().add(AuthCheckRequested());
+                },
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: const Text('Tạo bài viết'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollEndNotification &&
+            notification.metrics.extentAfter < 200) {
+          _loadMorePosts();
+        }
+        return false;
+      },
+      child: RefreshIndicator(
+        onRefresh: () => _loadMyPosts(refresh: true),
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: _myPosts.length + (_isLoadingMorePosts ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index >= _myPosts.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              );
+            }
+            final post = _myPosts[index];
+            return PostCard(
+              post: post,
+              isCompanyAdmin: user.role == 'company_admin',
+              onLike: () async {
+                try {
+                  final repo = FeedRepository(_dioClient);
+                  await repo.toggleLike(post.id);
+                  _loadMyPosts(refresh: true);
+                } catch (_) {}
+              },
+              onComment: () async {
+                await context.push('/post/${post.id}');
+                _loadMyPosts(refresh: true);
+              },
+              onTap: () async {
+                await context.push('/post/${post.id}');
+                _loadMyPosts(refresh: true);
+              },
+              onEdit: () => _showEditPostSheet(post),
+              onDelete: () => _confirmDeletePost(post),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showEditPostSheet(PostModel post) {
+    final controller = TextEditingController(text: post.content);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: EdgeInsets.only(
+          left: 20, right: 20, top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            const Text('Chỉnh sửa bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: 'Nội dung bài viết...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Bài viết của bạn',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Các bài viết bạn chia sẻ sẽ hiển thị ở đây',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  try {
+                    final repo = FeedRepository(_dioClient);
+                    await repo.updatePost(post.id, content: controller.text.trim());
+                    if (mounted) {
+                      Navigator.pop(context);
+                      _loadMyPosts(refresh: true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Đã cập nhật bài viết'), backgroundColor: AppColors.success),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                      );
+                    }
+                  }
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Lưu thay đổi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDeletePost(PostModel post) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Xoá bài viết?'),
+        content: const Text('Bài viết sẽ bị xoá vĩnh viễn.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Huỷ'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final repo = FeedRepository(_dioClient);
+                await repo.deletePost(post.id);
+                _loadMyPosts(refresh: true);
+                if (mounted) context.read<AuthBloc>().add(AuthCheckRequested());
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text('Xoá'),
+          ),
+        ],
       ),
     );
   }

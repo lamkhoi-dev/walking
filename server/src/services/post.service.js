@@ -102,7 +102,10 @@ const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
     query.authorId = { $nin: blockedUserIds };
   }
 
-  if (filter === 'public') {
+  if (filter === 'mine') {
+    // Only user's own posts (for profile page)
+    query.authorId = userId;
+  } else if (filter === 'public') {
     // Only public posts (system-wide)
     query.visibility = 'public';
   } else if (filter === 'friends') {

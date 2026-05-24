@@ -10,6 +10,9 @@ class UserModel {
   final bool isActive;
   final DateTime? lastOnline;
   final DateTime? createdAt;
+  final int friendCount;
+  final int postCount;
+  final int groupCount;
 
   UserModel({
     required this.id,
@@ -23,6 +26,9 @@ class UserModel {
     this.isActive = true,
     this.lastOnline,
     this.createdAt,
+    this.friendCount = 0,
+    this.postCount = 0,
+    this.groupCount = 0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +50,9 @@ class UserModel {
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,
+      friendCount: json['friendCount'] ?? 0,
+      postCount: json['postCount'] ?? 0,
+      groupCount: json['groupCount'] ?? 0,
     );
   }
 
@@ -60,7 +69,34 @@ class UserModel {
       'isActive': isActive,
       'lastOnline': lastOnline?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
+      'friendCount': friendCount,
+      'postCount': postCount,
+      'groupCount': groupCount,
     };
+  }
+
+  /// Create a copy with updated social counts
+  UserModel copyWithSocialCounts({
+    int? friendCount,
+    int? postCount,
+    int? groupCount,
+  }) {
+    return UserModel(
+      id: id,
+      email: email,
+      phone: phone,
+      fullName: fullName,
+      avatar: avatar,
+      role: role,
+      companyId: companyId,
+      companyCode: companyCode,
+      isActive: isActive,
+      lastOnline: lastOnline,
+      createdAt: createdAt,
+      friendCount: friendCount ?? this.friendCount,
+      postCount: postCount ?? this.postCount,
+      groupCount: groupCount ?? this.groupCount,
+    );
   }
 
   String get displayIdentifier => email ?? phone ?? '';

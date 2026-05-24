@@ -1,12 +1,14 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Company = require('../models/Company');
+const Post = require('../models/Post');
 const Report = require('../models/Report');
 const UserSettings = require('../models/UserSettings');
 const StepRecord = require('../models/StepRecord');
 const Group = require('../models/Group');
 const config = require('../config/env');
 const generateCompanyCode = require('../utils/generateCompanyCode');
+const friendService = require('./friend.service');
 const logger = require('../utils/logger');
 
 class AuthService {
@@ -275,16 +277,22 @@ class AuthService {
       throw err;
     }
 
-    let company = null;
-    if (user.companyId) {
-      company = await Company.findById(user.companyId).select(
-        '_id name status code logo totalMembers'
-      );
-    }
+    // Parallel queries for company + social counts
+    const [company, friendCount, postCount, groupCount] = await Promise.all([
+      user.companyId
+        ? Company.findById(user.companyId).select('_id name status code logo totalMembers')
+        : Promise.resolve(null),
+      friendService.getFriendCount(userId),
+      Post.countDocuments({ authorId: userId, isActive: true }),
+      Group.countDocuments({ members: userId, isActive: true }),
+    ]);
 
     return {
       user: user.toJSON(),
       company,
+      friendCount,
+      postCount,
+      groupCount,
     };
   }
 
