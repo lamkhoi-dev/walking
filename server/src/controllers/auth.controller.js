@@ -368,8 +368,8 @@ const getUserProfile = async (req, res, next) => {
     // Get friend count, post count, group count in parallel
     const [friendCount, postCount, groupCount, postsResult] = await Promise.all([
       friendService.getFriendCount(targetId),
-      Post.countDocuments({ author: targetId, deletedAt: null }),
-      Group.countDocuments({ members: targetId }),
+      Post.countDocuments({ authorId: targetId, isActive: true }),
+      Group.countDocuments({ members: targetId, isActive: true }),
       postService.getUserPosts(targetId, viewerId, {
         page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 20,

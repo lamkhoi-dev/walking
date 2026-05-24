@@ -90,6 +90,7 @@ class UserProfile {
   final int friendCount;
   final int postCount;
   final int groupCount;
+  final List<Map<String, dynamic>> postsRaw;
 
   const UserProfile({
     required this.user,
@@ -99,11 +100,13 @@ class UserProfile {
     this.friendCount = 0,
     this.postCount = 0,
     this.groupCount = 0,
+    this.postsRaw = const [],
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final userData = json['user'] as Map<String, dynamic>;
     final friendshipData = json['friendship'] as Map<String, dynamic>?;
+    final postsData = json['posts'] as List?;
 
     return UserProfile(
       user: FriendUser.fromJson(userData),
@@ -115,6 +118,7 @@ class UserProfile {
       friendCount: (json['friendCount'] as num?)?.toInt() ?? 0,
       postCount: (json['postCount'] as num?)?.toInt() ?? 0,
       groupCount: (json['groupCount'] as num?)?.toInt() ?? 0,
+      postsRaw: postsData?.map((p) => p as Map<String, dynamic>).toList() ?? [],
     );
   }
 }

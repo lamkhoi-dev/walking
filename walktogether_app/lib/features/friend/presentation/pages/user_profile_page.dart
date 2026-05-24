@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../shared/widgets/avatar_widget.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../feed/data/models/post_model.dart';
+import '../../../feed/presentation/widgets/post_card.dart';
+import '../../../feed/data/repositories/feed_repository.dart';
 import '../../data/models/friendship_model.dart';
 import '../../data/repositories/friend_repository.dart';
 
@@ -21,6 +24,7 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> with TickerProviderStateMixin {
   late final TabController _tabController;
   late final FriendRepository _friendRepo;
+  late final DioClient _dioClient;
 
   UserProfile? _profile;
   FriendshipStatus _friendshipStatus = FriendshipStatus.none;
@@ -28,12 +32,14 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
   bool _isLoading = true;
   String? _error;
   bool _isOwnProfile = false;
+  List<PostModel> _posts = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _friendRepo = FriendRepository(dio: context.read<DioClient>());
+    _dioClient = context.read<DioClient>();
+    _friendRepo = FriendRepository(dio: _dioClient);
 
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
@@ -54,10 +60,17 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     try {
       final profile = await _friendRepo.getUserProfile(widget.userId);
       if (!mounted) return;
+
+      // Parse posts from raw data
+      final posts = profile.postsRaw
+          .map((p) => PostModel.fromJson(p))
+          .toList();
+
       setState(() {
         _profile = profile;
         _friendshipStatus = profile.friendshipStatus;
         _friendshipId = profile.friendshipId;
+        _posts = posts;
         _isLoading = false;
       });
     } catch (e) {
@@ -197,6 +210,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
             expandedHeight: 280,
             pinned: true,
             backgroundColor: AppColors.navy,
+            surfaceTintColor: Colors.transparent,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
               onPressed: () => context.pop(),
@@ -206,9 +220,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  onSelected: (v) {
-                    // TODO: block/report
-                  },
+                  onSelected: (v) {},
                   itemBuilder: (_) => [
                     const PopupMenuItem(value: 'block', child: Text('Chặn người dùng')),
                     const PopupMenuItem(value: 'report', child: Text('Báo cáo')),
@@ -243,78 +255,71 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                         ),
                       ),
                     ),
-                    // Content
+                    // Content — centered avatar + name
                     SafeArea(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 24),
-                          // Avatar
-                          Container(
-                            width: 96,
-                            height: 96,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8)),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: user.avatar != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: user.avatar!,
-                                      fit: BoxFit.cover,
-                                      placeholder: (_, __) => Container(
-                                        color: AppColors.primaryLight,
-                                        child: const Icon(Icons.person, size: 40, color: AppColors.primary),
-                                      ),
-                                      errorWidget: (_, __, ___) => Container(
-                                        color: AppColors.primaryLight,
-                                        child: const Icon(Icons.person, size: 40, color: AppColors.primary),
-                                      ),
-                                    )
-                                  : Container(
-                                      color: AppColors.primaryLight,
-                                      child: const Icon(Icons.person, size: 40, color: AppColors.primary),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          // Name
-                          Text(
-                            user.fullName,
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
-                          ),
-                          const SizedBox(height: 6),
-                          // Role badge
-                          if (user.role != null && user.role == 'company_admin')
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 16),
+                            // Avatar with border
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 3),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8)),
+                                ],
+                              ),
+                              child: AvatarWidget(
+                                imageUrl: user.avatar,
+                                name: user.fullName,
+                                size: 96,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            // Name
+                            Text(
+                              user.fullName,
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
+                            ),
+                            const SizedBox(height: 6),
+                            // Role badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.verified_rounded, size: 14, color: Colors.white70),
-                                  SizedBox(width: 4),
-                                  Text('Quản trị viên', style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
+                                  Icon(
+                                    user.role == 'company_admin' ? Icons.verified_rounded : Icons.person,
+                                    size: 14,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    user.role == 'company_admin' ? 'Quản trị viên' : 'Thành viên',
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13),
+                                  ),
                                 ],
                               ),
                             ),
-                          // Company name
-                          if (_profile!.company != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                _profile!.company!.name,
-                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
+                            // Company name
+                            if (_profile!.company != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                  _profile!.company!.name,
+                                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
+                                ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -507,27 +512,62 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
   }
 
   Widget _buildPostsTab() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
-              child: const Icon(Icons.article_outlined, size: 48, color: AppColors.primary),
-            ),
-            const SizedBox(height: 16),
-            const Text('Bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
-            const SizedBox(height: 8),
-            const Text(
-              'Bài viết sẽ hiển thị ở đây',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ],
+    if (_posts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.article_outlined, size: 48, color: AppColors.primary),
+              ),
+              const SizedBox(height: 20),
+              const Text('Chưa có bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+              const SizedBox(height: 8),
+              Text(
+                '${_profile!.user.fullName} chưa đăng bài viết nào',
+                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadProfile,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: _posts.length,
+        itemBuilder: (context, index) {
+          final post = _posts[index];
+          return PostCard(
+            post: post,
+            isCompanyAdmin: false,
+            onLike: () async {
+              try {
+                final repo = FeedRepository(_dioClient);
+                await repo.toggleLike(post.id);
+                _loadProfile();
+              } catch (_) {}
+            },
+            onComment: () async {
+              await context.push('/post/${post.id}');
+              _loadProfile();
+            },
+            onTap: () async {
+              await context.push('/post/${post.id}');
+              _loadProfile();
+            },
+          );
+        },
       ),
     );
   }
@@ -543,12 +583,13 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
         if (_profile!.company != null)
           _InfoTile(icon: Icons.business_rounded, label: 'Công ty', value: _profile!.company!.name),
         _InfoTile(icon: Icons.people_rounded, label: 'Bạn bè', value: '${_profile!.friendCount} bạn bè'),
+        _InfoTile(icon: Icons.article_rounded, label: 'Bài viết', value: '${_profile!.postCount} bài viết'),
+        _InfoTile(icon: Icons.group_rounded, label: 'Nhóm', value: '${_profile!.groupCount} nhóm'),
       ],
     );
   }
 
   Widget _buildStatsTab() {
-    // Public stats — shown to everyone
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -556,14 +597,14 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: AppColors.indigo.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.bar_chart_rounded, size: 48, color: AppColors.indigo),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             const Text('Thống kê', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
             const SizedBox(height: 8),
             Text(
