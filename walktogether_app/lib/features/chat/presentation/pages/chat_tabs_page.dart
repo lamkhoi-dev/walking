@@ -256,7 +256,7 @@ class _GroupsTab extends StatelessWidget {
                         // Tap → go to group chat
                         if (group.conversationId != null) {
                           context.push(
-                            '/chat/${group.conversationId}?title=${Uri.encodeComponent(group.name)}',
+                            '/chat/${group.conversationId}?title=${Uri.encodeComponent(group.name)}&groupId=${group.id}',
                           );
                         } else {
                           context.push('/groups/${group.id}');

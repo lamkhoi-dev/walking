@@ -91,32 +91,38 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title ?? 'Tin nhắn'),
+        title: widget.groupId != null && widget.groupId!.isNotEmpty
+            ? GestureDetector(
+                onTap: () => context.push('/groups/${widget.groupId}'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.title ?? 'Nhóm',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: Theme.of(context).appBarTheme.foregroundColor?.withValues(alpha: 0.5) ?? Colors.grey,
+                    ),
+                  ],
+                ),
+              )
+            : Text(widget.title ?? 'Tin nhắn'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           if (widget.groupId != null && widget.groupId!.isNotEmpty)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded),
-              onSelected: (value) {
-                if (value == 'group_detail') {
-                  context.push('/groups/${widget.groupId}');
-                }
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'group_detail',
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded, size: 20),
-                      SizedBox(width: 10),
-                      Text('Chi tiết nhóm'),
-                    ],
-                  ),
-                ),
-              ],
+            IconButton(
+              icon: const Icon(Icons.info_outline_rounded),
+              onPressed: () => context.push('/groups/${widget.groupId}'),
+              tooltip: 'Chi tiết nhóm',
             ),
         ],
       ),

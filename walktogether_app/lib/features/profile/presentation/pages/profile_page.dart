@@ -15,6 +15,7 @@ import '../../data/repositories/profile_repository.dart';
 import '../../../feed/data/repositories/feed_repository.dart';
 import '../../../feed/data/models/post_model.dart';
 import '../../../feed/presentation/widgets/post_card.dart';
+import '../../../friend/data/repositories/friend_repository.dart';
 
 /// Enhanced Profile page with stats, edit functionality, and beautiful UI
 class ProfilePage extends StatefulWidget {
@@ -24,7 +25,7 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
+class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin {
   late TabController _tabController;
   PersonalStats? _stats;
   bool _isLoadingStats = true;
@@ -38,10 +39,18 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   int _postsTotalPages = 1;
   bool _isLoadingMorePosts = false;
 
+  // Friend request badge
+  int _pendingRequestCount = 0;
+  late AnimationController _badgePulseController;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _badgePulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -52,12 +61,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       _dioClient = context.read<DioClient>();
       _loadStats();
       _loadMyPosts();
+      _loadPendingRequests();
     }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _badgePulseController.dispose();
     super.dispose();
   }
 
@@ -93,6 +104,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         });
       }
     }
+  }
+
+  Future<void> _loadPendingRequests() async {
+    try {
+      final repo = FriendRepository(dio: _dioClient);
+      final result = await repo.getFriendRequests();
+      final requests = result['requests'] as List;
+      if (mounted) {
+        setState(() => _pendingRequestCount = requests.length);
+      }
+    } catch (_) {}
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -386,7 +408,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 ),
                 child: IntrinsicHeight(
                   child: Row(children: [
-                    _SocialStatColumn(count: '${user.friendCount}', label: 'Bạn bè', onTap: () => context.push('/friends')),
+                    _SocialStatColumn(
+                      count: '${user.friendCount}',
+                      label: 'Bạn bè',
+                      onTap: () => context.push('/friends'),
+                      badgeCount: _pendingRequestCount,
+                      badgePulse: _badgePulseController,
+                    ),
                     VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
                     _SocialStatColumn(count: '${user.postCount}', label: 'Bài viết', onTap: () => _tabController.animateTo(0)),
                     VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
@@ -1833,8 +1861,16 @@ class _SocialStatColumn extends StatelessWidget {
   final String count;
   final String label;
   final VoidCallback? onTap;
+  final int badgeCount;
+  final AnimationController? badgePulse;
 
-  const _SocialStatColumn({required this.count, required this.label, this.onTap});
+  const _SocialStatColumn({
+    required this.count,
+    required this.label,
+    this.onTap,
+    this.badgeCount = 0,
+    this.badgePulse,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1842,24 +1878,62 @@ class _SocialStatColumn extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Text(
-              count,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textMain),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-                if (onTap != null) ...[
-                  const SizedBox(width: 2),
-                  const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textSecondary),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    count,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textMain),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                      if (onTap != null) ...[
+                        const SizedBox(width: 2),
+                        const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textSecondary),
+                      ],
+                    ],
+                  ),
                 ],
-              ],
+              ),
             ),
+            // Blinking red badge
+            if (badgeCount > 0 && badgePulse != null)
+              Positioned(
+                top: -4,
+                right: 8,
+                child: AnimatedBuilder(
+                  animation: badgePulse!,
+                  builder: (_, child) => Transform.scale(
+                    scale: 0.85 + 0.15 * badgePulse!.value,
+                    child: child,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.danger.withValues(alpha: 0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

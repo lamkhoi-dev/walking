@@ -13,6 +13,7 @@ import '../../../group/data/repositories/group_repository.dart';
 import '../../../chat/data/repositories/chat_repository.dart';
 import '../../../settings/data/repositories/settings_repository.dart';
 import '../../../../shared/widgets/report_dialog.dart';
+import '../../../../shared/widgets/video_player_page.dart';
 
 import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
@@ -911,42 +912,44 @@ class _PostDetailPageState extends State<PostDetailPage>
                     final media = entry.value;
                     return Padding(
                       padding: EdgeInsets.only(top: entry.key > 0 ? 3 : 0),
-                      child: LikeAnimationWidget(
-                        isLiked: post.isLiked,
-                        onDoubleTap: () {
-                          if (!post.isLiked) _toggleLike();
-                        },
-                        child: CachedNetworkImage(
-                          imageUrl: media.url,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          placeholder: (_, __) => Container(
-                            height: 260,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                            ),
-                            child: Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary.withValues(
-                                      alpha: 0.4),
+                      child: media.isVideo
+                          ? _buildVideoItem(media)
+                          : LikeAnimationWidget(
+                              isLiked: post.isLiked,
+                              onDoubleTap: () {
+                                if (!post.isLiked) _toggleLike();
+                              },
+                              child: CachedNetworkImage(
+                                imageUrl: media.url,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                placeholder: (_, __) => Container(
+                                  height: 260,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                  ),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary.withValues(
+                                            alpha: 0.4),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  height: 260,
+                                  color: Colors.grey.shade100,
+                                  child: const Center(
+                                    child: Icon(Icons.broken_image_rounded,
+                                        color: AppColors.textSecondary, size: 28),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          errorWidget: (_, __, ___) => Container(
-                            height: 260,
-                            color: Colors.grey.shade100,
-                            child: const Center(
-                              child: Icon(Icons.broken_image_rounded,
-                                  color: AppColors.textSecondary, size: 28),
-                            ),
-                          ),
-                        ),
-                      ),
                     );
                   }).toList(),
                 ),
@@ -957,6 +960,78 @@ class _PostDetailPageState extends State<PostDetailPage>
         ],
       ),
     );
+  }
+
+  // ===== VIDEO ITEM =====
+  Widget _buildVideoItem(PostMedia media) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => VideoPlayerPage(url: media.url)),
+      ),
+      child: Stack(
+        children: [
+          // Thumbnail or dark placeholder
+          if (media.thumbnail != null)
+            CachedNetworkImage(
+              imageUrl: media.thumbnail!,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 260,
+              placeholder: (_, __) => _videoPlaceholder(),
+              errorWidget: (_, __, ___) => _videoPlaceholder(),
+            )
+          else
+            _videoPlaceholder(),
+          // Play button overlay
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                width: 60, height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                ),
+                child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+              ),
+            ),
+          ),
+          // Duration badge
+          if (media.duration > 0)
+            Positioned(
+              right: 10, bottom: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  _formatMediaDuration(media.duration),
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _videoPlaceholder() {
+    return Container(
+      height: 260,
+      width: double.infinity,
+      color: const Color(0xFF1A1A2E),
+      child: const Center(
+        child: Icon(Icons.videocam_rounded, color: Colors.white38, size: 48),
+      ),
+    );
+  }
+
+  String _formatMediaDuration(int seconds) {
+    final min = seconds ~/ 60;
+    final sec = seconds % 60;
+    return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
   // ===== DETAILED ACHIEVEMENT CARD =====
