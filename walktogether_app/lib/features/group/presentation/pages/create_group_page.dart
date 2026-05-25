@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../data/repositories/group_repository.dart';
+import '../../../friend/data/repositories/friend_repository.dart';
 import '../bloc/group_list_bloc.dart';
 import '../widgets/member_selector.dart';
 
@@ -164,6 +166,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             // Member selector
             MemberSelector(
               repository: widget.repository,
+              friendRepository: FriendRepository(dio: context.read<DioClient>()),
               selectedMemberIds: _selectedMemberIds,
               onChanged: (ids) {
                 setState(() => _selectedMemberIds = ids);

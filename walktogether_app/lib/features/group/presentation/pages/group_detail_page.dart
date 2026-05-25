@@ -13,6 +13,8 @@ import '../../../feed/data/models/post_model.dart';
 import '../../../feed/data/repositories/feed_repository.dart';
 import '../../../feed/presentation/widgets/post_card.dart';
 import '../../data/repositories/group_repository.dart';
+import '../../../friend/data/repositories/friend_repository.dart';
+import '../../../../core/network/dio_client.dart';
 import '../bloc/group_detail_bloc.dart';
 import '../widgets/member_list_tile.dart';
 import '../widgets/member_selector.dart';
@@ -162,7 +164,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  expandedHeight: 200,
+                  expandedHeight: 260,
                   pinned: true,
                   backgroundColor: AppColors.surface,
                   surfaceTintColor: Colors.transparent,
@@ -225,22 +227,29 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                                 color: Colors.white.withValues(alpha: 0.8),
                               ),
                             ),
+                            const SizedBox(height: 48),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  bottom: TabBar(
-                    controller: _tabController,
-                    labelColor: AppColors.primary,
-                    unselectedLabelColor: AppColors.textSecondary,
-                    indicatorColor: AppColors.primary,
-                    indicatorWeight: 3,
-                    tabs: const [
-                      Tab(text: 'Bài viết'),
-                      Tab(text: 'Thành viên'),
-                      Tab(text: 'Thông tin'),
-                    ],
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(48),
+                    child: Container(
+                      color: AppColors.surface,
+                      child: TabBar(
+                        controller: _tabController,
+                        labelColor: AppColors.primary,
+                        unselectedLabelColor: AppColors.textSecondary,
+                        indicatorColor: AppColors.primary,
+                        indicatorWeight: 3,
+                        tabs: const [
+                          Tab(text: 'Bài viết'),
+                          Tab(text: 'Thành viên'),
+                          Tab(text: 'Thông tin'),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ];
@@ -569,6 +578,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                   Expanded(
                     child: MemberSelector(
                       repository: context.read<GroupRepository>(),
+                      friendRepository: FriendRepository(dio: context.read<DioClient>()),
                       selectedMemberIds: const [],
                       excludeMemberIds: existingIds,
                       onChanged: (ids) => selectedIds = ids,
