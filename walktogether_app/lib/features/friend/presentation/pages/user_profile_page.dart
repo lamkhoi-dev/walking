@@ -269,7 +269,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
               ),
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.only(top: topPadding + 16, bottom: 52),
+                padding: EdgeInsets.only(top: topPadding + 16, bottom: 80),
                 decoration: const BoxDecoration(gradient: AppColors.profileGradient),
                 child: Stack(
                   children: [
