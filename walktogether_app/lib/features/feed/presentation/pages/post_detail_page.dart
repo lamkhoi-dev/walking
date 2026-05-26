@@ -516,46 +516,52 @@ class _PostDetailPageState extends State<PostDetailPage>
       ),
       title: Row(
         children: [
-          // Tiny avatar
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
-            ),
-            child: post.author.avatar != null
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: post.author.avatar!,
-                      fit: BoxFit.cover,
-                      width: 28,
-                      height: 28,
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      post.author.fullName.isNotEmpty
-                          ? post.author.fullName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+          // Tiny avatar — tap to view profile
+          GestureDetector(
+            onTap: () => context.push('/user/${post.author.id}'),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.primaryGradient,
+              ),
+              child: post.author.avatar != null
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: post.author.avatar!,
+                        fit: BoxFit.cover,
+                        width: 28,
+                        height: 28,
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        post.author.fullName.isNotEmpty
+                            ? post.author.fullName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              post.author.fullName,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMain,
+            child: GestureDetector(
+              onTap: () => context.push('/user/${post.author.id}'),
+              child: Text(
+                post.author.fullName,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textMain,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -721,33 +727,36 @@ class _PostDetailPageState extends State<PostDetailPage>
             child: Row(
               children: [
                 // Avatar with online-style ring
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                  ),
+                GestureDetector(
+                  onTap: () => context.push('/user/${post.author.id}'),
                   child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: const BoxDecoration(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      gradient: AppColors.primaryGradient,
                     ),
-                    padding: const EdgeInsets.all(1.5),
                     child: Container(
-                      decoration: BoxDecoration(
+                      width: 42,
+                      height: 42,
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
+                        color: Colors.white,
                       ),
-                      child: post.author.avatar != null
-                          ? ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: post.author.avatar!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : _avatarPlaceholder(post),
+                      padding: const EdgeInsets.all(1.5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.primaryGradient,
+                        ),
+                        child: post.author.avatar != null
+                            ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: post.author.avatar!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : _avatarPlaceholder(post),
+                      ),
                     ),
                   ),
                 ),
@@ -837,36 +846,42 @@ class _PostDetailPageState extends State<PostDetailPage>
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 28, height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: AppColors.primaryGradient,
-                          ),
-                          child: post.sharedPost!.author.avatar != null
-                              ? ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: post.sharedPost!.author.avatar!,
-                                    fit: BoxFit.cover, width: 28, height: 28,
-                                  ),
-                                )
-                              : Center(
-                                  child: Text(
-                                    post.sharedPost!.author.fullName.isNotEmpty
-                                        ? post.sharedPost!.author.fullName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700,
+                        GestureDetector(
+                          onTap: () => context.push('/user/${post.sharedPost!.author.id}'),
+                          child: Container(
+                            width: 28, height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: AppColors.primaryGradient,
+                            ),
+                            child: post.sharedPost!.author.avatar != null
+                                ? ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: post.sharedPost!.author.avatar!,
+                                      fit: BoxFit.cover, width: 28, height: 28,
+                                    ),
+                                  )
+                                : Center(
+                                    child: Text(
+                                      post.sharedPost!.author.fullName.isNotEmpty
+                                          ? post.sharedPost!.author.fullName[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
-                                ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            post.sharedPost!.author.fullName,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                          child: GestureDetector(
+                            onTap: () => context.push('/user/${post.sharedPost!.author.id}'),
+                            child: Text(
+                              post.sharedPost!.author.fullName,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                         Icon(Icons.arrow_forward_ios_rounded, size: 14,

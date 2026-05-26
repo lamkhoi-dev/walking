@@ -9,6 +9,7 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../feed/data/models/post_model.dart';
 import '../../../feed/presentation/widgets/post_card.dart';
 import '../../../feed/data/repositories/feed_repository.dart';
+import '../../../chat/data/repositories/chat_repository.dart';
 import '../../data/models/friendship_model.dart';
 import '../../data/repositories/friend_repository.dart';
 
@@ -138,6 +139,20 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+      );
+    }
+  }
+
+  Future<void> _openDirectChat() async {
+    try {
+      final chatRepo = ChatRepository(_dioClient);
+      final conversation = await chatRepo.getOrCreateDirectConversation(widget.userId);
+      if (!mounted) return;
+      context.push('/chat/${conversation.id}');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể mở tin nhắn: $e'), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -472,19 +487,43 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
         );
 
       case FriendshipStatus.friends:
-        return SizedBox(
-          width: double.infinity,
-          height: 44,
-          child: OutlinedButton.icon(
-            onPressed: _unfriend,
-            icon: const Icon(Icons.check_circle_rounded, size: 20),
-            label: const Text('Bạn bè ✓', style: TextStyle(fontWeight: FontWeight.w700)),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.secondary,
-              side: const BorderSide(color: AppColors.secondary),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        return Row(
+          children: [
+            // Message button
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: ElevatedButton.icon(
+                  onPressed: _openDirectChat,
+                  icon: const Icon(Icons.chat_bubble_rounded, size: 18),
+                  label: const Text('Nhắn tin', style: TextStyle(fontWeight: FontWeight.w700)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 10),
+            // Friend status button
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: OutlinedButton.icon(
+                  onPressed: _unfriend,
+                  icon: const Icon(Icons.check_circle_rounded, size: 20),
+                  label: const Text('Bạn bè ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.secondary,
+                    side: const BorderSide(color: AppColors.secondary),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
 
       case FriendshipStatus.self:
