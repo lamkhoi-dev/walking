@@ -41,7 +41,17 @@ const errorHandler = (err, req, res, next) => {
 
   // Multer file size error
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return error(res, 400, 'File quá lớn. Tối đa 5MB', 'FILE_TOO_LARGE');
+    return error(res, 400, 'File quá lớn. Tối đa 50MB cho video, 5MB cho ảnh', 'FILE_TOO_LARGE');
+  }
+
+  // Other Multer errors
+  if (err.name === 'MulterError') {
+    return error(res, 400, `Lỗi upload: ${err.message}`, 'UPLOAD_ERROR');
+  }
+
+  // Cloudinary errors
+  if (err.http_code || err.message?.includes('public_id') || err.message?.includes('Cloudinary')) {
+    return error(res, 400, 'Lỗi xử lý media. Vui lòng thử lại với file nhỏ hơn.', 'MEDIA_PROCESSING_ERROR');
   }
 
   // Custom AppError

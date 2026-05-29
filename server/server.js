@@ -65,10 +65,18 @@ const gracefulShutdown = (signal) => {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// Handle unhandled rejections
+// Handle unhandled rejections — log but do NOT crash the server
+// These are typically from async errors in request handlers (e.g. Cloudinary failures)
+// that should return 500 to the client, not kill the entire process
 process.on('unhandledRejection', (err) => {
   logger.error('Unhandled Rejection:', err);
-  gracefulShutdown('UNHANDLED_REJECTION');
+  // DO NOT call gracefulShutdown — the server should keep running
+});
+
+// Only crash on truly unrecoverable errors (synchronous exceptions)
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 
 startServer();

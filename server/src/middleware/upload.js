@@ -21,15 +21,21 @@ const postStorage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     const isVideo = file.mimetype.startsWith('video/');
+    if (isVideo) {
+      return {
+        folder: 'walktogether/posts',
+        resource_type: 'video',
+        allowed_formats: ['mp4', 'mov', 'webm', 'avi'],
+        // Use eager_async to avoid "Video too large for synchronous processing"
+        eager_async: true,
+        eager: [{ quality: 'auto', fetch_format: 'mp4' }],
+      };
+    }
     return {
       folder: 'walktogether/posts',
-      resource_type: isVideo ? 'video' : 'image',
-      allowed_formats: isVideo
-        ? ['mp4', 'mov', 'webm', 'avi']
-        : ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-      transformation: isVideo
-        ? [{ quality: 'auto', fetch_format: 'mp4' }]
-        : [{ width: 1920, height: 1920, crop: 'limit', quality: 'auto' }],
+      resource_type: 'image',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      transformation: [{ width: 1920, height: 1920, crop: 'limit', quality: 'auto' }],
     };
   },
 });
