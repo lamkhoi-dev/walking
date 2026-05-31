@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../contest/data/repositories/contest_repository.dart';
@@ -88,6 +89,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
     if (picked != null) {
       final file = File(picked.path.trim());
       if (file.existsSync()) {
+        final size = file.lengthSync();
+        if (size > AppConstants.maxVideoSize) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Ảnh quá lớn (${(size / 1024 / 1024).toStringAsFixed(1)}MB). Tối đa 50MB.'),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
+          return;
+        }
         setState(() => _images.add(file));
       }
     }
@@ -102,6 +115,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
     if (picked != null) {
       final file = File(picked.path.trim());
       if (file.existsSync()) {
+        final size = file.lengthSync();
+        if (size > AppConstants.maxVideoSize) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Video quá lớn (${(size / 1024 / 1024).toStringAsFixed(1)}MB). Tối đa 50MB.'),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
+          return;
+        }
         setState(() => _images.add(file));
       }
     }

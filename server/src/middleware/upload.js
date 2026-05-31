@@ -6,13 +6,26 @@ const cloudinary = require('../config/cloudinary');
  * Multer + Cloudinary middleware for image uploads
  */
 
-// === CHAT IMAGES ===
+// === CHAT MEDIA (images + videos) ===
 const chatStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'walktogether/chat',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 1024, height: 1024, crop: 'limit', quality: 'auto' }],
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    if (isVideo) {
+      return {
+        folder: 'walktogether/chat',
+        resource_type: 'video',
+        allowed_formats: ['mp4', 'mov', 'webm', 'avi'],
+        eager_async: true,
+        eager: [{ quality: 'auto', fetch_format: 'mp4' }],
+      };
+    }
+    return {
+      folder: 'walktogether/chat',
+      resource_type: 'image',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      transformation: [{ width: 1024, height: 1024, crop: 'limit', quality: 'auto' }],
+    };
   },
 });
 
@@ -62,10 +75,10 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Chat upload: single image, 5MB max
+// Chat upload: single file (image or video), 50MB max
 const chatUpload = multer({
   storage: chatStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter,
 });
 
