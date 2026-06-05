@@ -89,15 +89,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
       for (var picked in pickedList) {
         if (_images.length >= 4) break;
         try {
-          // Android content URIs can have spaces in path segments (e.g. " uuid/file.jpg").
-          // Do NOT use File(picked.path) or picked.length() — they both fail with
-          // PathNotFoundException when the path contains an embedded space.
-          // Instead: read raw bytes through the Android content resolver via XFile.readAsBytes(),
-          // then persist to a clean temp path inside our own app cache.
+          // Read raw bytes through XFile.readAsBytes() to bypass content URI and space issues,
+          // then save to a clean path under the system temporary directory.
           final bytes = await picked.readAsBytes();
           if (bytes.length <= AppConstants.maxVideoSize) {
             final ext = picked.name.split('.').last.toLowerCase();
-            final safeDir = Directory('/data/user/0/com.runly.app/cache/safe_uploads');
+            final tempDir = Directory.systemTemp;
+            final safeDir = Directory('${tempDir.path}/safe_uploads');
             await safeDir.create(recursive: true);
             final safePath = '${safeDir.path}/${DateTime.now().millisecondsSinceEpoch}.$ext';
             final safeFile = await File(safePath).writeAsBytes(bytes, flush: true);
