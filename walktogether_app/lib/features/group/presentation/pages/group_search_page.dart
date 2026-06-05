@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -47,7 +48,7 @@ class _GroupSearchPageState extends State<GroupSearchPage> {
           controller: _searchController,
           focusNode: _focusNode,
           decoration: InputDecoration(
-            hintText: 'Tìm kiếm nhóm...',
+            hintText: 'group.search_hint'.tr(),
             hintStyle: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -151,14 +152,14 @@ class _GroupSearchPageState extends State<GroupSearchPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Tìm kiếm nhóm',
+              'group.search_groups_title'.tr(),
               style: AppTextStyles.heading4.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Nhập tên nhóm để bắt đầu tìm kiếm',
+              'group.search_groups_start'.tr(),
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -183,14 +184,14 @@ class _GroupSearchPageState extends State<GroupSearchPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Không tìm thấy kết quả',
+              'group.search_no_results'.tr(),
               style: AppTextStyles.heading4.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Không có nhóm nào phù hợp với "$query"',
+              'group.search_no_match'.tr(namedArgs: {'query': query}),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,

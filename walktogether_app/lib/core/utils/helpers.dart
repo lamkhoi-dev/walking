@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Utility helper functions
 class Helpers {
@@ -42,10 +43,10 @@ class Helpers {
   /// Relative time: "2 phút trước", "1 giờ trước"
   static String timeAgo(DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inSeconds < 60) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
+    if (diff.inSeconds < 60) return 'common.time_just_now'.tr();
+    if (diff.inMinutes < 60) return 'common.time_minutes_ago'.tr(namedArgs: {'n': '${diff.inMinutes}'});
+    if (diff.inHours < 24) return 'common.time_hours_ago'.tr(namedArgs: {'n': '${diff.inHours}'});
+    if (diff.inDays < 7) return 'common.time_days_ago'.tr(namedArgs: {'n': '${diff.inDays}'});
     return DateFormat('dd/MM/yyyy').format(date);
   }
 

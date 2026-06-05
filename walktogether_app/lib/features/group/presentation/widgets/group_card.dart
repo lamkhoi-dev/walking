@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../shared/widgets/avatar_widget.dart';
@@ -86,7 +87,7 @@ class GroupCard extends StatelessWidget {
                       )
                     else
                       Text(
-                        'Chưa có tin nhắn',
+                        'group.no_messages_group'.tr(),
                         style: AppTextStyles.bodySmall.copyWith(
                           fontStyle: FontStyle.italic,
                         ),
@@ -104,7 +105,7 @@ class GroupCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${group.totalMembers} thành viên',
+                          'group.n_members'.tr(namedArgs: {'n': '${group.totalMembers}'}),
                           style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
                         ),
                       ],
@@ -123,10 +124,10 @@ class GroupCard extends StatelessWidget {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inHours < 1) return '${diff.inMinutes}p';
-    if (diff.inDays < 1) return '${diff.inHours}h';
-    if (diff.inDays < 7) return '${diff.inDays}d';
+    if (diff.inMinutes < 1) return 'common.time_just_now'.tr();
+    if (diff.inHours < 1) return 'common.time_minutes'.tr(namedArgs: {'n': '${diff.inMinutes}'});
+    if (diff.inDays < 1) return 'common.time_hours'.tr(namedArgs: {'n': '${diff.inHours}'});
+    if (diff.inDays < 7) return 'common.time_days'.tr(namedArgs: {'n': '${diff.inDays}'});
     return '${dateTime.day}/${dateTime.month}';
   }
 }

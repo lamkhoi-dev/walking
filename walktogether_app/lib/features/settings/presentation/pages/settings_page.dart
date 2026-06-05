@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../bloc/settings_bloc.dart';
+import '../../../../shared/widgets/language_toggle.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -27,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Cài đặt'),
+        title: Text('settings.title'.tr()),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textMain,
@@ -80,7 +82,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       size: 48, color: AppColors.textSecondary),
                   const SizedBox(height: 12),
                   Text(
-                    'Không thể tải cài đặt',
+                    'common.error'.tr(),
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 16,
@@ -91,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     onPressed: () =>
                         context.read<SettingsCubit>().loadSettings(),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Thử lại'),
+                    label: Text('common.retry'.tr()),
                   ),
                 ],
               ),
@@ -104,6 +106,8 @@ class _SettingsPageState extends State<SettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildNotificationSection(settings),
+                const SizedBox(height: 20),
+                _buildLanguageSection(),
                 const SizedBox(height: 20),
                 _buildAccountSection(),
                 const SizedBox(height: 20),
@@ -121,38 +125,38 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildNotificationSection(UserSettings settings) {
     final notif = settings.notifications;
     return _SectionCard(
-      title: 'Thông báo',
+      title: 'settings.notifications'.tr(),
       icon: Icons.notifications_outlined,
       iconColor: AppColors.info,
       children: [
         _ToggleItem(
           icon: Icons.chat_bubble_outline,
-          label: 'Tin nhắn chat',
-          subtitle: 'Thông báo khi có tin nhắn mới',
+          label: 'settings.chat_messages'.tr(),
+          subtitle: 'settings.notifications'.tr(),
           value: notif.chat,
           onChanged: (v) =>
               context.read<SettingsCubit>().toggleNotification('chat', v),
         ),
         _ToggleItem(
           icon: Icons.emoji_events_outlined,
-          label: 'Cuộc thi',
-          subtitle: 'Thông báo khi cuộc thi bắt đầu/kết thúc',
+          label: 'settings.contest_notifications'.tr(),
+          subtitle: 'settings.contest_notifications_desc'.tr(),
           value: notif.contest,
           onChanged: (v) =>
               context.read<SettingsCubit>().toggleNotification('contest', v),
         ),
         _ToggleItem(
           icon: Icons.flag_outlined,
-          label: 'Mục tiêu hàng ngày',
-          subtitle: 'Nhắc nhở khi gần đạt mục tiêu',
+          label: 'settings.daily_goal'.tr(),
+          subtitle: 'settings.daily_goal'.tr(),
           value: notif.dailyGoal,
           onChanged: (v) =>
               context.read<SettingsCubit>().toggleNotification('dailyGoal', v),
         ),
         _ToggleItem(
           icon: Icons.bar_chart_rounded,
-          label: 'Báo cáo tuần',
-          subtitle: 'Tổng kết bước chân hàng tuần',
+          label: 'settings.weekly_summary'.tr(),
+          subtitle: 'settings.weekly_summary'.tr(),
           value: notif.weeklyReport,
           onChanged: (v) => context
               .read<SettingsCubit>()
@@ -163,31 +167,62 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ===== LANGUAGE SECTION =====
+  Widget _buildLanguageSection() {
+    return _SectionCard(
+      title: 'settings.language'.tr(),
+      icon: Icons.language_outlined,
+      iconColor: AppColors.info,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              const Icon(Icons.translate, size: 22, color: AppColors.textMain),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  'settings.language'.tr(),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMain,
+                  ),
+                ),
+              ),
+              const LanguageToggle(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   // ===== ACCOUNT SECTION =====
   Widget _buildAccountSection() {
     return _SectionCard(
-      title: 'Tài khoản',
+      title: 'settings.account'.tr(),
       icon: Icons.person_outline,
       iconColor: AppColors.secondary,
       children: [
         _ActionItem(
           icon: Icons.lock_outline,
-          label: 'Đổi mật khẩu',
+          label: 'settings.change_password'.tr(),
           onTap: () => context.push('/settings/change-password'),
         ),
         _ActionItem(
           icon: Icons.person_off_outlined,
-          label: 'Người đã chặn',
+          label: 'settings.blocked_users'.tr(),
           onTap: () => context.push('/settings/blocked'),
         ),
         _ActionItem(
           icon: Icons.description_outlined,
-          label: 'Điều khoản sử dụng',
+          label: 'settings.terms'.tr(),
           onTap: () => context.push('/terms'),
         ),
         _ActionItem(
           icon: Icons.shield_outlined,
-          label: 'Chính sách bảo mật',
+          label: 'settings.privacy_policy'.tr(),
           onTap: () => launchUrl(
             Uri.parse('https://lamkhoi-dev.github.io/walking/'),
             mode: LaunchMode.externalApplication,
@@ -200,13 +235,13 @@ class _SettingsPageState extends State<SettingsPage> {
   // ===== DANGER ZONE =====
   Widget _buildDangerZone() {
     return _SectionCard(
-      title: 'Vùng nguy hiểm',
+      title: 'settings.danger_zone'.tr(),
       icon: Icons.warning_amber_outlined,
       iconColor: AppColors.danger,
       children: [
         _ActionItem(
           icon: Icons.delete_forever_outlined,
-          label: 'Xóa tài khoản',
+          label: 'settings.delete_account'.tr(),
           color: AppColors.danger,
           onTap: _showDeleteAccountDialog,
         ),
@@ -224,7 +259,7 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Icon(Icons.warning_amber_outlined, color: AppColors.danger, size: 24),
             const SizedBox(width: 8),
-            const Text('Xóa tài khoản?'),
+            Text('settings.delete_account'.tr(), style: TextStyle(fontSize: 14)),
           ],
         ),
         content: Column(
@@ -232,7 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hành động này không thể hoàn tác. Tất cả dữ liệu cá nhân, bước chân và cài đặt sẽ bị xóa.',
+              'settings.delete_account_warning'.tr(),
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
@@ -240,7 +275,7 @@ class _SettingsPageState extends State<SettingsPage> {
               controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Nhập mật khẩu xác nhận',
+                labelText: 'settings.enter_password_confirm'.tr(),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -256,7 +291,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text('common.cancel'.tr()),
           ),
           TextButton(
             onPressed: () async {
@@ -269,7 +304,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 context.read<AuthBloc>().add(AuthLogoutRequested());
               }
             },
-            child: const Text('Xóa tài khoản', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600)),
+            child: Text('settings.delete_account'.tr(), style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600)),
           ),
         ],
       ),

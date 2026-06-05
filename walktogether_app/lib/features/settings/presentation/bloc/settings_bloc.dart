@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../data/repositories/settings_repository.dart';
 
 /// Settings state
@@ -56,7 +57,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       debugPrint('SettingsCubit.loadSettings error: $e');
       emit(state.copyWith(
         isLoading: false,
-        error: 'Không thể tải cài đặt',
+        error: 'settings.cannot_load'.tr(),
       ));
     }
   }
@@ -69,13 +70,13 @@ class SettingsCubit extends Cubit<SettingsState> {
       emit(state.copyWith(
         settings: updated,
         isSaving: false,
-        successMessage: 'Đã cập nhật mục tiêu: ${_formatNumber(steps)} bước',
+        successMessage: 'settings.goal_updated',
       ));
     } catch (e) {
       debugPrint('SettingsCubit.updateDailyGoal error: $e');
       emit(state.copyWith(
         isSaving: false,
-        error: 'Không thể cập nhật mục tiêu',
+        error: 'settings.cannot_update_goal'.tr(),
       ));
     }
   }
@@ -116,7 +117,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       // Revert on error
       emit(state.copyWith(
         settings: state.settings?.copyWith(notifications: current),
-        error: 'Không thể cập nhật thông báo',
+        error: 'settings.cannot_update_notifications'.tr(),
       ));
     }
   }
@@ -138,7 +139,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       debugPrint('SettingsCubit.updateUnits error: $e');
       emit(state.copyWith(
         settings: state.settings?.copyWith(units: previous),
-        error: 'Không thể cập nhật đơn vị',
+        error: 'settings.cannot_update_units'.tr(),
       ));
     }
   }
@@ -156,14 +157,14 @@ class SettingsCubit extends Cubit<SettingsState> {
       );
       emit(state.copyWith(
         isSaving: false,
-        successMessage: 'Đổi mật khẩu thành công',
+        successMessage: 'settings.password_changed',
       ));
       return true;
     } catch (e) {
       debugPrint('SettingsCubit.changePassword error: $e');
-      String message = 'Không thể đổi mật khẩu';
+      String message = 'settings.cannot_change_password'.tr();
       if (e.toString().contains('401')) {
-        message = 'Mật khẩu hiện tại không đúng';
+        message = 'settings.wrong_current_password'.tr();
       }
       emit(state.copyWith(isSaving: false, error: message));
       return false;
@@ -177,14 +178,14 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _repository.deleteAccount(password);
       emit(state.copyWith(
         isSaving: false,
-        successMessage: 'Tài khoản đã được xóa',
+        successMessage: 'settings.account_deleted'.tr(),
       ));
       return true;
     } catch (e) {
       debugPrint('SettingsCubit.deleteAccount error: $e');
-      String message = 'Không thể xóa tài khoản';
+      String message = 'settings.cannot_delete_account'.tr();
       if (e.toString().contains('401')) {
-        message = 'Mật khẩu không đúng';
+        message = 'settings.wrong_password'.tr();
       }
       emit(state.copyWith(isSaving: false, error: message));
       return false;

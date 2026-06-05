@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 /// Custom API exception classes
 class ApiException implements Exception {
   final String message;
@@ -17,31 +19,31 @@ class ApiException implements Exception {
 }
 
 class NetworkException extends ApiException {
-  NetworkException({String message = 'Không có kết nối mạng'})
-      : super(message: message, errorCode: 'NETWORK_ERROR');
+  NetworkException({String? message})
+      : super(message: message ?? 'error.network'.tr(), errorCode: 'NETWORK_ERROR');
 }
 
 class TimeoutException extends ApiException {
-  TimeoutException({String message = 'Kết nối quá thời gian. Vui lòng thử lại.'})
-      : super(message: message, errorCode: 'TIMEOUT');
+  TimeoutException({String? message})
+      : super(message: message ?? 'error.timeout'.tr(), errorCode: 'TIMEOUT');
 }
 
 class UnauthorizedException extends ApiException {
-  UnauthorizedException({String message = 'Phiên đăng nhập đã hết hạn'})
-      : super(message: message, statusCode: 401, errorCode: 'UNAUTHORIZED');
+  UnauthorizedException({String? message})
+      : super(message: message ?? 'error.unauthorized'.tr(), statusCode: 401, errorCode: 'UNAUTHORIZED');
 }
 
 class ForbiddenException extends ApiException {
-  ForbiddenException({String message = 'Bạn không có quyền thực hiện thao tác này'})
-      : super(message: message, statusCode: 403, errorCode: 'FORBIDDEN');
+  ForbiddenException({String? message})
+      : super(message: message ?? 'error.forbidden'.tr(), statusCode: 403, errorCode: 'FORBIDDEN');
 }
 
 class NotFoundException extends ApiException {
-  NotFoundException({String message = 'Không tìm thấy dữ liệu'})
-      : super(message: message, statusCode: 404, errorCode: 'NOT_FOUND');
+  NotFoundException({String? message})
+      : super(message: message ?? 'error.not_found'.tr(), statusCode: 404, errorCode: 'NOT_FOUND');
 }
 
 class ServerException extends ApiException {
-  ServerException({String message = 'Lỗi hệ thống. Vui lòng thử lại sau.'})
-      : super(message: message, statusCode: 500, errorCode: 'SERVER_ERROR');
+  ServerException({String? message})
+      : super(message: message ?? 'error.server'.tr(), statusCode: 500, errorCode: 'SERVER_ERROR');
 }

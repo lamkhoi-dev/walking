@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -71,8 +72,8 @@ class _PendingApprovalPageState extends State<PendingApprovalPage>
 
               const SizedBox(height: 32),
 
-              const Text(
-                'Đang chờ phê duyệt',
+              Text(
+                'auth.pending_title'.tr(),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
@@ -83,8 +84,7 @@ class _PendingApprovalPageState extends State<PendingApprovalPage>
               const SizedBox(height: 12),
 
               Text(
-                'Công ty của bạn đang được xem xét.\n'
-                'Bạn sẽ được thông báo khi hoàn tất.',
+                'auth.pending_desc'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -117,8 +117,8 @@ class _PendingApprovalPageState extends State<PendingApprovalPage>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Trạng thái: Chờ duyệt',
+                    Text(
+                      'auth.status_pending'.tr(),
                       style: TextStyle(
                         color: AppColors.pendingOrange,
                         fontWeight: FontWeight.w600,
@@ -137,7 +137,7 @@ class _PendingApprovalPageState extends State<PendingApprovalPage>
                   context.read<AuthBloc>().add(AuthCompanyStatusCheckRequested());
                 },
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Kiểm tra lại'),
+                label: Text('profile.check_again'.tr()),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: const BorderSide(color: AppColors.primary),
@@ -154,7 +154,7 @@ class _PendingApprovalPageState extends State<PendingApprovalPage>
                   context.read<AuthBloc>().add(AuthLogoutRequested());
                 },
                 icon: const Icon(Icons.logout, size: 18),
-                label: const Text('Đăng xuất'),
+                label: Text('auth.logout'.tr()),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                 ),

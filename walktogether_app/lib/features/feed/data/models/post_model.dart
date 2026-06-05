@@ -17,6 +17,11 @@ class PostModel {
   final int likesCount;
   final int commentsCount;
   final bool isLiked;
+  final DateTime? editedAt;
+  final bool isOfficial;
+  final bool isPinned;
+  final DateTime? pinnedAt;
+  final String? mediaLayout;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -38,9 +43,16 @@ class PostModel {
     this.likesCount = 0,
     this.commentsCount = 0,
     this.isLiked = false,
+    this.editedAt,
+    this.isOfficial = false,
+    this.isPinned = false,
+    this.pinnedAt,
+    this.mediaLayout,
     required this.createdAt,
     required this.updatedAt,
   });
+
+  bool get hasVideo => media.any((m) => m.type == 'video');
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
     final authorData = json['authorId'];
@@ -86,15 +98,29 @@ class PostModel {
       likesCount: json['likesCount'] as int? ?? 0,
       commentsCount: json['commentsCount'] as int? ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
+      editedAt: json['editedAt'] != null
+          ? DateTime.tryParse(json['editedAt'] as String)
+          : null,
+      isOfficial: json['isOfficial'] as bool? ?? false,
+      isPinned: json['isPinned'] as bool? ?? false,
+      pinnedAt: json['pinnedAt'] != null
+          ? DateTime.tryParse(json['pinnedAt'] as String)
+          : null,
+      mediaLayout: json['mediaLayout'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 
   PostModel copyWith({
+    String? content,
     int? likesCount,
     int? commentsCount,
     bool? isLiked,
+    DateTime? editedAt,
+    bool? isPinned,
+    DateTime? pinnedAt,
+    String? mediaLayout,
   }) {
     return PostModel(
       id: id,
@@ -103,7 +129,7 @@ class PostModel {
       visibility: visibility,
       visibleToGroups: visibleToGroups,
       type: type,
-      content: content,
+      content: content ?? this.content,
       media: media,
       sharedPostId: sharedPostId,
       sharedContestId: sharedContestId,
@@ -114,6 +140,11 @@ class PostModel {
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       isLiked: isLiked ?? this.isLiked,
+      editedAt: editedAt ?? this.editedAt,
+      isOfficial: isOfficial,
+      isPinned: isPinned ?? this.isPinned,
+      pinnedAt: pinnedAt ?? this.pinnedAt,
+      mediaLayout: mediaLayout ?? this.mediaLayout,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -139,14 +170,30 @@ class PostMedia {
   final String? publicId;
   final int width;
   final int height;
+  final String type;
+  final String? thumbnail;
+  final int duration;
 
-  const PostMedia({required this.url, this.publicId, this.width = 0, this.height = 0});
+  const PostMedia({
+    required this.url,
+    this.publicId,
+    this.width = 0,
+    this.height = 0,
+    this.type = 'image',
+    this.thumbnail,
+    this.duration = 0,
+  });
+
+  bool get isVideo => type == 'video';
 
   factory PostMedia.fromJson(Map<String, dynamic> json) => PostMedia(
         url: json['url'] as String? ?? '',
         publicId: json['publicId'] as String?,
         width: json['width'] as int? ?? 0,
         height: json['height'] as int? ?? 0,
+        type: json['type'] as String? ?? 'image',
+        thumbnail: json['thumbnail'] as String?,
+        duration: json['duration'] as int? ?? 0,
       );
 }
 

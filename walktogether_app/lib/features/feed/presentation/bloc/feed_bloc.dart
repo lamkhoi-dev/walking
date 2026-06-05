@@ -53,6 +53,21 @@ class FeedNewPostCreated extends FeedEvent {
   List<Object?> get props => [post];
 }
 
+class FeedPostEdited extends FeedEvent {
+  final String postId;
+  final String newContent;
+  const FeedPostEdited({required this.postId, required this.newContent});
+  @override
+  List<Object?> get props => [postId, newContent];
+}
+
+class FeedPostPinToggled extends FeedEvent {
+  final String postId;
+  const FeedPostPinToggled(this.postId);
+  @override
+  List<Object?> get props => [postId];
+}
+
 // ===== STATES =====
 abstract class FeedState extends Equatable {
   const FeedState();
@@ -120,6 +135,8 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
     on<FeedPostLikeToggled>(_onLikeToggled);
     on<FeedPostDeleted>(_onPostDeleted);
     on<FeedNewPostCreated>(_onNewPostCreated);
+    on<FeedPostEdited>(_onPostEdited);
+    on<FeedPostPinToggled>(_onPinToggled);
   }
 
   Future<void> _onLoad(FeedLoadRequested event, Emitter<FeedState> emit) async {
@@ -244,5 +261,49 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
         posts: [event.post, ...currentState.posts],
       ));
     }
+  }
+
+  Future<void> _onPostEdited(FeedPostEdited event, Emitter<FeedState> emit) async {
+    final currentState = state;
+    if (currentState is! FeedLoaded) return;
+
+    try {
+      final updated = await _repository.updatePost(event.postId, content: event.newContent);
+      final posts = currentState.posts.map((post) {
+        if (post.id == event.postId) {
+          return post.copyWith(
+            content: updated.content,
+            editedAt: updated.editedAt ?? DateTime.now(),
+          );
+        }
+        return post;
+      }).toList();
+      emit(currentState.copyWith(posts: posts));
+    } catch (_) {}
+  }
+
+  Future<void> _onPinToggled(FeedPostPinToggled event, Emitter<FeedState> emit) async {
+    final currentState = state;
+    if (currentState is! FeedLoaded) return;
+
+    try {
+      final updated = await _repository.togglePin(event.postId);
+      final posts = currentState.posts.map((post) {
+        if (post.id == event.postId) {
+          return post.copyWith(
+            isPinned: updated.isPinned,
+            pinnedAt: updated.pinnedAt,
+          );
+        }
+        return post;
+      }).toList();
+      // Re-sort: pinned first
+      posts.sort((a, b) {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+      emit(currentState.copyWith(posts: posts));
+    } catch (_) {}
   }
 }

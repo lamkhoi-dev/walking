@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -67,8 +68,8 @@ class _ContestDetailView extends StatelessWidget {
       listener: (context, state) {
         if (state is ContestDetailCancelled) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã hủy cuộc thi'),
+            SnackBar(
+              content: Text('contest.status_cancelled'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
@@ -85,7 +86,7 @@ class _ContestDetailView extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Chi tiết cuộc thi'),
+        title: Text('contest.detail_title'.tr()),
           actions: [
             BlocBuilder<ContestDetailBloc, ContestDetailState>(
               builder: (context, state) {
@@ -94,7 +95,7 @@ class _ContestDetailView extends StatelessWidget {
                     _isAdmin(context)) {
                   return IconButton(
                     icon: const Icon(Icons.cancel_outlined, color: AppColors.danger),
-                    tooltip: 'Hủy cuộc thi',
+                    tooltip: 'contest.cancel_tooltip'.tr(),
                     onPressed: () => _showCancelDialog(context, state.contest),
                   );
                 }
@@ -121,7 +122,7 @@ class _ContestDetailView extends StatelessWidget {
                       onPressed: () => context
                           .read<ContestDetailBloc>()
                           .add(ContestDetailLoadRequested(contestId)),
-                      child: const Text('Thử lại'),
+                      child: Text('common.retry'.tr()),
                     ),
                   ],
                 ),
@@ -162,9 +163,9 @@ class _ContestDetailView extends StatelessWidget {
                 children: [
                   const Icon(Icons.leaderboard, color: AppColors.primary, size: 20),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Bảng xếp hạng',
-                    style: TextStyle(
+                  Text(
+                    'contest.leaderboard'.tr(),
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textMain,
@@ -175,7 +176,7 @@ class _ContestDetailView extends StatelessWidget {
                     builder: (context, state) {
                       if (state is LeaderboardLoaded) {
                         return Text(
-                          '${state.entries.length} người chơi',
+                          'contest.players_count'.tr(namedArgs: {'n': state.entries.length.toString()}),
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
@@ -300,14 +301,14 @@ class _ContestDetailView extends StatelessWidget {
           if (contest.groupName != null)
             _buildInfoRow(
               Icons.group,
-              'Nhóm',
+              'contest.group_label'.tr(),
               contest.groupName!,
             ),
           if (contest.createdByName != null) ...[
             const SizedBox(height: 6),
             _buildInfoRow(
               Icons.person,
-              'Người tạo',
+              'contest.creator_label'.tr(),
               contest.createdByName!,
             ),
           ],
@@ -315,7 +316,7 @@ class _ContestDetailView extends StatelessWidget {
           const SizedBox(height: 6),
           _buildInfoRow(
             Icons.people,
-            'Số người tham gia',
+            'contest.participants_count_label'.tr(),
             '${contest.participants.length}',
           ),
 
@@ -326,7 +327,7 @@ class _ContestDetailView extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildDateBox(
-                  'Bắt đầu',
+                  'contest.start_date'.tr(),
                   contest.startDate,
                   AppColors.success,
                 ),
@@ -334,7 +335,7 @@ class _ContestDetailView extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildDateBox(
-                  'Kết thúc',
+                  'contest.end_date'.tr(),
                   contest.endDate,
                   AppColors.danger,
                 ),
@@ -347,13 +348,13 @@ class _ContestDetailView extends StatelessWidget {
             const SizedBox(height: 12),
             CountdownWidget(
               targetDate: contest.startDate,
-              label: 'Bắt đầu sau',
+              label: 'contest.starts_in'.tr(),
             ),
           ] else if (contest.status == 'active') ...[
             const SizedBox(height: 12),
             CountdownWidget(
               targetDate: contest.endDate,
-              label: 'Kết thúc sau',
+              label: 'contest.ends_in'.tr(),
             ),
           ],
         ],
@@ -419,22 +420,22 @@ class _ContestDetailView extends StatelessWidget {
       case 'active':
         bgColor = AppColors.success.withValues(alpha: 0.15);
         textColor = AppColors.success;
-        label = 'Đang diễn ra';
+        label = 'contest.status_active'.tr();
         break;
       case 'upcoming':
         bgColor = AppColors.warning.withValues(alpha: 0.15);
         textColor = AppColors.warning;
-        label = 'Sắp tới';
+        label = 'contest.status_upcoming'.tr();
         break;
       case 'completed':
         bgColor = Colors.blue.withValues(alpha: 0.15);
         textColor = Colors.blue;
-        label = 'Đã kết thúc';
+        label = 'contest.status_completed'.tr();
         break;
       case 'cancelled':
         bgColor = AppColors.danger.withValues(alpha: 0.15);
         textColor = AppColors.danger;
-        label = 'Đã hủy';
+        label = 'contest.status_cancelled'.tr();
         break;
       default:
         bgColor = Colors.grey.withValues(alpha: 0.15);
@@ -463,14 +464,14 @@ class _ContestDetailView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Hủy cuộc thi?'),
+        title: Text('contest.cancel_confirm_title'.tr()),
         content: Text(
-          'Bạn có chắc muốn hủy cuộc thi "${contest.name}"?\nHành động này không thể hoàn tác.',
+          'contest.cancel_confirm_content'.tr(namedArgs: {'name': contest.name}),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Không'),
+            child: Text('contest.cancel_confirm_no'.tr()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
@@ -480,7 +481,7 @@ class _ContestDetailView extends StatelessWidget {
                   .read<ContestDetailBloc>()
                   .add(ContestDetailCancelRequested(contest.id));
             },
-            child: const Text('Hủy cuộc thi'),
+            child: Text('contest.cancel_confirm_btn'.tr()),
           ),
         ],
       ),
@@ -545,7 +546,7 @@ class _DateFilterChips extends StatelessWidget {
                 // "Tổng" chip
                 _buildFilterChip(
                   context,
-                  label: 'Tổng',
+                  label: 'contest.total_label'.tr(),
                   isSelected: currentFilter == null,
                   onTap: () {
                     context.read<LeaderboardBloc>().add(
@@ -562,7 +563,7 @@ class _DateFilterChips extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 8),
                     child: _buildFilterChip(
                       context,
-                      label: isToday ? 'Hôm nay' : _formatDate(date),
+                      label: isToday ? 'contest.today_label'.tr() : _formatDate(date),
                       isSelected: currentFilter == dateKey,
                       onTap: () {
                         context.read<LeaderboardBloc>().add(

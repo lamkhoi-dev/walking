@@ -444,7 +444,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       senderId: event.senderId,
       senderName: event.senderName,
       senderAvatar: event.senderAvatar,
-      content: '[Đang gửi ảnh...]',
+      content: '[Sending image...]',
     );
 
     emit(currentState.copyWith(

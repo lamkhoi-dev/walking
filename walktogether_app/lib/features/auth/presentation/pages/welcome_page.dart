@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/custom_button.dart';
+import '../../../../shared/widgets/language_toggle.dart';
 
 /// Welcome/Landing page — first screen for unauthenticated users
 class WelcomePage extends StatelessWidget {
@@ -15,6 +17,15 @@ class WelcomePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
+              // Language Selector Row
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: const LanguageToggle(),
+                ),
+              ),
+              
               const Spacer(flex: 2),
 
               // Logo & Title
@@ -51,7 +62,7 @@ class WelcomePage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'One Step. One Journey.',
+                'auth.welcome_subtitle'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -64,13 +75,13 @@ class WelcomePage extends StatelessWidget {
 
               // Buttons
               CustomButton(
-                text: 'Đăng nhập',
+                text: 'auth.login'.tr(),
                 icon: Icons.login,
                 onPressed: () => context.go('/login'),
               ),
               const SizedBox(height: 12),
               CustomButton(
-                text: 'Đăng ký tài khoản',
+                text: 'auth.register'.tr(),
                 isOutlined: true,
                 onPressed: () => context.go('/register'),
               ),
@@ -81,14 +92,14 @@ class WelcomePage extends StatelessWidget {
                 onPressed: () {
                   // TODO: Open web portal link
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vui lòng truy cập web portal để đăng ký doanh nghiệp'),
+                    SnackBar(
+                      content: Text('auth.company_register_hint'.tr()),
                     ),
                   );
                 },
-                child: const Text(
-                  'Đăng ký doanh nghiệp? →',
-                  style: TextStyle(
+                child: Text(
+                  'auth.register_company'.tr(),
+                  style: const TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,

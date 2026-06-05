@@ -25,6 +25,8 @@ class AppConstants {
 
   // === FILE ===
   static const int maxImageSize = 5 * 1024 * 1024; // 5MB
+  static const int maxVideoSize = 50 * 1024 * 1024; // 50MB
+  static const int maxPostFiles = 8;
   static const List<String> allowedImageTypes = ['jpg', 'jpeg', 'png', 'gif'];
 
   // === ANIMATION ===

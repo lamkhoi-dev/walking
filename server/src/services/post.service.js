@@ -2,14 +2,15 @@ const Post = require('../models/Post');
 const Like = require('../models/Like');
 const Group = require('../models/Group');
 const User = require('../models/User');
+const friendService = require('./friend.service');
 const logger = require('../utils/logger');
 
 /**
  * Create a new post
  * Handles visibility normalization: 'all_groups' → populates visibleToGroups with author's groups
  */
-const createPost = async (authorId, { content, visibility, visibleToGroups, media, type, sharedPostId, sharedContestId, achievementRank, achievementSteps }) => {
-  const author = await User.findById(authorId).select('companyId');
+const createPost = async (authorId, { content, visibility, visibleToGroups, media, type, sharedPostId, sharedContestId, achievementRank, achievementSteps, mediaLayout }) => {
+  const author = await User.findById(authorId).select('companyId role');
   if (!author) {
     const err = new Error('Người dùng không tồn tại');
     err.statusCode = 404;
@@ -42,8 +43,12 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
   // Determine post type
   let postType = type || 'text';
   if (!type && media && media.length > 0) {
-    postType = 'image';
+    const hasVideo = media.some((m) => m.type === 'video');
+    postType = hasVideo ? 'video' : 'image';
   }
+
+  // Auto-set isOfficial for company_admin
+  const isOfficial = author.role === 'company_admin';
 
   const post = await Post.create({
     authorId,
@@ -53,6 +58,8 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
     type: postType,
     content: content || '',
     media: media || [],
+    mediaLayout: mediaLayout || null,
+    isOfficial,
     sharedPostId: sharedPostId || undefined,
     sharedContestId: sharedContestId || undefined,
     achievementRank: achievementRank || undefined,
@@ -79,14 +86,14 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
 const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
   const skip = (page - 1) * limit;
 
-  // Get user's groups for group-visibility filtering
-  const userGroups = await Group.find({
-    members: userId,
-    isActive: true,
-  }).select('_id');
+  // Parallelize prerequisite queries for performance
+  const [userGroups, currentUser, friendIds] = await Promise.all([
+    Group.find({ members: userId, isActive: true }).select('_id').lean(),
+    User.findById(userId).select('blockedUsers').lean(),
+    friendService.getFriendIds(userId),
+  ]);
+
   const userGroupIds = userGroups.map((g) => g._id);
-  // Get user's blocked list for filtering
-  const currentUser = await User.findById(userId).select('blockedUsers').lean();
   const blockedUserIds = currentUser?.blockedUsers || [];
 
   let query = { isActive: true };
@@ -96,24 +103,38 @@ const getFeed = async (userId, { filter, page = 1, limit = 20 }) => {
     query.authorId = { $nin: blockedUserIds };
   }
 
-  if (filter === 'public') {
+  if (filter === 'mine') {
+    // Only user's own posts (for profile page)
+    query.authorId = userId;
+  } else if (filter === 'public') {
     // Only public posts (system-wide)
     query.visibility = 'public';
+  } else if (filter === 'friends') {
+    // Posts from friends (public + friends-only)
+    if (friendIds.length > 0) {
+      query.authorId = { ...query.authorId, $in: friendIds };
+    } else {
+      // No friends → return empty
+      query._id = null;
+    }
   } else if (filter && filter.startsWith('group:')) {
     // Posts visible to a specific group
     const groupId = filter.replace('group:', '');
     query.visibleToGroups = groupId;
   } else {
-    // Default "all" feed: public + user's groups
+    // Default "all" feed: public + user's groups + friends' friends-only posts
     query.$or = [
       { visibility: 'public' },
       { visibleToGroups: { $in: userGroupIds } },
+      ...(friendIds.length > 0
+        ? [{ visibility: 'friends', authorId: { $in: friendIds } }]
+        : []),
     ];
   }
 
   const [posts, total] = await Promise.all([
     Post.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ isPinned: -1, pinnedAt: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate('authorId', 'fullName avatar')
@@ -224,6 +245,9 @@ const updatePost = async (postId, authorId, updates) => {
   }
 
   Object.assign(post, filteredUpdates);
+  if (filteredUpdates.content !== undefined) {
+    post.editedAt = new Date();
+  }
   await post.save();
   await post.populate('authorId', 'fullName avatar');
 
@@ -243,7 +267,7 @@ const deletePost = async (postId, userId, userRole) => {
   }
 
   const isAuthor = post.authorId.toString() === userId.toString();
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const isAdmin = userRole === 'company_admin' || userRole === 'super_admin';
 
   if (!isAuthor && !isAdmin) {
     const err = new Error('Bạn không có quyền xóa bài viết này');
@@ -305,6 +329,115 @@ const getLikes = async (postId, page = 1, limit = 20) => {
   };
 };
 
+/**
+ * Toggle pin on a post (company_admin only, max 3 per company)
+ */
+const togglePin = async (postId, userId) => {
+  const user = await User.findById(userId).select('role companyId');
+  if (!user || user.role !== 'company_admin') {
+    const err = new Error('Chỉ admin công ty mới có thể ghim bài viết');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const post = await Post.findOne({ _id: postId, isActive: true });
+  if (!post) {
+    const err = new Error('Bài viết không tồn tại');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // Must be same company
+  if (!post.companyId || post.companyId.toString() !== user.companyId?.toString()) {
+    const err = new Error('Bạn chỉ có thể ghim bài trong công ty của mình');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (post.isPinned) {
+    // Unpin
+    post.isPinned = false;
+    post.pinnedAt = null;
+    await post.save();
+  } else {
+    // Check pin limit (max 3)
+    const pinnedCount = await Post.countDocuments({
+      companyId: post.companyId,
+      isPinned: true,
+      isActive: true,
+    });
+
+    if (pinnedCount >= 3) {
+      // Auto-unpin the oldest
+      const oldest = await Post.findOne({
+        companyId: post.companyId,
+        isPinned: true,
+        isActive: true,
+      }).sort({ pinnedAt: 1 });
+      if (oldest) {
+        oldest.isPinned = false;
+        oldest.pinnedAt = null;
+        await oldest.save();
+      }
+    }
+
+    post.isPinned = true;
+    post.pinnedAt = new Date();
+    await post.save();
+  }
+
+  await post.populate('authorId', 'fullName avatar');
+  return post;
+};
+
+/**
+ * Get posts by a specific user (for profile page)
+ * Visibility-filtered based on viewer's relationship
+ */
+const getUserPosts = async (authorId, viewerId, { page = 1, limit = 20 } = {}) => {
+  const skip = (page - 1) * limit;
+  const isOwnProfile = authorId.toString() === viewerId.toString();
+
+  let visibilityFilter;
+  if (isOwnProfile) {
+    // Own profile: see all own posts
+    visibilityFilter = {};
+  } else {
+    // Check friendship
+    const { status } = await friendService.getFriendshipStatus(viewerId, authorId);
+    if (status === 'friends') {
+      // Friend: see public + friends posts
+      visibilityFilter = { visibility: { $in: ['public', 'friends'] } };
+    } else {
+      // Stranger: only public posts
+      visibilityFilter = { visibility: 'public' };
+    }
+  }
+
+  const query = { authorId, isActive: true, ...visibilityFilter };
+
+  const [posts, total] = await Promise.all([
+    Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('authorId', 'fullName avatar')
+      .populate('visibleToGroups', 'name')
+      .lean(),
+    Post.countDocuments(query),
+  ]);
+
+  // Check likes
+  const postIds = posts.map((p) => p._id);
+  const userLikes = await Like.find({ userId: viewerId, postId: { $in: postIds } }).select('postId');
+  const likedPostIds = new Set(userLikes.map((l) => l.postId.toString()));
+
+  return {
+    posts: posts.map((post) => ({ ...post, isLiked: likedPostIds.has(post._id.toString()) })),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  };
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -313,4 +446,6 @@ module.exports = {
   deletePost,
   toggleLike,
   getLikes,
+  togglePin,
+  getUserPosts,
 };

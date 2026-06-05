@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -90,8 +91,8 @@ class StepCounterService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'step_counter_channel',
-        channelName: 'Đếm bước chân',
-        channelDescription: 'Hiển thị khi đang đếm bước chân.',
+        channelName: 'step_tracker.channel_name'.tr(),
+        channelDescription: 'step_tracker.channel_desc'.tr(),
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         onlyAlertOnce: true,
@@ -113,7 +114,9 @@ class StepCounterService {
     );
   }
 
-  /// Start foreground service for background step counting
+  /// Start foreground service for background step counting.
+  /// IMPORTANT: Must call AFTER ACTIVITY_RECOGNITION permission is granted,
+  /// because the TaskHandler subscribes to the pedometer immediately on start.
   Future<void> startForegroundService() async {
     if (_currentUserId == null) return;
 
@@ -123,18 +126,24 @@ class StepCounterService {
     await metaBox.close();
 
     // Request notification permission (Android 13+)
+    // NOTE: ACTIVITY_RECOGNITION must already be granted before this call
     if (Platform.isAndroid) {
       final notifStatus = await Permission.notification.request();
       debugPrint('Notification permission: $notifStatus');
     }
 
-    final result = await FlutterForegroundTask.startService(
-      serviceId: 200, // Must match StepNotificationHelper.NOTIFICATION_ID
-      notificationTitle: 'Đang đếm bước chân...',
-      notificationText: 'Đang khởi động...',
-      callback: stepCounterCallback,
-    );
-    debugPrint('Foreground service start: $result');
+    try {
+      final result = await FlutterForegroundTask.startService(
+        serviceId: 200, // Must match StepNotificationHelper.NOTIFICATION_ID
+        notificationTitle: 'step_tracker.notification_title'.tr(),
+        notificationText: 'step_tracker.notification_starting'.tr(),
+        callback: stepCounterCallback,
+      );
+      debugPrint('Foreground service start: $result');
+    } catch (e) {
+      debugPrint('Failed to start foreground service: $e');
+      rethrow;
+    }
   }
 
   /// Stop foreground service
@@ -199,6 +208,9 @@ class StepCounterService {
   }
 
   /// Start step tracking.
+  /// On Android: requests ACTIVITY_RECOGNITION first, THEN starts foreground
+  /// service. This order is critical — the TaskHandler subscribes to pedometer
+  /// immediately on start, so permission must be granted beforehand.
   /// If foreground service is handling pedometer, skip local subscription
   /// to avoid double-counting.
   Future<void> startTracking({bool foregroundServiceActive = false}) async {
@@ -208,13 +220,16 @@ class StepCounterService {
     }
     if (_isTracking) return;
 
-    // Request ACTIVITY_RECOGNITION permission (required on Android 10+)
+    // STEP 1: Request ACTIVITY_RECOGNITION permission FIRST (required on Android 10+)
+    // This must happen BEFORE starting the foreground service, because the
+    // TaskHandler immediately subscribes to the pedometer on start.
     if (Platform.isAndroid) {
       final status = await Permission.activityRecognition.request();
       if (!status.isGranted) {
         debugPrint('ACTIVITY_RECOGNITION permission denied: $status');
-        throw Exception('Cần cấp quyền nhận diện hoạt động để đếm bước chân');
+        throw Exception('step_tracker.permission_required'.tr());
       }
+      debugPrint('ACTIVITY_RECOGNITION granted — safe to start pedometer/service');
     }
 
     // On iOS, CMPedometer (used by pedometer_2) handles its own
@@ -349,7 +364,7 @@ class StepCounterService {
         msg.contains('denied') ||
         msg.contains('restricted')) {
       _stepController.addError(
-        Exception('Tính năng đếm bước cần quyền "Motion & Fitness". Bạn có thể bật trong Cài đặt bất cứ lúc nào.'),
+        Exception('step_tracker.motion_permission_hint'.tr()),
       );
     }
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/post_model.dart';
 import 'image_gallery_viewer.dart';
@@ -12,9 +14,12 @@ class PostCard extends StatelessWidget {
   final VoidCallback onComment;
   final VoidCallback? onShare;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onReport;
   final VoidCallback? onBlock;
+  final VoidCallback? onPin;
+  final bool isCompanyAdmin;
 
   const PostCard({
     super.key,
@@ -23,9 +28,12 @@ class PostCard extends StatelessWidget {
     required this.onComment,
     this.onShare,
     this.onTap,
+    this.onEdit,
     this.onDelete,
     this.onReport,
     this.onBlock,
+    this.onPin,
+    this.isCompanyAdmin = false,
   });
 
   @override
@@ -48,6 +56,25 @@ class PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Pinned indicator
+            if (post.isPinned)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.push_pin_rounded, size: 14, color: const Color(0xFFFF9800)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'feed.pinned_post'.tr(),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFE65100)),
+                    ),
+                  ],
+                ),
+              ),
             _buildHeader(context),
             if (post.content.isNotEmpty) _buildContent(),
             // Shared post embed — tap to view original
@@ -173,9 +200,9 @@ class PostCard extends StatelessWidget {
             ? const Color(0xFF2196F3)
             : Colors.grey;
     final statusLabel = isActive
-        ? 'Đang diễn ra'
+        ? 'contest.status_active'.tr()
         : isCompleted
-            ? 'Đã kết thúc'
+            ? 'contest.status_completed'.tr()
             : contest.status;
 
     // Use dedicated fields (with regex fallback for old posts)
@@ -198,7 +225,7 @@ class PostCard extends StatelessWidget {
     String? daysText;
     if (contest.startDate != null && contest.endDate != null) {
       final days = contest.endDate!.difference(contest.startDate!).inDays;
-      daysText = '$days ngày';
+      daysText = 'common.n_days'.tr(namedArgs: {'n': '$days'});
     }
 
     return Container(
@@ -357,8 +384,8 @@ class PostCard extends StatelessWidget {
                                 height: 1,
                               ),
                             ),
-                            const Text(
-                              'hạng',
+                            Text(
+                              'feed.rank_label'.tr(),
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
@@ -387,14 +414,14 @@ class PostCard extends StatelessWidget {
                       children: [
                         if (stepsText != null)
                           _contestStatItem(Icons.directions_walk_rounded,
-                              stepsText, 'bước', const Color(0xFF3E2723)),
+                              stepsText, 'feed.steps_label'.tr(), const Color(0xFF3E2723)),
                         if (stepsText != null && daysText != null)
                           Container(
                               width: 1, height: 24,
                               color: goldDark.withValues(alpha: 0.15)),
                         if (daysText != null)
                           _contestStatItem(Icons.schedule_rounded,
-                              daysText, 'thời gian', const Color(0xFF3E2723)),
+                              daysText, 'feed.duration_label'.tr(), const Color(0xFF3E2723)),
                       ],
                     ),
                   ),
@@ -452,24 +479,27 @@ class PostCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 0),
       child: Row(
         children: [
-          // Avatar
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
+          // Avatar — tap to view profile
+          GestureDetector(
+            onTap: () => context.push('/user/${post.author.id}'),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.primaryGradient,
+              ),
+              child: post.author.avatar != null
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: post.author.avatar!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => _avatarPlaceholder(),
+                        errorWidget: (_, __, ___) => _avatarPlaceholder(),
+                      ),
+                    )
+                  : _avatarPlaceholder(),
             ),
-            child: post.author.avatar != null
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: post.author.avatar!,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => _avatarPlaceholder(),
-                      errorWidget: (_, __, ___) => _avatarPlaceholder(),
-                    ),
-                  )
-                : _avatarPlaceholder(),
           ),
           const SizedBox(width: 10),
 
@@ -486,6 +516,10 @@ class PostCard extends StatelessWidget {
                     color: AppColors.textMain,
                   ),
                 ),
+                if (post.isOfficial) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.verified_rounded, size: 16, color: Color(0xFF1DA1F2)),
+                ],
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -496,11 +530,28 @@ class PostCard extends StatelessWidget {
                         color: AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
+                    if (post.editedAt != null) ...[
+                      const SizedBox(width: 4),
+                      Text('·', style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5))),
+                      const SizedBox(width: 4),
+                      Text(
+                        'feed.edited'.tr(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.textSecondary.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 4),
                     Text('·', style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5))),
                     const SizedBox(width: 4),
                     Icon(
-                      post.visibility == 'public' ? Icons.public_rounded : Icons.group_rounded,
+                      post.visibility == 'public'
+                          ? Icons.public_rounded
+                          : post.visibility == 'friends'
+                              ? Icons.people_rounded
+                              : Icons.group_rounded,
                       size: 14,
                       color: AppColors.textSecondary.withValues(alpha: 0.6),
                     ),
@@ -511,46 +562,74 @@ class PostCard extends StatelessWidget {
           ),
 
           // Menu — always show if any action available
-          if (onDelete != null || onReport != null)
+          if (onEdit != null || onDelete != null || onReport != null || onPin != null)
             PopupMenuButton<String>(
               icon: Icon(Icons.more_horiz_rounded, color: AppColors.textSecondary, size: 22),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (value) {
+                if (value == 'edit') onEdit?.call();
                 if (value == 'delete') onDelete?.call();
                 if (value == 'report') onReport?.call();
                 if (value == 'block') onBlock?.call();
+                if (value == 'pin') onPin?.call();
               },
               itemBuilder: (_) => [
+                if (onPin != null)
+                  PopupMenuItem(
+                    value: 'pin',
+                    child: Row(
+                      children: [
+                        Icon(
+                          post.isPinned ? Icons.push_pin_outlined : Icons.push_pin_rounded,
+                          size: 18,
+                          color: const Color(0xFFFF9800),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(post.isPinned ? 'feed.unpin'.tr() : 'feed.pin'.tr()),
+                      ],
+                    ),
+                  ),
+                if (onEdit != null)
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit_rounded, size: 18, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Text('common.edit'.tr()),
+                      ],
+                    ),
+                  ),
                 if (onDelete != null)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
-                        SizedBox(width: 10),
-                        Text('Xóa bài viết', style: TextStyle(color: AppColors.danger)),
+                        const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                        const SizedBox(width: 10),
+                        Text('feed.delete_post'.tr(), style: const TextStyle(color: AppColors.danger)),
                       ],
                     ),
                   ),
                 if (onReport != null)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'report',
                     child: Row(
                       children: [
-                        Icon(Icons.flag_outlined, size: 18, color: AppColors.warning),
-                        SizedBox(width: 10),
-                        Text('Báo cáo bài viết'),
+                        const Icon(Icons.flag_outlined, size: 18, color: AppColors.warning),
+                        const SizedBox(width: 10),
+                        Text('feed.report_post'.tr()),
                       ],
                     ),
                   ),
                 if (onBlock != null)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'block',
                     child: Row(
                       children: [
-                        Icon(Icons.person_off_outlined, size: 18, color: AppColors.danger),
-                        SizedBox(width: 10),
-                        Text('Chặn người dùng', style: TextStyle(color: AppColors.danger)),
+                        const Icon(Icons.person_off_outlined, size: 18, color: AppColors.danger),
+                        const SizedBox(width: 10),
+                        Text('feed.block_user'.tr(), style: const TextStyle(color: AppColors.danger)),
                       ],
                     ),
                   ),
@@ -595,23 +674,259 @@ class PostCard extends StatelessWidget {
     final images = post.media;
     final count = images.length;
     final heroPrefix = 'post_${post.id}';
+    final layout = post.mediaLayout;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        child: count == 1
-            ? _singleImage(context, images[0], heroPrefix)
-            : count == 2
-                ? _twoImages(context, images, heroPrefix)
-                : count == 3
-                    ? _threeImages(context, images, heroPrefix)
-                    : _fourImages(context, images, heroPrefix),
+        child: _buildMediaByLayout(context, images, count, layout, heroPrefix),
       ),
     );
   }
 
-  /// Tappable image with Hero animation → opens gallery at given index
+  Widget _buildMediaByLayout(
+    BuildContext context,
+    List<PostMedia> images,
+    int count,
+    String? layout,
+    String heroPrefix,
+  ) {
+    if (count == 1) return _singleImage(context, images[0], heroPrefix);
+
+    // 2 images
+    if (count == 2) {
+      switch (layout) {
+        case 'two_stack':
+          return _twoImagesStacked(context, images, heroPrefix);
+        case 'two_left_large':
+          return _twoImagesLeftLarge(context, images, heroPrefix);
+        default:
+          return _twoImages(context, images, heroPrefix);
+      }
+    }
+
+    // 3 images
+    if (count == 3) {
+      switch (layout) {
+        case 'three_top':
+          return _threeImagesTop(context, images, heroPrefix);
+        case 'three_cols':
+          return _threeImagesCols(context, images, heroPrefix);
+        default:
+          return _threeImages(context, images, heroPrefix);
+      }
+    }
+
+    // 4+ images
+    switch (layout) {
+      case 'four_top_banner':
+        return _fourImagesTopBanner(context, images, heroPrefix);
+      case 'four_left_large':
+        return _fourImagesLeftLarge(context, images, heroPrefix);
+      default:
+        return _fourImages(context, images, heroPrefix);
+    }
+  }
+
+  // ── New layout: 2 images stacked (top/bottom) ──
+  Widget _twoImagesStacked(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 300,
+      child: Column(
+        children: [
+          Expanded(
+            child: _tappableImage(ctx, images[0], 0, heroPrefix),
+          ),
+          const SizedBox(height: 3),
+          Expanded(
+            child: _tappableImage(ctx, images[1], 1, heroPrefix),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 2 images left large (2/3 + 1/3) ──
+  Widget _twoImagesLeftLarge(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 220,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: _tappableImage(ctx, images[0], 0, heroPrefix, height: 220),
+          ),
+          const SizedBox(width: 3),
+          Expanded(
+            child: _tappableImage(ctx, images[1], 1, heroPrefix, height: 220),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 3 images top banner (1 top + 2 bottom) ──
+  Widget _threeImagesTop(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 280,
+      child: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: _tappableImage(ctx, images[0], 0, heroPrefix),
+          ),
+          const SizedBox(height: 3),
+          Expanded(
+            flex: 2,
+            child: Row(
+              children: [
+                Expanded(
+                  child: _tappableImage(ctx, images[1], 1, heroPrefix),
+                ),
+                const SizedBox(width: 3),
+                Expanded(
+                  child: _tappableImage(ctx, images[2], 2, heroPrefix),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 3 equal columns ──
+  Widget _threeImagesCols(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(child: _tappableImage(ctx, images[0], 0, heroPrefix, height: 200)),
+          const SizedBox(width: 3),
+          Expanded(child: _tappableImage(ctx, images[1], 1, heroPrefix, height: 200)),
+          const SizedBox(width: 3),
+          Expanded(child: _tappableImage(ctx, images[2], 2, heroPrefix, height: 200)),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 4 images top banner (1 top + 3 bottom) ──
+  Widget _fourImagesTopBanner(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 280,
+      child: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: _tappableImage(ctx, images[0], 0, heroPrefix),
+          ),
+          const SizedBox(height: 3),
+          Expanded(
+            flex: 2,
+            child: Row(
+              children: [
+                Expanded(child: _tappableImage(ctx, images[1], 1, heroPrefix)),
+                const SizedBox(width: 3),
+                Expanded(child: _tappableImage(ctx, images[2], 2, heroPrefix)),
+                const SizedBox(width: 3),
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _tappableImage(ctx, images[3], 3, heroPrefix),
+                      if (post.media.length > 4)
+                        GestureDetector(
+                          onTap: () => ImageGalleryViewer.show(
+                            ctx,
+                            imageUrls: post.media.map((m) => m.url).toList(),
+                            initialIndex: 3,
+                            heroTagPrefix: heroPrefix,
+                          ),
+                          child: Container(
+                            color: Colors.black38,
+                            child: Center(
+                              child: Text(
+                                '+${post.media.length - 4}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 4 images left large (1 left + 3 right stacked) ──
+  Widget _fourImagesLeftLarge(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 280,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: _tappableImage(ctx, images[0], 0, heroPrefix, height: 280),
+          ),
+          const SizedBox(width: 3),
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                Expanded(child: _tappableImage(ctx, images[1], 1, heroPrefix)),
+                const SizedBox(height: 3),
+                Expanded(child: _tappableImage(ctx, images[2], 2, heroPrefix)),
+                const SizedBox(height: 3),
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _tappableImage(ctx, images[3], 3, heroPrefix),
+                      if (post.media.length > 4)
+                        GestureDetector(
+                          onTap: () => ImageGalleryViewer.show(
+                            ctx,
+                            imageUrls: post.media.map((m) => m.url).toList(),
+                            initialIndex: 3,
+                            heroTagPrefix: heroPrefix,
+                          ),
+                          child: Container(
+                            color: Colors.black38,
+                            child: Center(
+                              child: Text(
+                                '+${post.media.length - 4}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tappable image/video with Hero animation → opens gallery at given index
   Widget _tappableImage(
     BuildContext context,
     PostMedia media,
@@ -621,13 +936,66 @@ class PostCard extends StatelessWidget {
     double? width,
     BoxFit fit = BoxFit.cover,
   }) {
-    final allUrls = post.media.map((m) => m.url).toList();
+    final allUrls = post.media.where((m) => !m.isVideo).map((m) => m.url).toList();
 
+    if (media.isVideo) {
+      // Video thumbnail with play button
+      return GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => _VideoPlayerPage(url: media.url)),
+        ),
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            if (media.thumbnail != null)
+              CachedNetworkImage(
+                imageUrl: media.thumbnail!,
+                fit: fit,
+                height: height,
+                width: width ?? double.infinity,
+                placeholder: (_, __) => _imagePlaceholder(height ?? 200),
+                errorWidget: (_, __, ___) => _videoPlaceholder(height ?? 200),
+              )
+            else
+              _videoPlaceholder(height ?? 200),
+            Positioned.fill(
+              child: Center(
+                child: Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+                ),
+              ),
+            ),
+            if (media.duration > 0)
+              Positioned(
+                right: 8, bottom: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _formatDuration(media.duration),
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Image
     return GestureDetector(
       onTap: () => ImageGalleryViewer.show(
         context,
         imageUrls: allUrls,
-        initialIndex: index,
+        initialIndex: allUrls.indexOf(media.url).clamp(0, allUrls.length - 1),
         heroTagPrefix: heroPrefix,
       ),
       child: Hero(
@@ -642,6 +1010,22 @@ class PostCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static Widget _videoPlaceholder(double height) {
+    return Container(
+      height: height,
+      color: const Color(0xFF1A1A2E),
+      child: const Center(
+        child: Icon(Icons.videocam_rounded, color: Colors.white38, size: 48),
+      ),
+    );
+  }
+
+  static String _formatDuration(int seconds) {
+    final min = seconds ~/ 60;
+    final sec = seconds % 60;
+    return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
   Widget _singleImage(BuildContext ctx, PostMedia media, String heroPrefix) {
@@ -775,7 +1159,7 @@ class PostCard extends StatelessWidget {
           // Like button
           _ActionButton(
             icon: post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            label: post.likesCount > 0 ? '${post.likesCount}' : 'Thích',
+            label: post.likesCount > 0 ? '${post.likesCount}' : 'feed.like_action'.tr(),
             color: post.isLiked ? const Color(0xFFE91E63) : AppColors.textSecondary,
             onTap: onLike,
           ),
@@ -784,7 +1168,7 @@ class PostCard extends StatelessWidget {
           // Comment button
           _ActionButton(
             icon: Icons.chat_bubble_outline_rounded,
-            label: post.commentsCount > 0 ? '${post.commentsCount}' : 'Bình luận',
+            label: post.commentsCount > 0 ? '${post.commentsCount}' : 'feed.comment_action'.tr(),
             color: AppColors.textSecondary,
             onTap: onComment,
           ),
@@ -794,7 +1178,7 @@ class PostCard extends StatelessWidget {
           if (onShare != null)
             _ActionButton(
               icon: Icons.share_rounded,
-              label: 'Chia sẻ',
+              label: 'feed.share_action'.tr(),
               color: AppColors.textSecondary,
               onTap: onShare!,
             ),
@@ -807,10 +1191,10 @@ class PostCard extends StatelessWidget {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút';
-    if (diff.inHours < 24) return '${diff.inHours} giờ';
-    if (diff.inDays < 7) return '${diff.inDays} ngày';
+    if (diff.inMinutes < 1) return 'common.time_just_now'.tr();
+    if (diff.inMinutes < 60) return 'common.time_minutes'.tr(namedArgs: {'n': '${diff.inMinutes}'});
+    if (diff.inHours < 24) return 'common.time_hours'.tr(namedArgs: {'n': '${diff.inHours}'});
+    if (diff.inDays < 7) return 'common.time_days'.tr(namedArgs: {'n': '${diff.inDays}'});
     return DateFormat('dd/MM/yyyy').format(dateTime);
   }
 }
@@ -854,6 +1238,99 @@ class _ActionButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Full-screen video player page
+class _VideoPlayerPage extends StatefulWidget {
+  final String url;
+  const _VideoPlayerPage({required this.url});
+
+  @override
+  State<_VideoPlayerPage> createState() => _VideoPlayerPageState();
+}
+
+class _VideoPlayerPageState extends State<_VideoPlayerPage> {
+  late VideoPlayerController _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() => _initialized = true);
+          _controller.play();
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Video', style: TextStyle(fontSize: 16)),
+      ),
+      body: Center(
+        child: _initialized
+            ? AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    VideoPlayer(_controller),
+                    // Tap to play/pause
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _controller.value.isPlaying
+                              ? _controller.pause()
+                              : _controller.play();
+                        });
+                      },
+                      child: AnimatedOpacity(
+                        opacity: !_controller.value.isPlaying ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Container(
+                          width: 64, height: 64,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 40),
+                        ),
+                      ),
+                    ),
+                    // Progress
+                    Positioned(
+                      bottom: 0, left: 0, right: 0,
+                      child: VideoProgressIndicator(
+                        _controller,
+                        allowScrubbing: true,
+                        colors: const VideoProgressColors(
+                          playedColor: AppColors.primary,
+                          bufferedColor: Colors.white24,
+                          backgroundColor: Colors.white12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const CircularProgressIndicator(color: AppColors.primary),
       ),
     );
   }

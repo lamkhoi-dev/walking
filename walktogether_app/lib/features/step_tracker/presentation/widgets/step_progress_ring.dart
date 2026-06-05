@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -54,7 +55,7 @@ class StepProgressRing extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'bước',
+                'step_tracker.unit_steps'.tr(),
                 style: AppTextStyles.labelMedium,
               ),
               const SizedBox(height: 4),

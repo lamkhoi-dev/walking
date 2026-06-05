@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../chat/presentation/bloc/conversation_list_bloc.dart';
 import '../../../step_tracker/presentation/bloc/step_tracker_bloc.dart';
@@ -45,13 +46,13 @@ class HomeShellPage extends StatelessWidget {
               children: [
                 _NavItem(
                   icon: Icons.directions_run,
-                  label: 'Hoạt động',
+                  label: 'nav.activity'.tr(),
                   isSelected: currentIndex == 0,
                   onTap: () => context.go('/home'),
                 ),
                 _NavItem(
                   icon: Icons.dynamic_feed_rounded,
-                  label: 'Feed',
+                  label: 'nav.feed'.tr(),
                   isSelected: currentIndex == 1,
                   onTap: () => context.go('/feed'),
                 ),
@@ -86,8 +87,8 @@ class HomeShellPage extends StatelessWidget {
                       }
                     }
                     return _NavItem(
-                      icon: Icons.chat_bubble_outline,
-                      label: 'Chat',
+                      icon: Icons.groups_outlined,
+                      label: 'nav.groups'.tr(),
                       isSelected: currentIndex == 2,
                       onTap: () => context.go('/chat'),
                       badgeCount: unread > 0 ? unread : null,
@@ -96,7 +97,7 @@ class HomeShellPage extends StatelessWidget {
                 ),
                 _NavItem(
                   icon: Icons.person_outline,
-                  label: 'Hồ sơ',
+                  label: 'nav.profile'.tr(),
                   isSelected: currentIndex == 3,
                   onTap: () => context.go('/profile'),
                 ),

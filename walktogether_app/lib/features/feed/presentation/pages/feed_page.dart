@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -47,11 +48,11 @@ class _FeedPageState extends State<FeedPage> {
   String get _filterLabel {
     switch (_selectedFilter) {
       case 'all':
-        return 'Tất cả';
+        return 'feed.visibility_public_desc'.tr();
       case 'public':
-        return 'Công khai';
+        return 'feed.visibility_public'.tr();
       default:
-        return 'Tất cả';
+        return 'feed.visibility_public_desc'.tr();
     }
   }
 
@@ -188,8 +189,11 @@ class _FeedPageState extends State<FeedPage> {
           final authState = context.read<AuthBloc>().state;
           final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
           final isOwner = post.author.id == currentUserId;
+          final isCompanyAdmin = authState is AuthAuthenticated && authState.user.role == 'company_admin';
+          final isSameCompany = authState is AuthAuthenticated && authState.user.companyId == post.companyId;
           return PostCard(
             post: post,
+            isCompanyAdmin: isCompanyAdmin,
             onLike: () => context.read<FeedBloc>().add(FeedPostLikeToggled(post.id)),
             onComment: () async {
               await context.push('/post/${post.id}');
@@ -206,6 +210,15 @@ class _FeedPageState extends State<FeedPage> {
                 context.read<FeedBloc>().add(const FeedRefreshRequested());
               }
             },
+            onEdit: isOwner && post.type != 'shared_post' && post.type != 'shared_contest'
+                ? () => _showEditSheet(post)
+                : null,
+            onDelete: isOwner
+                ? () => _confirmDeletePost(post)
+                : null,
+            onPin: isCompanyAdmin && isSameCompany
+                ? () => context.read<FeedBloc>().add(FeedPostPinToggled(post.id))
+                : null,
             onReport: isOwner ? null : () {
               ReportDialog.show(
                 context,
@@ -232,14 +245,14 @@ class _FeedPageState extends State<FeedPage> {
             child: const Icon(Icons.dynamic_feed_rounded, size: 40, color: AppColors.primary),
           ),
           const SizedBox(height: 20),
-          const Text('Chưa có bài viết nào', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+          Text('feed.no_posts'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
           const SizedBox(height: 8),
-          Text('Hãy là người đầu tiên chia sẻ!', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          Text('feed.create_post'.tr(), style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => context.push('/post/create'),
             icon: const Icon(Icons.add_rounded, size: 20),
-            label: const Text('Tạo bài viết'),
+            label: Text('feed.create_post'.tr()),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -258,7 +271,7 @@ class _FeedPageState extends State<FeedPage> {
         children: [
           Icon(Icons.error_outline_rounded, size: 56, color: AppColors.danger.withValues(alpha: 0.6)),
           const SizedBox(height: 16),
-          const Text('Không thể tải feed', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('feed.load_error'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -268,7 +281,7 @@ class _FeedPageState extends State<FeedPage> {
           FilledButton.icon(
             onPressed: () => context.read<FeedBloc>().add(const FeedLoadRequested()),
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Thử lại'),
+            label: Text('common.retry'.tr()),
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
           ),
         ],
@@ -300,17 +313,16 @@ class _FeedPageState extends State<FeedPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Chặn người dùng?'),
-        content: Text('Bạn sẽ không thấy bài viết từ $authorName nữa. Bạn có thể bỏ chặn trong Cài đặt.'),
+        title: Text('common.block'.tr()),
+        content: Text('feed.block_confirm'.tr(namedArgs: {'name': authorName})),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Hủy'),
+            child: Text('common.cancel'.tr()),
           ),
           TextButton(
             onPressed: () async {
               Navigator.of(dialogContext).pop();
-              // Wait for dialog to fully dismiss before proceeding
               await Future.delayed(const Duration(milliseconds: 300));
               if (!mounted) return;
               try {
@@ -319,7 +331,7 @@ class _FeedPageState extends State<FeedPage> {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Đã chặn $authorName'),
+                    content: Text('${'common.block'.tr()} $authorName'),
                     backgroundColor: AppColors.success,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -330,11 +342,145 @@ class _FeedPageState extends State<FeedPage> {
               } catch (e) {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                  SnackBar(content: Text('${'common.error'.tr()}: $e'), backgroundColor: AppColors.danger),
                 );
               }
             },
-            child: const Text('Chặn', style: TextStyle(color: AppColors.danger)),
+            child: Text('common.block'.tr(), style: const TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditSheet(PostModel post) {
+    final editController = TextEditingController(text: post.content);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'feed.edit_post'.tr(),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: editController,
+                    maxLines: null,
+                    minLines: 4,
+                    maxLength: 2000,
+                    textCapitalization: TextCapitalization.sentences,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'feed.post_content_hint'.tr(),
+                      hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    style: const TextStyle(fontSize: 15, height: 1.5),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final newContent = editController.text.trim();
+                        if (newContent.isEmpty) return;
+                        Navigator.pop(ctx);
+                        context.read<FeedBloc>().add(
+                          FeedPostEdited(postId: post.id, newContent: newContent),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('feed.post_updated'.tr()),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: Text('common.save'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeletePost(PostModel post) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('feed.delete_post_title'.tr()),
+        content: Text('feed.delete_post_confirm'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('common.cancel'.tr()),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<FeedBloc>().add(FeedPostDeleted(post.id));
+            },
+            child: Text('common.delete'.tr(), style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -402,9 +548,9 @@ class _FilterSheetState extends State<_FilterSheet> {
             decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 20),
-          const Text('Lọc bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+          Text('feed.filter_title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
           const SizedBox(height: 4),
-          Text('Hiển thị bài viết theo phạm vi', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text('feed.filter_subtitle'.tr(), style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
           const SizedBox(height: 20),
           Flexible(
             child: SingleChildScrollView(
@@ -413,16 +559,16 @@ class _FilterSheetState extends State<_FilterSheet> {
                 children: [
                   _FilterOption(
                     icon: Icons.all_inclusive_rounded,
-                    title: 'Tất cả',
-                    subtitle: 'Bài viết công khai + nhóm của bạn',
+                    title: 'feed.tab_all'.tr(),
+                    subtitle: 'feed.visibility_public_desc'.tr(),
                     isSelected: widget.selected == 'all',
                     onTap: () => widget.onSelected('all'),
                     gradient: [const Color(0xFF4CAF50), const Color(0xFF81C784)],
                   ),
                   _FilterOption(
                     icon: Icons.public_rounded,
-                    title: 'Công khai',
-                    subtitle: 'Chỉ bài viết công khai toàn hệ thống',
+                    title: 'feed.tab_public'.tr(),
+                    subtitle: 'feed.visibility_group_desc'.tr(),
                     isSelected: widget.selected == 'public',
                     onTap: () => widget.onSelected('public'),
                     gradient: [const Color(0xFF2196F3), const Color(0xFF64B5F6)],
@@ -437,7 +583,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                     ..._groups.map((group) => _FilterOption(
                       icon: Icons.group_rounded,
                       title: group.name,
-                      subtitle: 'Bài viết trong nhóm này',
+                      subtitle: 'feed.tab_group_posts'.tr(),
                       isSelected: widget.selected == 'group:${group.id}',
                       onTap: () => widget.onSelected('group:${group.id}'),
                       gradient: [const Color(0xFFFF9800), const Color(0xFFFFB74D)],

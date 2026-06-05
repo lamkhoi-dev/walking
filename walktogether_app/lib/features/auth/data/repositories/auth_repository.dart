@@ -43,7 +43,11 @@ class AuthRepository {
   Future<({UserModel user, CompanyModel? company})> getMe() async {
     final response = await _dio.get(ApiEndpoints.me);
     final data = response.data['data'];
-    final user = UserModel.fromJson(data['user']);
+    final user = UserModel.fromJson(data['user']).copyWithSocialCounts(
+      friendCount: data['friendCount'] as int? ?? 0,
+      postCount: data['postCount'] as int? ?? 0,
+      groupCount: data['groupCount'] as int? ?? 0,
+    );
     final company = data['company'] != null
         ? CompanyModel.fromJson(data['company'])
         : null;

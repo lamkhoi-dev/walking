@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../core/constants/app_colors.dart';
 import '../../features/settings/data/repositories/settings_repository.dart';
 
@@ -42,11 +43,11 @@ class _ReportDialogState extends State<ReportDialog> {
   bool _isSubmitting = false;
 
   static const _reasons = [
-    {'value': 'spam', 'label': 'Spam', 'icon': Icons.report_outlined},
-    {'value': 'harassment', 'label': 'Quấy rối', 'icon': Icons.person_off_outlined},
-    {'value': 'inappropriate', 'label': 'Không phù hợp', 'icon': Icons.block_outlined},
-    {'value': 'violence', 'label': 'Bạo lực', 'icon': Icons.warning_amber_outlined},
-    {'value': 'other', 'label': 'Khác', 'icon': Icons.more_horiz},
+    {'value': 'spam', 'key': 'report.reason_spam', 'icon': Icons.report_outlined},
+    {'value': 'harassment', 'key': 'report.reason_harassment', 'icon': Icons.person_off_outlined},
+    {'value': 'inappropriate', 'key': 'report.reason_inappropriate', 'icon': Icons.block_outlined},
+    {'value': 'violence', 'key': 'report.reason_violence', 'icon': Icons.warning_amber_outlined},
+    {'value': 'other', 'key': 'report.reason_other', 'icon': Icons.more_horiz},
   ];
 
   @override
@@ -72,7 +73,7 @@ class _ReportDialogState extends State<ReportDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét trong 24h.'),
+            content: Text('report.success'.tr()),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -81,9 +82,9 @@ class _ReportDialogState extends State<ReportDialog> {
       }
     } catch (e) {
       if (mounted) {
-        String msg = 'Không thể gửi báo cáo';
+        String msg = 'report.error'.tr();
         if (e.toString().contains('409')) {
-          msg = 'Bạn đã báo cáo nội dung này rồi';
+          msg = 'report.already_reported'.tr();
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -122,15 +123,15 @@ class _ReportDialogState extends State<ReportDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Icon(Icons.flag_outlined, color: AppColors.warning, size: 22),
-                SizedBox(width: 10),
+                const Icon(Icons.flag_outlined, color: AppColors.warning, size: 22),
+                const SizedBox(width: 10),
                 Text(
-                  'Báo cáo nội dung',
-                  style: TextStyle(
+                  'report.title'.tr(),
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMain,
@@ -143,7 +144,7 @@ class _ReportDialogState extends State<ReportDialog> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'Chọn lý do báo cáo',
+              'report.subtitle'.tr(),
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
           ),
@@ -164,7 +165,7 @@ class _ReportDialogState extends State<ReportDialog> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    r['label'] as String,
+                    (r['key'] as String).tr(),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -187,7 +188,7 @@ class _ReportDialogState extends State<ReportDialog> {
                 maxLines: 2,
                 maxLength: 500,
                 decoration: InputDecoration(
-                  hintText: 'Mô tả thêm (tùy chọn)',
+                  hintText: 'report.description_hint'.tr(),
                   hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -217,7 +218,7 @@ class _ReportDialogState extends State<ReportDialog> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Hủy'),
+                    child: Text('common.cancel'.tr()),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -242,8 +243,8 @@ class _ReportDialogState extends State<ReportDialog> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            'Gửi báo cáo',
+                        : Text(
+                            'report.submit'.tr(),
                             style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                   ),

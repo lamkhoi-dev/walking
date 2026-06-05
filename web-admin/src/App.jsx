@@ -6,6 +6,8 @@ import DashboardPage from './pages/DashboardPage';
 import CompanyListPage from './pages/CompanyListPage';
 import CompanyDetailPage from './pages/CompanyDetailPage';
 import CompanyRegisterPage from './pages/CompanyRegisterPage';
+import UserListPage from './pages/UserListPage';
+import UserDetailPage from './pages/UserDetailPage';
 
 // Protected route wrapper
 function PrivateRoute({ children }) {
@@ -40,6 +42,8 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route path="companies" element={<CompanyListPage />} />
           <Route path="companies/:id" element={<CompanyDetailPage />} />
+          <Route path="users" element={<UserListPage />} />
+          <Route path="users/:id" element={<UserDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

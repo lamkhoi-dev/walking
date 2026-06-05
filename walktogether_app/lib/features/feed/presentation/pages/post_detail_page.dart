@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,6 +14,7 @@ import '../../../group/data/repositories/group_repository.dart';
 import '../../../chat/data/repositories/chat_repository.dart';
 import '../../../settings/data/repositories/settings_repository.dart';
 import '../../../../shared/widgets/report_dialog.dart';
+import '../../../../shared/widgets/video_player_page.dart';
 
 import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
@@ -114,7 +116,7 @@ class _PostDetailPageState extends State<PostDetailPage>
               if (isOwner && post.type != 'shared_post' && post.type != 'shared_contest')
                 _BottomSheetItem(
                   icon: Icons.edit_rounded,
-                  label: 'Chỉnh sửa bài viết',
+                  label: 'common.edit'.tr(),
                   onTap: () {
                     Navigator.pop(context);
                     _showEditSheet(post);
@@ -123,7 +125,7 @@ class _PostDetailPageState extends State<PostDetailPage>
               if (isOwner)
                 _BottomSheetItem(
                   icon: Icons.delete_outline_rounded,
-                  label: 'Xóa bài viết',
+                  label: 'feed.delete_post'.tr(),
                   color: AppColors.danger,
                   onTap: () {
                     Navigator.pop(context);
@@ -132,13 +134,13 @@ class _PostDetailPageState extends State<PostDetailPage>
                 ),
               _BottomSheetItem(
                 icon: Icons.link_rounded,
-                label: 'Sao chép liên kết',
+                label: 'feed.copy_link'.tr(),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: 'walktogether://post/${post.id}'));
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã sao chép liên kết'),
+                    SnackBar(
+                      content: Text('feed.link_copied'.tr()),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -147,7 +149,7 @@ class _PostDetailPageState extends State<PostDetailPage>
               if (!isOwner)
                 _BottomSheetItem(
                   icon: Icons.flag_outlined,
-                  label: 'Báo cáo bài viết',
+                  label: 'feed.report_post'.tr(),
                   color: AppColors.warning,
                   onTap: () {
                     Navigator.pop(context);
@@ -162,7 +164,7 @@ class _PostDetailPageState extends State<PostDetailPage>
               if (!isOwner)
                 _BottomSheetItem(
                   icon: Icons.person_off_outlined,
-                  label: 'Chặn người dùng này',
+                  label: 'feed.block_user'.tr(),
                   color: AppColors.danger,
                   onTap: () {
                     Navigator.pop(context);
@@ -182,12 +184,12 @@ class _PostDetailPageState extends State<PostDetailPage>
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Xóa bài viết?'),
-        content: const Text('Bạn có chắc muốn xóa bài viết này? Hành động này không thể hoàn tác.'),
+        title: Text('feed.delete_post_title'.tr()),
+        content: Text('feed.delete_post_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+            child: Text('common.cancel'.tr()),
           ),
           TextButton(
             onPressed: () async {
@@ -199,12 +201,12 @@ class _PostDetailPageState extends State<PostDetailPage>
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                    SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
                   );
                 }
               }
             },
-            child: const Text('Xóa', style: TextStyle(color: AppColors.danger)),
+            child: Text('common.delete'.tr(), style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -212,17 +214,17 @@ class _PostDetailPageState extends State<PostDetailPage>
   }
 
   void _confirmBlockUser(PostModel post) {
-    final authorName = post.author?.fullName ?? 'người dùng này';
+    final authorName = post.author.fullName.isNotEmpty ? post.author.fullName : 'feed.unknown_user'.tr();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Chặn người dùng?'),
-        content: Text('Bạn sẽ không thấy bài viết từ $authorName nữa. Bạn có thể bỏ chặn trong Cài đặt.'),
+        title: Text('feed.block_user_title'.tr()),
+        content: Text('feed.block_user_confirm'.tr(namedArgs: {'name': authorName})),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+            child: Text('common.cancel'.tr()),
           ),
           TextButton(
             onPressed: () async {
@@ -233,7 +235,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Đã chặn $authorName'),
+                      content: Text('feed.blocked_user'.tr(namedArgs: {'name': authorName})),
                       backgroundColor: AppColors.success,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -244,12 +246,12 @@ class _PostDetailPageState extends State<PostDetailPage>
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                    SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
                   );
                 }
               }
             },
-            child: const Text('Chặn', style: TextStyle(color: AppColors.danger)),
+            child: Text('common.block'.tr(), style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -515,46 +517,52 @@ class _PostDetailPageState extends State<PostDetailPage>
       ),
       title: Row(
         children: [
-          // Tiny avatar
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
-            ),
-            child: post.author.avatar != null
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: post.author.avatar!,
-                      fit: BoxFit.cover,
-                      width: 28,
-                      height: 28,
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      post.author.fullName.isNotEmpty
-                          ? post.author.fullName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+          // Tiny avatar — tap to view profile
+          GestureDetector(
+            onTap: () => context.push('/user/${post.author.id}'),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.primaryGradient,
+              ),
+              child: post.author.avatar != null
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: post.author.avatar!,
+                        fit: BoxFit.cover,
+                        width: 28,
+                        height: 28,
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        post.author.fullName.isNotEmpty
+                            ? post.author.fullName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              post.author.fullName,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMain,
+            child: GestureDetector(
+              onTap: () => context.push('/user/${post.author.id}'),
+              child: Text(
+                post.author.fullName,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textMain,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -657,9 +665,9 @@ class _PostDetailPageState extends State<PostDetailPage>
                     size: 32, color: AppColors.danger),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Không thể tải bài viết',
-                style: TextStyle(
+              Text(
+                'feed.cannot_load_post'.tr(),
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textMain,
@@ -667,7 +675,7 @@ class _PostDetailPageState extends State<PostDetailPage>
               ),
               const SizedBox(height: 8),
               Text(
-                'Kiểm tra kết nối mạng và thử lại',
+                'common.check_connection'.tr(),
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -679,7 +687,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                     .read<PostDetailBloc>()
                     .add(PostDetailLoadRequested(widget.postId)),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Thử lại'),
+                label: Text('common.retry'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -720,33 +728,36 @@ class _PostDetailPageState extends State<PostDetailPage>
             child: Row(
               children: [
                 // Avatar with online-style ring
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                  ),
+                GestureDetector(
+                  onTap: () => context.push('/user/${post.author.id}'),
                   child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: const BoxDecoration(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      gradient: AppColors.primaryGradient,
                     ),
-                    padding: const EdgeInsets.all(1.5),
                     child: Container(
-                      decoration: BoxDecoration(
+                      width: 42,
+                      height: 42,
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
+                        color: Colors.white,
                       ),
-                      child: post.author.avatar != null
-                          ? ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: post.author.avatar!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : _avatarPlaceholder(post),
+                      padding: const EdgeInsets.all(1.5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.primaryGradient,
+                        ),
+                        child: post.author.avatar != null
+                            ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: post.author.avatar!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : _avatarPlaceholder(post),
+                      ),
                     ),
                   ),
                 ),
@@ -836,36 +847,42 @@ class _PostDetailPageState extends State<PostDetailPage>
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 28, height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: AppColors.primaryGradient,
-                          ),
-                          child: post.sharedPost!.author.avatar != null
-                              ? ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: post.sharedPost!.author.avatar!,
-                                    fit: BoxFit.cover, width: 28, height: 28,
-                                  ),
-                                )
-                              : Center(
-                                  child: Text(
-                                    post.sharedPost!.author.fullName.isNotEmpty
-                                        ? post.sharedPost!.author.fullName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700,
+                        GestureDetector(
+                          onTap: () => context.push('/user/${post.sharedPost!.author.id}'),
+                          child: Container(
+                            width: 28, height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: AppColors.primaryGradient,
+                            ),
+                            child: post.sharedPost!.author.avatar != null
+                                ? ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: post.sharedPost!.author.avatar!,
+                                      fit: BoxFit.cover, width: 28, height: 28,
+                                    ),
+                                  )
+                                : Center(
+                                    child: Text(
+                                      post.sharedPost!.author.fullName.isNotEmpty
+                                          ? post.sharedPost!.author.fullName[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
-                                ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            post.sharedPost!.author.fullName,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                          child: GestureDetector(
+                            onTap: () => context.push('/user/${post.sharedPost!.author.id}'),
+                            child: Text(
+                              post.sharedPost!.author.fullName,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                         Icon(Icons.arrow_forward_ios_rounded, size: 14,
@@ -911,42 +928,44 @@ class _PostDetailPageState extends State<PostDetailPage>
                     final media = entry.value;
                     return Padding(
                       padding: EdgeInsets.only(top: entry.key > 0 ? 3 : 0),
-                      child: LikeAnimationWidget(
-                        isLiked: post.isLiked,
-                        onDoubleTap: () {
-                          if (!post.isLiked) _toggleLike();
-                        },
-                        child: CachedNetworkImage(
-                          imageUrl: media.url,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          placeholder: (_, __) => Container(
-                            height: 260,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                            ),
-                            child: Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary.withValues(
-                                      alpha: 0.4),
+                      child: media.isVideo
+                          ? _buildVideoItem(media)
+                          : LikeAnimationWidget(
+                              isLiked: post.isLiked,
+                              onDoubleTap: () {
+                                if (!post.isLiked) _toggleLike();
+                              },
+                              child: CachedNetworkImage(
+                                imageUrl: media.url,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                placeholder: (_, __) => Container(
+                                  height: 260,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                  ),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary.withValues(
+                                            alpha: 0.4),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  height: 260,
+                                  color: Colors.grey.shade100,
+                                  child: const Center(
+                                    child: Icon(Icons.broken_image_rounded,
+                                        color: AppColors.textSecondary, size: 28),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          errorWidget: (_, __, ___) => Container(
-                            height: 260,
-                            color: Colors.grey.shade100,
-                            child: const Center(
-                              child: Icon(Icons.broken_image_rounded,
-                                  color: AppColors.textSecondary, size: 28),
-                            ),
-                          ),
-                        ),
-                      ),
                     );
                   }).toList(),
                 ),
@@ -957,6 +976,78 @@ class _PostDetailPageState extends State<PostDetailPage>
         ],
       ),
     );
+  }
+
+  // ===== VIDEO ITEM =====
+  Widget _buildVideoItem(PostMedia media) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => VideoPlayerPage(url: media.url)),
+      ),
+      child: Stack(
+        children: [
+          // Thumbnail or dark placeholder
+          if (media.thumbnail != null)
+            CachedNetworkImage(
+              imageUrl: media.thumbnail!,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 260,
+              placeholder: (_, __) => _videoPlaceholder(),
+              errorWidget: (_, __, ___) => _videoPlaceholder(),
+            )
+          else
+            _videoPlaceholder(),
+          // Play button overlay
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                width: 60, height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                ),
+                child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+              ),
+            ),
+          ),
+          // Duration badge
+          if (media.duration > 0)
+            Positioned(
+              right: 10, bottom: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  _formatMediaDuration(media.duration),
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _videoPlaceholder() {
+    return Container(
+      height: 260,
+      width: double.infinity,
+      color: const Color(0xFF1A1A2E),
+      child: const Center(
+        child: Icon(Icons.videocam_rounded, color: Colors.white38, size: 48),
+      ),
+    );
+  }
+
+  String _formatMediaDuration(int seconds) {
+    final min = seconds ~/ 60;
+    final sec = seconds % 60;
+    return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
   // ===== DETAILED ACHIEVEMENT CARD =====
@@ -974,9 +1065,9 @@ class _PostDetailPageState extends State<PostDetailPage>
             ? const Color(0xFF2196F3)
             : Colors.grey;
     final statusLabel = isActive
-        ? 'Đang diễn ra'
+        ? 'contest.status_active'.tr()
         : isCompleted
-            ? 'Đã kết thúc'
+            ? 'contest.status_completed'.tr()
             : contest.status;
 
     // Use dedicated fields (with regex fallback for old posts)
@@ -998,7 +1089,7 @@ class _PostDetailPageState extends State<PostDetailPage>
     String? daysText;
     if (contest.startDate != null && contest.endDate != null) {
       final days = contest.endDate!.difference(contest.startDate!).inDays;
-      daysText = '$days ngày';
+      daysText = 'common.n_days'.tr(namedArgs: {'n': '$days'});
     }
 
     return Container(
@@ -1166,8 +1257,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                                 ),
                               ),
                               if (rank > 3)
-                                const Text(
-                                  'hạng',
+                                Text(
+                                  'feed.rank_label'.tr(),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -1198,7 +1289,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                             _achievementStatItem(
                               Icons.directions_walk_rounded,
                               stepsText,
-                              'bước chân',
+                              'feed.steps_label'.tr(),
                               const Color(0xFF3E2723),
                             ),
                           if (stepsText != null && daysText != null)
@@ -1210,7 +1301,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                             _achievementStatItem(
                               Icons.schedule_rounded,
                               daysText,
-                              'thời gian',
+                              'feed.duration_label'.tr(),
                               const Color(0xFF3E2723),
                             ),
                         ],
@@ -1257,7 +1348,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                             color: goldDark.withValues(alpha: 0.6)),
                         const SizedBox(width: 6),
                         Text(
-                          'Bảng xếp hạng',
+                          'feed.leaderboard_label'.tr(),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -1365,7 +1456,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${post.likesCount} lượt thích',
+                      'feed.n_likes'.tr(namedArgs: {'n': '${post.likesCount}'}),
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -1375,7 +1466,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                   const Spacer(),
                   if (post.commentsCount > 0)
                     Text(
-                      '${post.commentsCount} bình luận',
+                      'feed.n_comments'.tr(namedArgs: {'n': '${post.commentsCount}'}),
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -1404,7 +1495,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                     icon: post.isLiked
                         ? Icons.favorite_rounded
                         : Icons.favorite_border_rounded,
-                    label: 'Thích',
+                    label: 'feed.like_action'.tr(),
                     color: post.isLiked
                         ? const Color(0xFFE91E63)
                         : AppColors.textSecondary,
@@ -1418,7 +1509,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 Expanded(
                   child: _InteractionButton(
                     icon: Icons.chat_bubble_outline_rounded,
-                    label: 'Bình luận',
+                    label: 'feed.comment_action'.tr(),
                     color: AppColors.textSecondary,
                     onTap: () {
                       _focusNode.requestFocus();
@@ -1431,7 +1522,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                   Expanded(
                     child: _InteractionButton(
                       icon: Icons.share_outlined,
-                      label: 'Chia sẻ',
+                      label: 'feed.share_action'.tr(),
                       color: AppColors.textSecondary,
                       onTap: () => _showShareSheet(post),
                     ),
@@ -1461,7 +1552,7 @@ class _PostDetailPageState extends State<PostDetailPage>
           ),
           const SizedBox(width: 8),
           Text(
-            'Bình luận',
+            'feed.comments_title'.tr(),
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -1510,8 +1601,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                       size: 28, color: Colors.grey.shade300),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Chưa có bình luận nào',
+                Text(
+                  'feed.no_comments_yet'.tr(),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -1520,7 +1611,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Hãy là người đầu tiên bình luận! 💬',
+                  'feed.be_first_comment'.tr(),
                   style: TextStyle(
                     color: AppColors.textSecondary.withValues(alpha: 0.6),
                     fontSize: 13,
@@ -1612,7 +1703,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 textInputAction: TextInputAction.newline,
                 style: const TextStyle(fontSize: 14.5, height: 1.3),
                 decoration: InputDecoration(
-                  hintText: 'Viết bình luận...',
+                  hintText: 'feed.comment_hint'.tr(),
                   hintStyle: TextStyle(
                     color: AppColors.textSecondary.withValues(alpha: 0.45),
                     fontSize: 14.5,
@@ -1702,10 +1793,10 @@ class _PostDetailPageState extends State<PostDetailPage>
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút';
-    if (diff.inHours < 24) return '${diff.inHours} giờ';
-    if (diff.inDays < 7) return '${diff.inDays} ngày';
+    if (diff.inMinutes < 1) return 'common.time_just_now'.tr();
+    if (diff.inMinutes < 60) return 'common.time_minutes'.tr(namedArgs: {'n': '${diff.inMinutes}'});
+    if (diff.inHours < 24) return 'common.time_hours'.tr(namedArgs: {'n': '${diff.inHours}'});
+    if (diff.inDays < 7) return 'common.time_days'.tr(namedArgs: {'n': '${diff.inDays}'});
     return DateFormat('dd/MM/yyyy HH:mm').format(dateTime);
   }
 }

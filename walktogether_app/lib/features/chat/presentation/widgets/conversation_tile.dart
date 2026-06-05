@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/conversation_model.dart';
 import 'package:intl/intl.dart';
@@ -155,12 +156,12 @@ class ConversationTile extends StatelessWidget {
   }
 
   String _lastMessagePreview(MessageModel? msg) {
-    if (msg == null) return 'Chưa có tin nhắn';
+    if (msg == null) return 'chat.no_messages_hint'.tr();
     if (msg.isSystem) return msg.content;
-    if (msg.isImage) return '📷 Hình ảnh';
+    if (msg.isImage) return 'chat.image_label'.tr();
 
     final prefix = msg.isMine(currentUserId)
-        ? 'Bạn: '
+        ? 'chat.you_prefix'.tr()
         : msg.senderName != null && msg.senderName!.isNotEmpty
             ? '${msg.senderName}: '
             : '';
@@ -174,7 +175,7 @@ class ConversationTile extends StatelessWidget {
     if (diff.inDays == 0) {
       return DateFormat('HH:mm').format(dateTime);
     } else if (diff.inDays == 1) {
-      return 'Hôm qua';
+      return 'common.yesterday'.tr();
     } else if (diff.inDays < 7) {
       return DateFormat('EEEE', 'vi').format(dateTime);
     } else {

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../contest/data/repositories/contest_repository.dart';
@@ -33,6 +35,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   // Group-specific posting state
   List<String> _selectedGroupIds = [];
   List<String> _selectedGroupNames = [];
+  // Media layout state
+  String? _selectedLayout;
 
   @override
   void dispose() {
@@ -48,15 +52,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
   String get _visibilityLabel {
     switch (_visibility) {
       case 'public':
-        return 'Công khai';
+        return 'feed.visibility_public'.tr();
+      case 'friends':
+        return 'feed.visibility_friends'.tr();
       case 'all_groups':
-        return 'Tất cả nhóm';
+        return 'feed.visibility_all_groups'.tr();
       case 'groups':
         return _selectedGroupNames.isNotEmpty
             ? _selectedGroupNames.join(', ')
-            : 'Nhóm cụ thể';
+            : 'feed.visibility_specific_group'.tr();
       default:
-        return 'Công khai';
+        return 'feed.visibility_public'.tr();
     }
   }
 
@@ -64,6 +70,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     switch (_visibility) {
       case 'public':
         return Icons.public_rounded;
+      case 'friends':
+        return Icons.people_rounded;
       case 'all_groups':
         return Icons.groups_rounded;
       case 'groups':
@@ -74,31 +82,104 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Future<void> _pickImages() async {
-    if (_images.length >= 8) return;
-    final remaining = 8 - _images.length;
-    final picked = await _picker.pickMultiImage(
+    if (_images.length >= 4) return;
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
       maxWidth: 1920,
       maxHeight: 1920,
       imageQuality: 85,
-      limit: remaining,
     );
-    if (picked.isNotEmpty) {
-      setState(() {
-        for (final xFile in picked) {
-          if (_images.length < 8) {
-            // Trim path to handle space in scaled filenames from image_picker
-            final file = File(xFile.path.trim());
-            if (file.existsSync()) {
-              _images.add(file);
-            }
+    if (picked != null) {
+      final file = File(picked.path.trim());
+      if (file.existsSync()) {
+        final size = file.lengthSync();
+        if (size > AppConstants.maxVideoSize) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('feed.image_too_large'.tr(namedArgs: {'size': (size / 1024 / 1024).toStringAsFixed(1)})),
+                backgroundColor: AppColors.danger,
+              ),
+            );
           }
+          return;
         }
-      });
+        setState(() {
+          _images.add(file);
+          _resetLayoutIfNeeded();
+        });
+      }
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    if (_images.length >= 4) return;
+    final picked = await _picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(minutes: 3),
+    );
+    if (picked != null) {
+      final file = File(picked.path.trim());
+      if (file.existsSync()) {
+        final size = file.lengthSync();
+        if (size > AppConstants.maxVideoSize) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('feed.video_too_large'.tr(namedArgs: {'size': (size / 1024 / 1024).toStringAsFixed(1)})),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
+          return;
+        }
+        setState(() {
+          _images.add(file);
+          _resetLayoutIfNeeded();
+        });
+      }
     }
   }
 
   void _removeImage(int index) {
-    setState(() => _images.removeAt(index));
+    setState(() {
+      _images.removeAt(index);
+      _resetLayoutIfNeeded();
+    });
+  }
+
+  void _resetLayoutIfNeeded() {
+    final layouts = _getAvailableLayouts();
+    if (layouts.isEmpty) {
+      _selectedLayout = null;
+    } else if (_selectedLayout == null || !layouts.any((l) => l.id == _selectedLayout)) {
+      _selectedLayout = layouts.first.id;
+    }
+  }
+
+  List<_LayoutOption> _getAvailableLayouts() {
+    final count = _images.length;
+    if (count < 2) return [];
+    if (count == 2) {
+      return [
+        _LayoutOption('two_side', 'feed.layout_side_by_side', _LayoutIconType.twoSide),
+        _LayoutOption('two_stack', 'feed.layout_stacked', _LayoutIconType.twoStack),
+        _LayoutOption('two_left_large', 'feed.layout_left_large', _LayoutIconType.twoLeftLarge),
+      ];
+    }
+    if (count == 3) {
+      return [
+        _LayoutOption('three_left', 'feed.layout_left_large', _LayoutIconType.threeLeft),
+        _LayoutOption('three_top', 'feed.layout_top_banner', _LayoutIconType.threeTop),
+        _LayoutOption('three_cols', 'feed.layout_equal_cols', _LayoutIconType.threeCols),
+      ];
+    }
+    // 4+
+    return [
+      _LayoutOption('four_grid', 'feed.layout_grid', _LayoutIconType.fourGrid),
+      _LayoutOption('four_top_banner', 'feed.layout_top_banner', _LayoutIconType.fourTopBanner),
+      _LayoutOption('four_left_large', 'feed.layout_left_large', _LayoutIconType.fourLeftLarge),
+    ];
   }
 
   Future<void> _submitPost() async {
@@ -115,7 +196,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         sharedContestId = _achievementContestId;
         // Add human-readable text for backwards compatibility
         final steps = _formatSteps(_achievementSteps ?? 0);
-        final rankInfo = '🏆 Hạng #$_achievementRank với $steps bước trong "$_achievementContestName"';
+        final rankInfo = 'feed.rank_info'.tr(namedArgs: {'rank': '$_achievementRank', 'steps': steps, 'contest': _achievementContestName ?? ''});
         if (postContent.isEmpty) {
           postContent = rankInfo;
         } else {
@@ -133,12 +214,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
         sharedContestId: sharedContestId,
         achievementRank: _achievementRank,
         achievementSteps: _achievementSteps,
+        mediaLayout: _images.length >= 2 ? _selectedLayout : null,
       );
       if (mounted) context.pop(true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
         );
       }
     } finally {
@@ -230,8 +312,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Tạo bài viết',
+        title: Text(
+          'feed.create_post'.tr(),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
         ),
         actions: [
@@ -250,7 +332,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       width: 18, height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Đăng', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                  : Text('feed.post'.tr(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           ),
         ],
@@ -304,7 +386,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     textCapitalization: TextCapitalization.sentences,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Bạn đang nghĩ gì?',
+                      hintText: 'feed.post_hint'.tr(),
                       hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5), fontSize: 16),
                       border: InputBorder.none,
                       counterStyle: TextStyle(fontSize: 11, color: AppColors.textSecondary.withValues(alpha: 0.5)),
@@ -316,6 +398,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   if (_images.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _buildImageGrid(),
+                  ],
+
+                  // Layout picker (when ≥2 images)
+                  if (_images.length >= 2) ...[
+                    const SizedBox(height: 12),
+                    _buildLayoutPicker(),
                   ],
 
                   // Achievement preview card
@@ -416,7 +504,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         color: AppColors.textSecondary.withValues(alpha: 0.6)),
                     const SizedBox(width: 3),
                     Text(
-                      '${_formatSteps(_achievementSteps ?? 0)} bước',
+                      'feed.n_steps_unit'.tr(namedArgs: {'n': _formatSteps(_achievementSteps ?? 0)}),
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -428,7 +516,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         color: AppColors.textSecondary.withValues(alpha: 0.6)),
                     const SizedBox(width: 3),
                     Text(
-                      '${_achievementParticipants ?? 0} người',
+                      'common.n_people'.tr(namedArgs: {'n': '${_achievementParticipants ?? 0}'}),
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -466,17 +554,70 @@ class _CreatePostPageState extends State<CreatePostPage> {
     });
   }
 
+  bool _isVideoFile(File file) {
+    final ext = file.path.split('.').last.toLowerCase();
+    return ['mp4', 'mov', 'webm', 'avi', 'm4v', '3gp'].contains(ext);
+  }
+
   Widget _buildImageGrid() {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: List.generate(_images.length, (index) {
+        final file = _images[index];
+        final isVideo = _isVideoFile(file);
+
         return Stack(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.file(_images[index], width: 100, height: 100, fit: BoxFit.cover),
+              child: isVideo
+                  ? Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            file.path.split('/').last.length > 12
+                                ? '${file.path.split('/').last.substring(0, 10)}...'
+                                : file.path.split('/').last,
+                            style: const TextStyle(color: Colors.white70, fontSize: 9),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : Image.file(file, width: 100, height: 100, fit: BoxFit.cover),
             ),
+            // Video badge
+            if (isVideo)
+              Positioned(
+                bottom: 6,
+                left: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('VIDEO', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            // Remove button
             Positioned(
               top: 4,
               right: 4,
@@ -507,18 +648,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
       ),
       child: Row(
         children: [
-          _ToolbarButton(
+          _ToolbarIconButton(
             icon: Icons.photo_library_rounded,
-            label: 'Ảnh',
-            color: AppColors.success,
+            color: const Color(0xFF4CAF50),
             badgeCount: _images.length,
             onTap: _images.length < 4 ? _pickImages : null,
+            tooltip: 'feed.select_photo'.tr(),
           ),
-          const SizedBox(width: 16),
-          _ToolbarButton(
+          const SizedBox(width: 12),
+          _ToolbarIconButton(
             icon: Icons.camera_alt_rounded,
-            label: 'Camera',
-            color: AppColors.info,
+            color: const Color(0xFF2196F3),
             onTap: _images.length < 4
                 ? () async {
                     final picked = await _picker.pickImage(
@@ -531,27 +671,235 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     }
                   }
                 : null,
+            tooltip: 'feed.take_photo'.tr(),
           ),
-          const SizedBox(width: 16),
-          _ToolbarButton(
+          const SizedBox(width: 12),
+          _ToolbarIconButton(
+            icon: Icons.videocam_rounded,
+            color: const Color(0xFFE53935),
+            onTap: _images.length < 4 ? _pickVideo : null,
+            tooltip: 'feed.select_video'.tr(),
+          ),
+          const SizedBox(width: 12),
+          _ToolbarIconButton(
             icon: Icons.emoji_events_rounded,
-            label: 'Thành tích',
-            color: AppColors.warning,
+            color: const Color(0xFFFF9800),
             onTap: () => _showAchievementPicker(),
+            tooltip: 'feed.achievement_tooltip'.tr(),
           ),
           const Spacer(),
-          Text(
-            '${_images.length}/4 ảnh',
-            style: TextStyle(
-              fontSize: 12,
-              color: _images.length >= 4 ? AppColors.warning : AppColors.textSecondary.withValues(alpha: 0.6),
-              fontWeight: FontWeight.w500,
+          if (_images.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _images.length >= 4
+                    ? AppColors.warning.withValues(alpha: 0.12)
+                    : AppColors.textSecondary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${_images.length}/4',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _images.length >= 4 ? AppColors.warning : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
   }
+
+  Widget _buildLayoutPicker() {
+    final layouts = _getAvailableLayouts();
+    if (layouts.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.grid_view_rounded, size: 16, color: AppColors.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              'feed.choose_layout'.tr(),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 64,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: layouts.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final layout = layouts[index];
+              final isSelected = _selectedLayout == layout.id;
+
+              return GestureDetector(
+                onTap: () => setState(() => _selectedLayout = layout.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 64,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.08)
+                        : AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.divider,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 36,
+                        height: 28,
+                        child: CustomPaint(
+                          painter: _LayoutIconPainter(
+                            type: layout.iconType,
+                            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      if (isSelected)
+                        Container(
+                          width: 6, height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// === LAYOUT OPTION DATA ===
+enum _LayoutIconType {
+  twoSide, twoStack, twoLeftLarge,
+  threeLeft, threeTop, threeCols,
+  fourGrid, fourTopBanner, fourLeftLarge,
+}
+
+class _LayoutOption {
+  final String id;
+  final String labelKey;
+  final _LayoutIconType iconType;
+  const _LayoutOption(this.id, this.labelKey, this.iconType);
+}
+
+// === LAYOUT ICON PAINTER ===
+class _LayoutIconPainter extends CustomPainter {
+  final _LayoutIconType type;
+  final Color color;
+
+  _LayoutIconPainter({required this.type, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.25)
+      ..style = PaintingStyle.fill;
+    final borderPaint = Paint()
+      ..color = color.withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    const gap = 2.0;
+    const r = Radius.circular(2);
+
+    switch (type) {
+      // 2 images
+      case _LayoutIconType.twoSide:
+        final w = (size.width - gap) / 2;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, w, size.height), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(w + gap, 0, w, size.height), r, paint, borderPaint);
+      case _LayoutIconType.twoStack:
+        final h = (size.height - gap) / 2;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, size.width, h), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(0, h + gap, size.width, h), r, paint, borderPaint);
+      case _LayoutIconType.twoLeftLarge:
+        final wLarge = size.width * 0.65;
+        final wSmall = size.width - wLarge - gap;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, wLarge, size.height), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(wLarge + gap, 0, wSmall, size.height), r, paint, borderPaint);
+
+      // 3 images
+      case _LayoutIconType.threeLeft:
+        final wLarge = size.width * 0.6;
+        final wSmall = size.width - wLarge - gap;
+        final hSmall = (size.height - gap) / 2;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, wLarge, size.height), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(wLarge + gap, 0, wSmall, hSmall), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(wLarge + gap, hSmall + gap, wSmall, hSmall), r, paint, borderPaint);
+      case _LayoutIconType.threeTop:
+        final hTop = size.height * 0.55;
+        final hBot = size.height - hTop - gap;
+        final wBot = (size.width - gap) / 2;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, size.width, hTop), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(0, hTop + gap, wBot, hBot), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(wBot + gap, hTop + gap, wBot, hBot), r, paint, borderPaint);
+      case _LayoutIconType.threeCols:
+        final w = (size.width - gap * 2) / 3;
+        for (int i = 0; i < 3; i++) {
+          _drawRect(canvas, Rect.fromLTWH(i * (w + gap), 0, w, size.height), r, paint, borderPaint);
+        }
+
+      // 4 images
+      case _LayoutIconType.fourGrid:
+        final w = (size.width - gap) / 2;
+        final h = (size.height - gap) / 2;
+        for (int row = 0; row < 2; row++) {
+          for (int col = 0; col < 2; col++) {
+            _drawRect(canvas, Rect.fromLTWH(col * (w + gap), row * (h + gap), w, h), r, paint, borderPaint);
+          }
+        }
+      case _LayoutIconType.fourTopBanner:
+        final hTop = size.height * 0.55;
+        final hBot = size.height - hTop - gap;
+        final wBot = (size.width - gap * 2) / 3;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, size.width, hTop), r, paint, borderPaint);
+        for (int i = 0; i < 3; i++) {
+          _drawRect(canvas, Rect.fromLTWH(i * (wBot + gap), hTop + gap, wBot, hBot), r, paint, borderPaint);
+        }
+      case _LayoutIconType.fourLeftLarge:
+        final wLarge = size.width * 0.55;
+        final wSmall = size.width - wLarge - gap;
+        final hSmall = (size.height - gap * 2) / 3;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, wLarge, size.height), r, paint, borderPaint);
+        for (int i = 0; i < 3; i++) {
+          _drawRect(canvas, Rect.fromLTWH(wLarge + gap, i * (hSmall + gap), wSmall, hSmall), r, paint, borderPaint);
+        }
+    }
+  }
+
+  void _drawRect(Canvas canvas, Rect rect, Radius r, Paint fill, Paint stroke) {
+    final rrect = RRect.fromRectAndRadius(rect, r);
+    canvas.drawRRect(rrect, fill);
+    canvas.drawRRect(rrect, stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LayoutIconPainter old) => old.type != type || old.color != color;
 }
 
 // === VISIBILITY BOTTOM SHEET ===
@@ -580,36 +928,44 @@ class _VisibilitySheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Ai có thể xem?',
+          Text(
+            'feed.who_can_see'.tr(),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
           ),
           const SizedBox(height: 4),
           Text(
-            'Chọn phạm vi hiển thị bài viết',
+            'feed.select_visibility'.tr(),
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 20),
           _VisibilityOption(
             icon: Icons.public_rounded,
-            title: 'Công khai',
-            subtitle: 'Tất cả mọi người đều xem được',
+            title: 'feed.visibility_public'.tr(),
+            subtitle: 'feed.visibility_public_desc'.tr(),
             isSelected: selected == 'public',
             onTap: () => onSelected('public'),
             gradient: [const Color(0xFF4CAF50), const Color(0xFF81C784)],
           ),
           _VisibilityOption(
+            icon: Icons.people_rounded,
+            title: 'feed.visibility_friends'.tr(),
+            subtitle: 'feed.visibility_friends_desc'.tr(),
+            isSelected: selected == 'friends',
+            onTap: () => onSelected('friends'),
+            gradient: [const Color(0xFF009688), const Color(0xFF4DB6AC)],
+          ),
+          _VisibilityOption(
             icon: Icons.groups_rounded,
-            title: 'Tất cả nhóm của tôi',
-            subtitle: 'Chỉ thành viên trong nhóm bạn tham gia',
+            title: 'feed.visibility_all_groups'.tr(),
+            subtitle: 'feed.visibility_all_groups_desc'.tr(),
             isSelected: selected == 'all_groups',
             onTap: () => onSelected('all_groups'),
             gradient: [const Color(0xFF2196F3), const Color(0xFF64B5F6)],
           ),
           _VisibilityOption(
             icon: Icons.group_rounded,
-            title: 'Nhóm cụ thể',
-            subtitle: 'Chọn nhóm cụ thể để đăng bài',
+            title: 'feed.visibility_specific_group'.tr(),
+            subtitle: 'feed.visibility_specific_group_desc'.tr(),
             isSelected: selected == 'groups',
             onTap: () => onSelected('groups'),
             gradient: [const Color(0xFFFF9800), const Color(0xFFFFB74D)],
@@ -793,9 +1149,9 @@ class _GroupPickerSheetState extends State<_GroupPickerSheet> {
               children: [
                 const Icon(Icons.group_rounded, color: Color(0xFFFF9800), size: 22),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Chọn nhóm',
+                    'feed.select_group_share'.tr(),
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
                   ),
                 ),
@@ -835,10 +1191,10 @@ class _GroupPickerSheetState extends State<_GroupPickerSheet> {
             children: [
               Icon(Icons.group_off_rounded, size: 48, color: Colors.grey.shade300),
               const SizedBox(height: 12),
-              const Text('Chưa có nhóm nào',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              Text('feed.no_groups_in_post'.tr(),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('Tạo hoặc tham gia nhóm trước!',
+              Text('feed.join_group_first'.tr(),
                   style: TextStyle(fontSize: 13, color: AppColors.textSecondary.withValues(alpha: 0.6))),
             ],
           ),
@@ -893,7 +1249,7 @@ class _GroupPickerSheetState extends State<_GroupPickerSheet> {
                       children: [
                         Text(group.name,
                             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textMain)),
-                        Text('${group.memberCount} thành viên',
+                        Text('feed.member_count'.tr(namedArgs: {'count': group.memberCount.toString()}),
                             style: TextStyle(fontSize: 12, color: AppColors.textSecondary.withValues(alpha: 0.7))),
                       ],
                     ),
@@ -919,39 +1275,43 @@ class _GroupItem {
   const _GroupItem({required this.id, required this.name, required this.memberCount});
 }
 
-class _ToolbarButton extends StatelessWidget {
+class _ToolbarIconButton extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color color;
   final int badgeCount;
   final VoidCallback? onTap;
+  final String tooltip;
 
-  const _ToolbarButton({
+  const _ToolbarIconButton({
     required this.icon,
-    required this.label,
     required this.color,
     this.badgeCount = 0,
     this.onTap,
+    this.tooltip = '',
   });
 
   @override
   Widget build(BuildContext context) {
     final isDisabled = onTap == null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: isDisabled ? 0.4 : 1.0,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Badge(
-              isLabelVisible: badgeCount > 0,
-              label: Text('$badgeCount'),
-              child: Icon(icon, size: 24, color: color),
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Opacity(
+          opacity: isDisabled ? 0.35 : 1.0,
+          child: Badge(
+            isLabelVisible: badgeCount > 0,
+            label: Text('$badgeCount', style: const TextStyle(fontSize: 10)),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, size: 22, color: color),
             ),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
-          ],
+          ),
         ),
       ),
     );

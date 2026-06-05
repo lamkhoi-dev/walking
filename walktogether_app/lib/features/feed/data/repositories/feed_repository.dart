@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/post_model.dart';
@@ -50,6 +51,7 @@ class FeedRepository {
     String? sharedContestId,
     int? achievementRank,
     int? achievementSteps,
+    String? mediaLayout,
   }) async {
     final formData = FormData.fromMap({
       'content': content,
@@ -61,16 +63,33 @@ class FeedRepository {
       if (sharedContestId != null) 'sharedContestId': sharedContestId,
       if (achievementRank != null) 'achievementRank': achievementRank,
       if (achievementSteps != null) 'achievementSteps': achievementSteps,
+      if (mediaLayout != null) 'mediaLayout': mediaLayout,
     });
 
     if (images != null) {
       for (final image in images) {
+        final filename = image.path.split(Platform.pathSeparator).last;
+        final ext = filename.split('.').last.toLowerCase();
+        // Detect MIME type for video files
+        MediaType? contentType;
+        if (['mp4', 'm4v', '3gp'].contains(ext)) {
+          contentType = MediaType('video', 'mp4');
+        } else if (['mov'].contains(ext)) {
+          contentType = MediaType('video', 'quicktime');
+        } else if (['webm'].contains(ext)) {
+          contentType = MediaType('video', 'webm');
+        } else if (['avi'].contains(ext)) {
+          contentType = MediaType('video', 'x-msvideo');
+        }
+        // For images, let dio auto-detect
+
         formData.files.add(
           MapEntry(
             'images',
             await MultipartFile.fromFile(
               image.path,
-              filename: image.path.split(Platform.pathSeparator).last,
+              filename: filename,
+              contentType: contentType,
             ),
           ),
         );
@@ -82,8 +101,8 @@ class FeedRepository {
       data: formData,
       options: Options(
         contentType: 'multipart/form-data',
-        sendTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 300),
+        receiveTimeout: const Duration(seconds: 300),
       ),
     );
     return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
@@ -144,6 +163,12 @@ class FeedRepository {
   /// Delete a post
   Future<void> deletePost(String postId) async {
     await _dioClient.delete(ApiEndpoints.postDetail(postId));
+  }
+
+  /// Toggle pin a post
+  Future<PostModel> togglePin(String postId) async {
+    final response = await _dioClient.put(ApiEndpoints.postPin(postId));
+    return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 }
 

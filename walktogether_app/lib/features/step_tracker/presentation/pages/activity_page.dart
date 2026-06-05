@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/step_sync_service.dart';
+import '../../../../shared/widgets/avatar_widget.dart';
 import '../../../contest/data/models/contest_model.dart';
 import '../../../contest/data/repositories/contest_repository.dart';
+import '../../../group/data/models/group_model.dart';
+import '../../../group/data/repositories/group_repository.dart';
 import '../bloc/step_tracker_bloc.dart';
 import '../widgets/step_progress_ring.dart';
 import '../widgets/step_stat_card.dart';
@@ -63,7 +67,7 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Đang khởi tạo bộ đếm bước...',
+            'step_tracker.initializing'.tr(),
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -119,7 +123,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 child: StepStatCard(
                   icon: Icons.straighten_rounded,
                   value: _formatDistance(state.distance),
-                  label: 'Khoảng cách',
+                  label: 'step_tracker.distance'.tr(),
                   iconColor: AppColors.secondary,
                 ),
               ),
@@ -128,7 +132,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 child: StepStatCard(
                   icon: Icons.local_fire_department_rounded,
                   value: _formatCalories(state.calories),
-                  label: 'Calo',
+                  label: 'step_tracker.calories'.tr(),
                   iconColor: AppColors.pendingOrange,
                 ),
               ),
@@ -139,7 +143,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   child: StepStatCard(
                     icon: Icons.flag_rounded,
                     value: '${(state.progress * 100).toInt()}%',
-                    label: 'Mục tiêu',
+                    label: 'step_tracker.goal'.tr(),
                     iconColor: AppColors.primary,
                   ),
                 ),
@@ -159,7 +163,7 @@ class _ActivityPageState extends State<ActivityPage> {
             child: OutlinedButton.icon(
               onPressed: () => context.push('/goals'),
               icon: const Icon(Icons.emoji_events_rounded, size: 20),
-              label: Text('Xem mục tiêu & thành tựu',
+              label: Text('step_tracker.view_goals'.tr(),
                   style: AppTextStyles.buttonMedium.copyWith(color: AppColors.primary)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
@@ -174,6 +178,10 @@ class _ActivityPageState extends State<ActivityPage> {
 
           // Hourly chart
           _buildHourlyChart(state.hourlySteps, state.todaySteps),
+          const SizedBox(height: 24),
+
+          // My groups section
+          _MyGroupsSection(),
           const SizedBox(height: 24),
 
           // Active contests section
@@ -191,7 +199,7 @@ class _ActivityPageState extends State<ActivityPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hoạt động hôm nay', style: AppTextStyles.heading3),
+              Text('step_tracker.today_activity'.tr(), style: AppTextStyles.heading3),
               const SizedBox(height: 4),
               Text(
                 _todayLabel(),
@@ -219,17 +227,17 @@ class _ActivityPageState extends State<ActivityPage> {
     switch (status) {
       case 'walking':
         icon = Icons.directions_walk_rounded;
-        label = 'Đang đi bộ';
+        label = 'step_tracker.walking'.tr();
         color = AppColors.primary;
         break;
       case 'stopped':
         icon = Icons.accessibility_new_rounded;
-        label = 'Đang đứng yên';
+        label = 'step_tracker.standing'.tr();
         color = AppColors.textSecondary;
         break;
       default:
         icon = Icons.help_outline_rounded;
-        label = 'Chưa xác định';
+        label = 'step_tracker.unknown'.tr();
         color = AppColors.textSecondary;
     }
 
@@ -272,7 +280,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 size: 22,
               ),
               label: Text(
-                state.isTracking ? 'Tạm dừng' : 'Tiếp tục',
+                state.isTracking ? 'step_tracker.pause'.tr() : 'step_tracker.resume'.tr(),
                 style: AppTextStyles.buttonMedium,
               ),
               style: ElevatedButton.styleFrom(
@@ -300,7 +308,7 @@ class _ActivityPageState extends State<ActivityPage> {
         ),
         child: Center(
           child: Text(
-            'Chưa có dữ liệu theo giờ',
+            'step_tracker.no_hourly_data'.tr(),
             style: AppTextStyles.bodySmall,
           ),
         ),
@@ -326,7 +334,7 @@ class _ActivityPageState extends State<ActivityPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bước chân theo giờ', style: AppTextStyles.labelLarge),
+          Text('step_tracker.hourly_steps'.tr(), style: AppTextStyles.labelLarge),
           const SizedBox(height: 16),
           SizedBox(
             height: 100,
@@ -382,7 +390,7 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Widget _buildError(String message) {
-    final isPermissionError = message.contains('quyền') || message.contains('cảm biến') || message.contains('permission');
+    final isPermissionError = message.contains('permission') || message.contains('quyền') || message.contains('cảm biến') || message.contains('authorized');
 
     return Center(
       child: Padding(
@@ -407,14 +415,14 @@ class _ActivityPageState extends State<ActivityPage> {
             ),
             const SizedBox(height: 20),
             Text(
-              isPermissionError ? 'Đếm bước chưa hoạt động' : 'Lỗi bộ đếm bước',
+              isPermissionError ? 'step_tracker.permission_error_title'.tr() : 'step_tracker.counter_error_title'.tr(),
               style: AppTextStyles.heading4,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               isPermissionError
-                  ? 'Tính năng đếm bước cần quyền truy cập cảm biến chuyển động để hoạt động. Bạn có thể bật quyền này trong Cài đặt bất cứ lúc nào.'
+                  ? 'step_tracker.permission_error_desc'.tr()
                   : message,
               style: AppTextStyles.bodySmall.copyWith(height: 1.5),
               textAlign: TextAlign.center,
@@ -436,7 +444,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   ),
                   elevation: 0,
                 ),
-                child: const Text('Thử lại', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text('common.retry'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
             if (isPermissionError) ...[
@@ -445,7 +453,7 @@ class _ActivityPageState extends State<ActivityPage> {
               GestureDetector(
                 onTap: () => openAppSettings(),
                 child: Text(
-                  'Mở Cài đặt',
+                  'step_tracker.open_settings'.tr(),
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                     decoration: TextDecoration.underline,
@@ -475,12 +483,414 @@ class _ActivityPageState extends State<ActivityPage> {
 
   String _todayLabel() {
     final now = DateTime.now();
-    const weekdays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-    const months = [
-      '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+    final weekdayKeys = [
+      'step_tracker.weekday_mon', 'step_tracker.weekday_tue', 'step_tracker.weekday_wed',
+      'step_tracker.weekday_thu', 'step_tracker.weekday_fri', 'step_tracker.weekday_sat', 'step_tracker.weekday_sun',
     ];
-    return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month]}';
+    final monthKeys = [
+      '', 'step_tracker.month_1', 'step_tracker.month_2', 'step_tracker.month_3',
+      'step_tracker.month_4', 'step_tracker.month_5', 'step_tracker.month_6',
+      'step_tracker.month_7', 'step_tracker.month_8', 'step_tracker.month_9',
+      'step_tracker.month_10', 'step_tracker.month_11', 'step_tracker.month_12',
+    ];
+    return '${weekdayKeys[now.weekday - 1].tr()}, ${now.day} ${monthKeys[now.month].tr()}';
+  }
+}
+
+/// My groups section — shows joined groups with contests
+class _MyGroupsSection extends StatefulWidget {
+  @override
+  State<_MyGroupsSection> createState() => _MyGroupsSectionState();
+}
+
+class _MyGroupsSectionState extends State<_MyGroupsSection> {
+  List<GroupModel> _groups = [];
+  bool _isLoading = true;
+  String? _expandedGroupId;
+  Map<String, List<ContestModel>> _groupContests = {};
+  Map<String, bool> _contestLoading = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroups();
+  }
+
+  Future<void> _loadGroups() async {
+    try {
+      final repo = context.read<GroupRepository>();
+      final groups = await repo.getGroups();
+      if (mounted) {
+        setState(() {
+          _groups = groups;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadContestsForGroup(String groupId) async {
+    if (_groupContests.containsKey(groupId)) return;
+    setState(() => _contestLoading[groupId] = true);
+    try {
+      final repo = context.read<ContestRepository>();
+      final contests = await repo.getContests(groupId: groupId);
+      if (mounted) {
+        setState(() {
+          _groupContests[groupId] = contests;
+          _contestLoading[groupId] = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _groupContests[groupId] = [];
+          _contestLoading[groupId] = false;
+        });
+      }
+    }
+  }
+
+  void _toggleGroup(String groupId) {
+    setState(() {
+      if (_expandedGroupId == groupId) {
+        _expandedGroupId = null;
+      } else {
+        _expandedGroupId = groupId;
+        _loadContestsForGroup(groupId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading || _groups.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.groups_rounded,
+                size: 18,
+                color: AppColors.secondary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'group.title'.tr(),
+                style: AppTextStyles.labelLarge.copyWith(fontSize: 15),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Navigate to groups tab via bottom nav
+                // The shell uses index 2 for groups
+              },
+              child: Text(
+                'common.n_groups'.tr(namedArgs: {'n': '${_groups.length}'}),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Group cards
+        ..._groups.take(5).map((group) => _buildGroupCard(group)),
+      ],
+    );
+  }
+
+  Widget _buildGroupCard(GroupModel group) {
+    final isExpanded = _expandedGroupId == group.id;
+    final contests = _groupContests[group.id] ?? [];
+    final isLoadingContests = _contestLoading[group.id] == true;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isExpanded
+                ? AppColors.primary.withValues(alpha: 0.3)
+                : AppColors.divider,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Group header row
+            InkWell(
+              onTap: () => _toggleGroup(group.id),
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    // Group avatar
+                    AvatarWidget(
+                      imageUrl: group.avatar,
+                      name: group.name,
+                      size: 40,
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Group info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            group.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textMain,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.people_rounded, size: 13,
+                                  color: AppColors.textSecondary.withValues(alpha: 0.6)),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${group.totalMembers} ${'group.members'.tr()}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Chat button
+                    if (group.conversationId != null)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => context.push(
+                            '/chat/${group.conversationId}?title=${Uri.encodeComponent(group.name)}&groupId=${group.id}',
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(width: 6),
+
+                    // Expand/collapse indicator
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 22,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Expanded contests area
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: _buildContestsList(group.id, contests, isLoadingContests),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContestsList(String groupId, List<ContestModel> contests, bool isLoading) {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: SizedBox(
+            width: 20, height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+          ),
+        ),
+      );
+    }
+
+    if (contests.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.emoji_events_outlined, size: 18,
+                  color: AppColors.textSecondary.withValues(alpha: 0.5)),
+              const SizedBox(width: 8),
+              Text(
+                'contest.no_contests'.tr(),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Column(
+        children: [
+          Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
+          const SizedBox(height: 8),
+          ...contests.map((contest) => _buildContestMiniCard(contest)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContestMiniCard(ContestModel contest) {
+    final now = DateTime.now();
+    final isActive = contest.status == 'active';
+    final daysLeft = contest.endDate.difference(now).inDays;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/contests/${contest.id}'),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                // Contest icon
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.textSecondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.directions_run_rounded,
+                    size: 16,
+                    color: isActive ? AppColors.primary : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Contest info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        contest.name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textMain,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${contest.participants.length} ${'common.people'.tr()} · ${isActive ? (daysLeft > 0 ? '${'contest.days_left'.tr(namedArgs: {'n': daysLeft.toString()})}' : 'step_tracker.today'.tr()) : contest.status == 'completed' ? 'contest.status_completed'.tr() : 'contest.status_upcoming'.tr()}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Status chip
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.textSecondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    isActive ? 'contest.status_active'.tr() : contest.status == 'completed' ? 'contest.status_completed'.tr() : 'contest.status_upcoming'.tr(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isActive ? AppColors.primary : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textSecondary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -547,14 +957,14 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Cuộc thi đang diễn ra',
+                'contest.active_title'.tr(),
                 style: AppTextStyles.labelLarge.copyWith(fontSize: 15),
               ),
             ),
             TextButton(
               onPressed: () => context.push('/goals'),
               child: Text(
-                'Xem tất cả',
+                'common.view_all'.tr(),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -631,7 +1041,7 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            contest.groupName ?? 'Nhóm',
+                            contest.groupName ?? 'group.title'.tr(),
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -649,7 +1059,7 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        daysLeft > 0 ? 'Còn $daysLeft ngày' : 'Hôm nay',
+                        daysLeft > 0 ? 'contest.days_left_short'.tr(namedArgs: {'n': daysLeft.toString()}) : 'step_tracker.today'.tr(),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -691,7 +1101,7 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
                     Icon(Icons.group_rounded, size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
-                      '${contest.participants.length} người tham gia',
+                      '${contest.participants.length} ${'contest.participants_label'.tr()}',
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],

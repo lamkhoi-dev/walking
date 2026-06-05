@@ -71,6 +71,7 @@ app.use('/api/v1/steps', require('./routes/step.routes'));
 app.use('/api/v1/settings', require('./routes/settings.routes'));
 app.use('/api/v1/posts', require('./routes/post.routes'));
 app.use('/api/v1/reports', require('./routes/report.routes'));
+app.use('/api/v1/friends', require('./routes/friend.routes'));
 
 // ===== 404 HANDLER =====
 app.use('*', (req, res) => {

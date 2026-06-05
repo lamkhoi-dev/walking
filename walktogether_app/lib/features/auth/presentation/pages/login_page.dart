@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
+import '../../../../shared/widgets/language_toggle.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -61,23 +63,27 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-
-                  // Back button
-                  IconButton(
-                    onPressed: () => context.go('/'),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.surface,
-                      shape: const CircleBorder(),
-                    ),
+                  const SizedBox(height: 20),                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back button
+                      IconButton(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.surface,
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                      const LanguageToggle(),
+                    ],
                   ),
 
                   const SizedBox(height: 32),
 
-                  const Text(
-                    'Đăng nhập',
-                    style: TextStyle(
+                  Text(
+                    'auth.login'.tr(),
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textMain,
@@ -85,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Chào mừng bạn quay lại!',
+                    'auth.welcome_back'.tr(),
                     style: TextStyle(
                       fontSize: 15,
                       color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -95,15 +101,15 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 40),
 
                   CustomTextField(
-                    label: 'Email hoặc Số điện thoại',
-                    hint: 'Nhập email hoặc số điện thoại',
+                    label: 'auth.email_or_phone'.tr(),
+                    hint: 'auth.enter_email_or_phone'.tr(),
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: const Icon(Icons.person_outline, size: 20),
                     textInputAction: TextInputAction.next,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập email hoặc số điện thoại';
+                        return 'auth.please_enter_email_or_phone'.tr();
                       }
                       return null;
                     },
@@ -112,18 +118,18 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
 
                   CustomTextField(
-                    label: 'Mật khẩu',
-                    hint: 'Nhập mật khẩu',
+                    label: 'auth.password'.tr(),
+                    hint: 'auth.enter_password'.tr(),
                     controller: _passwordController,
                     obscureText: true,
                     prefixIcon: const Icon(Icons.lock_outline, size: 20),
                     textInputAction: TextInputAction.done,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
+                        return 'auth.please_enter_password'.tr();
                       }
                       if (value.length < 6) {
-                        return 'Mật khẩu phải có ít nhất 6 ký tự';
+                        return 'auth.password_min_length'.tr();
                       }
                       return null;
                     },
@@ -134,45 +140,45 @@ class _LoginPageState extends State<LoginPage> {
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       return CustomButton(
-                        text: 'Đăng nhập',
+                        text: 'auth.login'.tr(),
                         isLoading: state is AuthLoading,
                         onPressed: _handleLogin,
                       );
                     },
                   ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Register link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Chưa có tài khoản? ',
-                      style: TextStyle(
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/register'),
-                      child: const Text(
-                        'Đăng ký ngay',
+                  // Register link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'auth.dont_have_account'.tr(),
                         style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary.withValues(alpha: 0.8),
                           fontSize: 14,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      GestureDetector(
+                        onTap: () => context.go('/register'),
+                        child: Text(
+                          'auth.register_now'.tr(),
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),  // BlocListener
     );
   }
 }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
+import '../../../../shared/widgets/language_toggle.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -41,7 +43,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Vui lòng đồng ý với Điều khoản sử dụng'),
+          content: Text('auth.please_accept_terms'.tr()),
           backgroundColor: Colors.orange.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -90,20 +92,26 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 20),
 
-                  IconButton(
-                    onPressed: () => context.go('/'),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    style: IconButton.styleFrom(
-                    backgroundColor: AppColors.surface,
-                    shape: const CircleBorder(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.surface,
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                      const LanguageToggle(),
+                    ],
                   ),
-                ),
 
                 const SizedBox(height: 24),
 
-                const Text(
-                  'Tạo tài khoản',
-                  style: TextStyle(
+                Text(
+                  'auth.create_account'.tr(),
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textMain,
@@ -111,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Tham gia Runly ngay!',
+                  'auth.join_runly'.tr(),
                   style: TextStyle(
                     fontSize: 15,
                     color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -121,14 +129,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 32),
 
                 CustomTextField(
-                  label: 'Họ và tên',
-                  hint: 'Nhập họ và tên',
+                  label: 'auth.name'.tr(),
+                  hint: 'auth.enter_name'.tr(),
                   controller: _nameController,
                   prefixIcon: const Icon(Icons.person_outline, size: 20),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Vui lòng nhập họ và tên';
+                      return 'auth.please_enter_name'.tr();
                     }
                     return null;
                   },
@@ -137,15 +145,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
 
                 CustomTextField(
-                  label: 'Email hoặc Số điện thoại',
-                  hint: 'Nhập email hoặc số điện thoại',
+                  label: 'auth.email_or_phone'.tr(),
+                  hint: 'auth.enter_email_or_phone'.tr(),
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined, size: 20),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Vui lòng nhập email hoặc số điện thoại';
+                      return 'auth.please_enter_email_or_phone'.tr();
                     }
                     return null;
                   },
@@ -154,18 +162,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
 
                 CustomTextField(
-                  label: 'Mật khẩu',
-                  hint: 'Ít nhất 6 ký tự',
+                  label: 'auth.password'.tr(),
+                  hint: 'auth.min_characters'.tr(),
                   controller: _passwordController,
                   obscureText: true,
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập mật khẩu';
+                      return 'auth.please_enter_password'.tr();
                     }
                     if (value.length < 6) {
-                      return 'Mật khẩu phải có ít nhất 6 ký tự';
+                      return 'auth.password_min_length'.tr();
                     }
                     return null;
                   },
@@ -174,15 +182,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
 
                 CustomTextField(
-                  label: 'Xác nhận mật khẩu',
-                  hint: 'Nhập lại mật khẩu',
+                  label: 'auth.confirm_password'.tr(),
+                  hint: 'auth.enter_password_confirm'.tr(),
                   controller: _confirmPasswordController,
                   obscureText: true,
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value != _passwordController.text) {
-                      return 'Mật khẩu không khớp';
+                      return 'auth.passwords_do_not_match'.tr();
                     }
                     return null;
                   },
@@ -204,8 +212,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Tôi có mã công ty',
-                        style: TextStyle(
+                        'auth.i_have_company_code'.tr(),
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -218,14 +226,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (_showCompanyCode) ...[
                   const SizedBox(height: 12),
                   CustomTextField(
-                    label: 'Mã công ty',
-                    hint: 'Nhập mã 6 ký tự (vd: AB1234)',
+                    label: 'auth.company_code'.tr(),
+                    hint: 'auth.enter_company_code_hint'.tr(),
                     controller: _companyCodeController,
                     prefixIcon: const Icon(Icons.business_outlined, size: 20),
                     textInputAction: TextInputAction.done,
                     validator: (value) {
                       if (value != null && value.trim().isNotEmpty && value.trim().length != 6) {
-                        return 'Mã công ty phải có 6 ký tự';
+                        return 'auth.company_code_length'.tr();
                       }
                       return null;
                     },
@@ -260,11 +268,11 @@ class _RegisterPageState extends State<RegisterPage> {
                               fontSize: 13,
                               color: AppColors.textSecondary.withValues(alpha: 0.8),
                             ),
-                            children: const [
-                              TextSpan(text: 'Tôi đồng ý với '),
+                            children: [
+                              TextSpan(text: 'auth.i_agree_to'.tr()),
                               TextSpan(
-                                text: 'Điều khoản sử dụng',
-                                style: TextStyle(
+                                text: 'settings.terms'.tr(),
+                                style: const TextStyle(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
                                   decoration: TextDecoration.underline,
@@ -283,7 +291,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     return CustomButton(
-                      text: 'Đăng ký',
+                      text: 'auth.register'.tr(),
                       isLoading: state is AuthLoading,
                       onPressed: _handleRegister,
                     );
@@ -296,7 +304,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Đã có tài khoản? ',
+                      'auth.already_have_account'.tr(),
                       style: TextStyle(
                         color: AppColors.textSecondary.withValues(alpha: 0.8),
                         fontSize: 14,
@@ -304,9 +312,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     GestureDetector(
                       onTap: () => context.go('/login'),
-                      child: const Text(
-                        'Đăng nhập',
-                        style: TextStyle(
+                      child: Text(
+                        'auth.login'.tr(),
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
@@ -336,9 +344,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         size: 28,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Bạn là doanh nghiệp?',
-                        style: TextStyle(
+                      Text(
+                        'auth.are_you_company'.tr(),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textMain,
@@ -346,7 +354,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Đăng ký công ty trên trang quản trị web',
+                        'auth.register_company_desc'.tr(),
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -365,7 +373,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             }
                           },
                           icon: const Icon(Icons.open_in_new, size: 16),
-                          label: const Text('Đăng ký doanh nghiệp'),
+                          label: Text('auth.register_company'.tr()),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primary,
                             side: const BorderSide(color: AppColors.primary),

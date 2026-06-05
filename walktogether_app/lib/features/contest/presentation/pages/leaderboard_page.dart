@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -77,7 +78,7 @@ class _LeaderboardView extends StatelessWidget {
                     onPressed: () => context
                         .read<LeaderboardBloc>()
                         .add(LeaderboardLoadRequested(contestId)),
-                    child: const Text('Thử lại'),
+                    child: Text('common.retry'.tr()),
                   ),
                 ],
               ),
@@ -86,15 +87,15 @@ class _LeaderboardView extends StatelessWidget {
 
           if (state is LeaderboardLoaded) {
             if (state.entries.isEmpty) {
-              return const Center(
+              return Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.leaderboard_outlined, size: 64, color: Colors.grey),
-                    SizedBox(height: 12),
+                    const Icon(Icons.leaderboard_outlined, size: 64, color: Colors.grey),
+                    const SizedBox(height: 12),
                     Text(
-                      'Chưa có dữ liệu bảng xếp hạng',
-                      style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                      'contest.no_leaderboard'.tr(),
+                      style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
                     ),
                   ],
                 ),

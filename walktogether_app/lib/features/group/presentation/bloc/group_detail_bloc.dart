@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../data/models/group_model.dart';
 import '../../data/repositories/group_repository.dart';
 
@@ -106,7 +107,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   ) async {
     try {
       final group = await _repository.addMembers(event.groupId, event.memberIds);
-      emit(GroupDetailActionSuccess(group, 'Thêm thành viên thành công'));
+      emit(GroupDetailActionSuccess(group, 'group.add_member_success'.tr()));
     } catch (e) {
       emit(GroupDetailError(e.toString()));
     }
@@ -118,7 +119,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   ) async {
     try {
       final group = await _repository.removeMember(event.groupId, event.userId);
-      emit(GroupDetailActionSuccess(group, 'Xóa thành viên thành công'));
+      emit(GroupDetailActionSuccess(group, 'group.remove_member_success'.tr()));
     } catch (e) {
       emit(GroupDetailError(e.toString()));
     }
@@ -130,7 +131,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   ) async {
     try {
       final group = await _repository.updateGroup(event.groupId, event.data);
-      emit(GroupDetailActionSuccess(group, 'Cập nhật nhóm thành công'));
+      emit(GroupDetailActionSuccess(group, 'group.update_group_success'.tr()));
     } catch (e) {
       emit(GroupDetailError(e.toString()));
     }

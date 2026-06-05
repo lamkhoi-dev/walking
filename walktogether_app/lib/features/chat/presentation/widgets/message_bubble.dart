@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/conversation_model.dart';
@@ -65,128 +66,169 @@ class _MessageBubbleState extends State<MessageBubble>
   }
 
   Widget _buildBubble(bool isMine) {
+    final showName = widget.showSender && !isMine && widget.message.senderName != null;
+
     return Padding(
       padding: EdgeInsets.only(
-        left: isMine ? 60 : 12,
+        left: isMine ? 60 : 8,
         right: isMine ? 12 : 60,
-        top: 2,
+        top: widget.showSender && !isMine ? 8 : 2,
         bottom: 2,
       ),
-      child: Column(
-        crossAxisAlignment:
-            isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          // Sender name (for group chats, received messages)
-          if (widget.showSender && !isMine && widget.message.senderName != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 12, bottom: 2),
-              child: Text(
-                widget.message.senderName!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
+          // Sender avatar (received messages only)
+          if (!isMine)
+            GestureDetector(
+              onTap: widget.message.senderId != null
+                  ? () => context.push('/user/${widget.message.senderId}')
+                  : null,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 6, bottom: 2),
+                child: widget.showSender
+                    ? CircleAvatar(
+                        radius: 14,
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                        backgroundImage: widget.message.senderAvatar != null
+                            ? CachedNetworkImageProvider(widget.message.senderAvatar!)
+                            : null,
+                        child: widget.message.senderAvatar == null
+                            ? Text(
+                                (widget.message.senderName ?? '?')[0].toUpperCase(),
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
+                              )
+                            : null,
+                      )
+                    : const SizedBox(width: 28), // Spacing for alignment
               ),
             ),
 
-          // Bubble
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isMine
-                  ? AppColors.chatBubbleSent
-                  : AppColors.chatBubbleReceived,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(isMine ? 16 : 4),
-                bottomRight: Radius.circular(isMine ? 4 : 16),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
+          // Bubble content
+          Flexible(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                // Shared post preview
-                if (widget.message.isSharedPost &&
-                    widget.message.sharedPost != null)
-                  _buildSharedPostPreview(isMine),
-
-                // Image content
-                if (widget.message.isImage && widget.message.imageUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      widget.message.imageUrl!,
-                      width: 200,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return SizedBox(
-                          width: 200,
-                          height: 150,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: AppColors.primary,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                // Text content (non-image, non-shared-post)
-                if (!widget.message.isImage && !widget.message.isSharedPost)
-                  Text(
-                    widget.message.content,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isMine ? Colors.white : AppColors.textMain,
-                      height: 1.4,
-                    ),
-                  ),
-
-                const SizedBox(height: 4),
-
-                // Time + sending indicator
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      DateFormat('HH:mm').format(widget.message.createdAt),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isMine
-                            ? Colors.white.withValues(alpha: 0.7)
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                    if (widget.message.isSending) ...[
-                      const SizedBox(width: 4),
-                      SizedBox(
-                        width: 10,
-                        height: 10,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: isMine
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : AppColors.textSecondary,
+                // Sender name
+                if (showName)
+                  GestureDetector(
+                    onTap: widget.message.senderId != null
+                        ? () => context.push('/user/${widget.message.senderId}')
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 3),
+                      child: Text(
+                        widget.message.senderName!,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
                         ),
                       ),
+                    ),
+                  ),
+
+                // Bubble
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isMine
+                        ? AppColors.chatBubbleSent
+                        : AppColors.chatBubbleReceived,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isMine ? 16 : 4),
+                      bottomRight: Radius.circular(isMine ? 4 : 16),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
                     ],
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Shared post preview
+                      if (widget.message.isSharedPost &&
+                          widget.message.sharedPost != null)
+                        _buildSharedPostPreview(isMine),
+
+                      // Image content
+                      if (widget.message.isImage && widget.message.imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            widget.message.imageUrl!,
+                            width: 200,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return SizedBox(
+                                width: 200,
+                                height: 150,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    color: AppColors.primary,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                      // Text content (non-image, non-shared-post)
+                      if (!widget.message.isImage && !widget.message.isSharedPost)
+                        Text(
+                          widget.message.content,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isMine ? Colors.white : AppColors.textMain,
+                            height: 1.4,
+                          ),
+                        ),
+
+                      const SizedBox(height: 4),
+
+                      // Time + sending indicator
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            DateFormat('HH:mm').format(widget.message.createdAt),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isMine
+                                  ? Colors.white.withValues(alpha: 0.7)
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          if (widget.message.isSending) ...[
+                            const SizedBox(width: 4),
+                            SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: isMine
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -248,7 +290,7 @@ class _MessageBubbleState extends State<MessageBubble>
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    post.authorName ?? 'Người dùng',
+                    post.authorName ?? 'common.user'.tr(),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -302,7 +344,7 @@ class _MessageBubbleState extends State<MessageBubble>
                 Icon(Icons.open_in_new_rounded, size: 12, color: subColor),
                 const SizedBox(width: 4),
                 Text(
-                  'Xem bài viết',
+                  'chat.view_post'.tr(),
                   style: TextStyle(
                     fontSize: 10,
                     color: subColor,

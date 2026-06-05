@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 
 /// Chat input bar: Image picker + TextField + Send button
@@ -206,7 +207,7 @@ class _ChatInputBarState extends State<ChatInputBar>
                     maxLines: null,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      hintText: 'Nhập tin nhắn...',
+                      hintText: 'chat.input_hint'.tr(),
                       hintStyle: TextStyle(
                         color: AppColors.textSecondary.withValues(alpha: 0.6),
                         fontSize: 14,
@@ -294,7 +295,7 @@ class _ChatInputBarState extends State<ChatInputBar>
           // Info
           Expanded(
             child: Text(
-              'Gửi ảnh',
+              'chat.send_photo'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -363,7 +364,7 @@ class _ImageSourceSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Chọn ảnh',
+            'chat.choose_image'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -382,7 +383,7 @@ class _ImageSourceSheet extends StatelessWidget {
               ),
               _SourceOption(
                 icon: Icons.photo_library_rounded,
-                label: 'Thư viện',
+                label: 'chat.gallery'.tr(),
                 color: AppColors.info,
                 onTap: onGallery,
               ),

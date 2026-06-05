@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,6 +46,9 @@ import '../../features/feed/presentation/pages/feed_page.dart';
 import '../../features/feed/presentation/pages/create_post_page.dart';
 import '../../features/feed/presentation/pages/post_detail_page.dart';
 import '../../features/feed/presentation/bloc/post_detail_bloc.dart';
+import '../../features/friend/presentation/pages/user_profile_page.dart';
+import '../../features/friend/presentation/pages/friends_page.dart';
+import '../../features/friend/presentation/pages/friend_search_page.dart';
 import '../../core/network/dio_client.dart';
 
 /// Listenable that bridges AuthBloc state changes to GoRouter refresh
@@ -297,7 +301,7 @@ class AppRouter {
         name: 'group-qr',
         builder: (context, state) {
           final groupId = state.pathParameters['id']!;
-          final groupName = state.uri.queryParameters['name'] ?? 'Nhóm';
+          final groupName = state.uri.queryParameters['name'] ?? 'group.default_name'.tr();
           return GroupQRPage(groupId: groupId, groupName: groupName);
         },
       ),
@@ -308,7 +312,7 @@ class AppRouter {
         name: 'contest-list',
         builder: (context, state) {
           final groupId = state.pathParameters['groupId']!;
-          final groupName = state.uri.queryParameters['name'] ?? 'Nhóm';
+          final groupName = state.uri.queryParameters['name'] ?? 'group.default_name'.tr();
           final groupCompanyId = state.uri.queryParameters['companyId'];
           return ContestListPage(
             groupId: groupId,
@@ -322,7 +326,7 @@ class AppRouter {
         name: 'contest-create',
         builder: (context, state) {
           final groupId = state.pathParameters['groupId']!;
-          final groupName = state.uri.queryParameters['name'] ?? 'Nhóm';
+          final groupName = state.uri.queryParameters['name'] ?? 'group.default_name'.tr();
           return RepositoryProvider.value(
             value: context.read<ContestRepository>(),
             child: CreateContestPage(groupId: groupId, groupName: groupName),
@@ -342,7 +346,7 @@ class AppRouter {
         name: 'contest-leaderboard',
         builder: (context, state) {
           final contestId = state.pathParameters['id']!;
-          final name = state.uri.queryParameters['name'] ?? 'Bảng xếp hạng';
+          final name = state.uri.queryParameters['name'] ?? 'contest.leaderboard'.tr();
           return LeaderboardPage(contestId: contestId, contestName: name);
         },
       ),
@@ -386,6 +390,26 @@ class AppRouter {
         name: 'blocked-users',
         builder: (context, state) => const BlockedUsersPage(),
       ),
+
+      // ===== FRIEND ROUTES (outside ShellRoute → no bottom nav) =====
+      GoRoute(
+        path: '/user/:id',
+        name: 'user-profile',
+        builder: (context, state) {
+          final userId = state.pathParameters['id']!;
+          return UserProfilePage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/friends',
+        name: 'friends',
+        builder: (context, state) => const FriendsPage(),
+      ),
+      GoRoute(
+        path: '/friends/search',
+        name: 'friend-search',
+        builder: (context, state) => const FriendSearchPage(),
+      ),
     ],
   );
 }
@@ -404,8 +428,6 @@ class _ServerConnectingPage extends StatelessWidget {
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final isFailed = state is AuthConnectingFailed;
-              final attempt = state is AuthConnectingServer ? state.attempt : 1;
-              final maxAttempts = state is AuthConnectingServer ? state.maxAttempts : 4;
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -420,37 +442,22 @@ class _ServerConnectingPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    const Text(
-                      'Đang kết nối máy chủ...',
-                      style: TextStyle(
+                    Text(
+                      'common.loading_title'.tr(),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1A1A2E),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Máy chủ đang khởi động, vui lòng đợi\ntrong giây lát nhé! 🚀',
+                    Text(
+                      'common.loading_subtitle'.tr(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         color: Color(0xFF6B7280),
                         height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Lần thử $attempt / $maxAttempts',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9CA3AF),
-                        ),
                       ),
                     ),
                   ] else ...[
@@ -460,19 +467,19 @@ class _ServerConnectingPage extends StatelessWidget {
                       color: Color(0xFFEF4444),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'Không thể kết nối',
-                      style: TextStyle(
+                    Text(
+                      'common.cannot_connect'.tr(),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1A1A2E),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Máy chủ chưa sẵn sàng hoặc mạng\nkhông ổn định. Thử lại nhé!',
+                    Text(
+                      'common.connect_failed_desc'.tr(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         color: Color(0xFF6B7280),
                         height: 1.5,
@@ -487,7 +494,7 @@ class _ServerConnectingPage extends StatelessWidget {
                           context.read<AuthBloc>().add(AuthCheckRequested());
                         },
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Thử lại'),
+                        label: Text('common.retry'.tr()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF44C548),
                           foregroundColor: Colors.white,
@@ -506,9 +513,9 @@ class _ServerConnectingPage extends StatelessWidget {
                       onPressed: () {
                         context.read<AuthBloc>().add(AuthLogoutRequested());
                       },
-                      child: const Text(
-                        'Đăng nhập lại',
-                        style: TextStyle(
+                      child: Text(
+                        'common.re_login'.tr(),
+                        style: const TextStyle(
                           color: Color(0xFF6B7280),
                           fontSize: 14,
                         ),

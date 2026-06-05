@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/leaderboard_entry_model.dart';
@@ -16,9 +17,9 @@ class PodiumWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (topThree.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('Chưa có dữ liệu')),
+        child: Center(child: Text('contest.no_data'.tr())),
       );
     }
 
@@ -150,7 +151,7 @@ class _PodiumPlace extends StatelessWidget {
         const SizedBox(height: 4),
         // Steps
         Text(
-          '${_formatNumber(entry.displaySteps)} bước',
+          '${_formatNumber(entry.displaySteps)} ${'step_tracker.steps'.tr()}',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,

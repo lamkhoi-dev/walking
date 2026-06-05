@@ -422,6 +422,40 @@ class GroupService {
       });
     }
 
+    // Add new member to active/upcoming contests in this group
+    const activeContests = await Contest.find({
+      groupId,
+      status: { $in: ['active', 'upcoming'] },
+    });
+
+    for (const contest of activeContests) {
+      // Add to participants
+      await Contest.findByIdAndUpdate(contest._id, {
+        $addToSet: { participants: userId },
+      });
+
+      // Create leaderboard entry if not exists
+      const existing = await ContestLeaderboard.findOne({
+        contestId: contest._id,
+        userId,
+      });
+
+      if (!existing) {
+        await ContestLeaderboard.create({
+          contestId: contest._id,
+          userId,
+          totalSteps: 0,
+          dailySteps: {},
+          rank: 0,
+        });
+        logger.info(`QR join: added leaderboard entry for user ${userId} in contest ${contest._id}`);
+      }
+    }
+
+    if (activeContests.length > 0) {
+      logger.info(`QR join: synced user ${userId} to ${activeContests.length} active/upcoming contest(s) in group ${group.name}`);
+    }
+
     return group.populate([
       { path: 'members', select: '_id fullName avatar role' },
       { path: 'createdBy', select: '_id fullName avatar' },
