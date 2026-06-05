@@ -92,7 +92,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       int added = 0;
       for (var picked in pickedList) {
         if (_images.length >= 4) break;
-        final file = File(picked.path.trim());
+        final file = File(picked.path);
         if (file.existsSync()) {
           final size = file.lengthSync();
           if (size <= AppConstants.maxVideoSize) {
@@ -116,7 +116,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       maxDuration: const Duration(minutes: 3),
     );
     if (picked != null) {
-      final file = File(picked.path.trim());
+      final file = File(picked.path);
       if (file.existsSync()) {
         final size = file.lengthSync();
         if (size > AppConstants.maxVideoSize) {
