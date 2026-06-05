@@ -83,29 +83,26 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImages() async {
     if (_images.length >= 4) return;
-    final picked = await _picker.pickImage(
-      source: ImageSource.gallery,
+    final pickedList = await _picker.pickMultiImage(
       maxWidth: 1920,
       maxHeight: 1920,
       imageQuality: 85,
     );
-    if (picked != null) {
-      final file = File(picked.path.trim());
-      if (file.existsSync()) {
-        final size = file.lengthSync();
-        if (size > AppConstants.maxVideoSize) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('feed.image_too_large'.tr(namedArgs: {'size': (size / 1024 / 1024).toStringAsFixed(1)})),
-                backgroundColor: AppColors.danger,
-              ),
-            );
+    if (pickedList.isNotEmpty) {
+      int added = 0;
+      for (var picked in pickedList) {
+        if (_images.length >= 4) break;
+        final file = File(picked.path.trim());
+        if (file.existsSync()) {
+          final size = file.lengthSync();
+          if (size <= AppConstants.maxVideoSize) {
+            _images.add(file);
+            added++;
           }
-          return;
         }
+      }
+      if (added > 0) {
         setState(() {
-          _images.add(file);
           _resetLayoutIfNeeded();
         });
       }
@@ -165,6 +162,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         _LayoutOption('two_side', 'feed.layout_side_by_side', _LayoutIconType.twoSide),
         _LayoutOption('two_stack', 'feed.layout_stacked', _LayoutIconType.twoStack),
         _LayoutOption('two_left_large', 'feed.layout_left_large', _LayoutIconType.twoLeftLarge),
+        _LayoutOption('two_right_large', 'feed.layout_right_large', _LayoutIconType.twoRightLarge),
       ];
     }
     if (count == 3) {
@@ -172,6 +170,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         _LayoutOption('three_left', 'feed.layout_left_large', _LayoutIconType.threeLeft),
         _LayoutOption('three_top', 'feed.layout_top_banner', _LayoutIconType.threeTop),
         _LayoutOption('three_cols', 'feed.layout_equal_cols', _LayoutIconType.threeCols),
+        _LayoutOption('three_right_large', 'feed.layout_right_large', _LayoutIconType.threeRightLarge),
       ];
     }
     // 4+
@@ -179,6 +178,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       _LayoutOption('four_grid', 'feed.layout_grid', _LayoutIconType.fourGrid),
       _LayoutOption('four_top_banner', 'feed.layout_top_banner', _LayoutIconType.fourTopBanner),
       _LayoutOption('four_left_large', 'feed.layout_left_large', _LayoutIconType.fourLeftLarge),
+      _LayoutOption('four_right_large', 'feed.layout_right_large', _LayoutIconType.fourRightLarge),
     ];
   }
 
@@ -796,9 +796,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
 // === LAYOUT OPTION DATA ===
 enum _LayoutIconType {
-  twoSide, twoStack, twoLeftLarge,
-  threeLeft, threeTop, threeCols,
-  fourGrid, fourTopBanner, fourLeftLarge,
+  twoSide, twoStack, twoLeftLarge, twoRightLarge,
+  threeLeft, threeTop, threeCols, threeRightLarge,
+  fourGrid, fourTopBanner, fourLeftLarge, fourRightLarge,
 }
 
 class _LayoutOption {
@@ -842,6 +842,11 @@ class _LayoutIconPainter extends CustomPainter {
         final wSmall = size.width - wLarge - gap;
         _drawRect(canvas, Rect.fromLTWH(0, 0, wLarge, size.height), r, paint, borderPaint);
         _drawRect(canvas, Rect.fromLTWH(wLarge + gap, 0, wSmall, size.height), r, paint, borderPaint);
+      case _LayoutIconType.twoRightLarge:
+        final wLarge = size.width * 0.65;
+        final wSmall = size.width - wLarge - gap;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, wSmall, size.height), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(wSmall + gap, 0, wLarge, size.height), r, paint, borderPaint);
 
       // 3 images
       case _LayoutIconType.threeLeft:
@@ -863,6 +868,13 @@ class _LayoutIconPainter extends CustomPainter {
         for (int i = 0; i < 3; i++) {
           _drawRect(canvas, Rect.fromLTWH(i * (w + gap), 0, w, size.height), r, paint, borderPaint);
         }
+      case _LayoutIconType.threeRightLarge:
+        final wLarge = size.width * 0.6;
+        final wSmall = size.width - wLarge - gap;
+        final hSmall = (size.height - gap) / 2;
+        _drawRect(canvas, Rect.fromLTWH(0, 0, wSmall, hSmall), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(0, hSmall + gap, wSmall, hSmall), r, paint, borderPaint);
+        _drawRect(canvas, Rect.fromLTWH(wSmall + gap, 0, wLarge, size.height), r, paint, borderPaint);
 
       // 4 images
       case _LayoutIconType.fourGrid:
@@ -889,6 +901,14 @@ class _LayoutIconPainter extends CustomPainter {
         for (int i = 0; i < 3; i++) {
           _drawRect(canvas, Rect.fromLTWH(wLarge + gap, i * (hSmall + gap), wSmall, hSmall), r, paint, borderPaint);
         }
+      case _LayoutIconType.fourRightLarge:
+        final wLarge = size.width * 0.55;
+        final wSmall = size.width - wLarge - gap;
+        final hSmall = (size.height - gap * 2) / 3;
+        for (int i = 0; i < 3; i++) {
+          _drawRect(canvas, Rect.fromLTWH(0, i * (hSmall + gap), wSmall, hSmall), r, paint, borderPaint);
+        }
+        _drawRect(canvas, Rect.fromLTWH(wSmall + gap, 0, wLarge, size.height), r, paint, borderPaint);
     }
   }
 

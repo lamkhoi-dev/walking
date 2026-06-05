@@ -57,14 +57,17 @@ const postSchema = new mongoose.Schema(
         'two_side',        // side-by-side (default for 2)
         'two_stack',       // top-bottom stacked
         'two_left_large',  // left 2/3 + right 1/3
+        'two_right_large', // left 1/3 + right 2/3
         // 3 images
         'three_left',      // left large + 2 stacked right (default for 3)
         'three_top',       // top large + 2 bottom row
         'three_cols',      // three equal columns
+        'three_right_large', // 2 stacked left + right large
         // 4 images
         'four_grid',       // 2×2 grid (default for 4)
         'four_top_banner', // top large + 3 bottom row
         'four_left_large', // left large + 3 stacked right
+        'four_right_large',// 3 stacked left + right large
       ],
       default: null,
     },

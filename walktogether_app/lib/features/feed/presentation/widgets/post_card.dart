@@ -701,6 +701,8 @@ class PostCard extends StatelessWidget {
           return _twoImagesStacked(context, images, heroPrefix);
         case 'two_left_large':
           return _twoImagesLeftLarge(context, images, heroPrefix);
+        case 'two_right_large':
+          return _twoImagesRightLarge(context, images, heroPrefix);
         default:
           return _twoImages(context, images, heroPrefix);
       }
@@ -713,6 +715,8 @@ class PostCard extends StatelessWidget {
           return _threeImagesTop(context, images, heroPrefix);
         case 'three_cols':
           return _threeImagesCols(context, images, heroPrefix);
+        case 'three_right_large':
+          return _threeImagesRightLarge(context, images, heroPrefix);
         default:
           return _threeImages(context, images, heroPrefix);
       }
@@ -724,6 +728,8 @@ class PostCard extends StatelessWidget {
         return _fourImagesTopBanner(context, images, heroPrefix);
       case 'four_left_large':
         return _fourImagesLeftLarge(context, images, heroPrefix);
+      case 'four_right_large':
+        return _fourImagesRightLarge(context, images, heroPrefix);
       default:
         return _fourImages(context, images, heroPrefix);
     }
@@ -759,6 +765,25 @@ class PostCard extends StatelessWidget {
           ),
           const SizedBox(width: 3),
           Expanded(
+            child: _tappableImage(ctx, images[1], 1, heroPrefix, height: 220),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 2 images right large (1/3 + 2/3) ──
+  Widget _twoImagesRightLarge(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 220,
+      child: Row(
+        children: [
+          Expanded(
+            child: _tappableImage(ctx, images[0], 0, heroPrefix, height: 220),
+          ),
+          const SizedBox(width: 3),
+          Expanded(
+            flex: 2,
             child: _tappableImage(ctx, images[1], 1, heroPrefix, height: 220),
           ),
         ],
@@ -807,6 +832,32 @@ class PostCard extends StatelessWidget {
           Expanded(child: _tappableImage(ctx, images[1], 1, heroPrefix, height: 200)),
           const SizedBox(width: 3),
           Expanded(child: _tappableImage(ctx, images[2], 2, heroPrefix, height: 200)),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 3 images right large (2 left stacked + 1 right large) ──
+  Widget _threeImagesRightLarge(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 280,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                Expanded(child: _tappableImage(ctx, images[0], 0, heroPrefix)),
+                const SizedBox(height: 3),
+                Expanded(child: _tappableImage(ctx, images[1], 1, heroPrefix)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 3),
+          Expanded(
+            flex: 3,
+            child: _tappableImage(ctx, images[2], 2, heroPrefix, height: 280),
+          ),
         ],
       ),
     );
@@ -918,6 +969,60 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── New layout: 4 images right large (3 left stacked + 1 right large) ──
+  Widget _fourImagesRightLarge(BuildContext ctx, List<PostMedia> images, String heroPrefix) {
+    return SizedBox(
+      height: 280,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                Expanded(child: _tappableImage(ctx, images[0], 0, heroPrefix)),
+                const SizedBox(height: 3),
+                Expanded(child: _tappableImage(ctx, images[1], 1, heroPrefix)),
+                const SizedBox(height: 3),
+                Expanded(child: _tappableImage(ctx, images[2], 2, heroPrefix)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 3),
+          Expanded(
+            flex: 3,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _tappableImage(ctx, images[3], 3, heroPrefix, height: 280),
+                if (post.media.length > 4)
+                  GestureDetector(
+                    onTap: () => ImageGalleryViewer.show(
+                      ctx,
+                      imageUrls: post.media.map((m) => m.url).toList(),
+                      initialIndex: 3,
+                      heroTagPrefix: heroPrefix,
+                    ),
+                    child: Container(
+                      color: Colors.black45,
+                      alignment: Alignment.center,
+                      child: Text(
+                        '+${post.media.length - 4}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
