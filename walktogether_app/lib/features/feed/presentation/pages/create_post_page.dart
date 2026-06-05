@@ -89,22 +89,20 @@ class _CreatePostPageState extends State<CreatePostPage> {
       for (var picked in pickedList) {
         if (_images.length >= 4) break;
         try {
-          // XFile handles content URIs and strange paths better than File.lengthSync()
-          final size = await picked.length();
-          if (size <= AppConstants.maxVideoSize) {
-            final file = File(picked.path);
-            if (await file.exists()) {
-               _images.add(file);
-               added++;
-            } else {
-               // Fallback: if the path has issues, read bytes and write to a safe temp file
-               final bytes = await picked.readAsBytes();
-               final safePath = '${Directory.systemTemp.path}/safe_${DateTime.now().millisecondsSinceEpoch}.jpg';
-               final safeFile = File(safePath);
-               await safeFile.writeAsBytes(bytes);
-               _images.add(safeFile);
-               added++;
-            }
+          // Android content URIs can have spaces in path segments (e.g. " uuid/file.jpg").
+          // Do NOT use File(picked.path) or picked.length() — they both fail with
+          // PathNotFoundException when the path contains an embedded space.
+          // Instead: read raw bytes through the Android content resolver via XFile.readAsBytes(),
+          // then persist to a clean temp path inside our own app cache.
+          final bytes = await picked.readAsBytes();
+          if (bytes.length <= AppConstants.maxVideoSize) {
+            final ext = picked.name.split('.').last.toLowerCase();
+            final safeDir = Directory('/data/user/0/com.runly.app/cache/safe_uploads');
+            await safeDir.create(recursive: true);
+            final safePath = '${safeDir.path}/${DateTime.now().millisecondsSinceEpoch}.$ext';
+            final safeFile = await File(safePath).writeAsBytes(bytes, flush: true);
+            _images.add(safeFile);
+            added++;
           }
         } catch (e) {
           debugPrint('Error processing picked image: $e');
