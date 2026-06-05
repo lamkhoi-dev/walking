@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -35,7 +36,7 @@ class _GoalsPageState extends State<GoalsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Mục tiêu của tôi'),
+        title: Text('goals.title'.tr()),
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -44,13 +45,13 @@ class _GoalsPageState extends State<GoalsPage> {
         builder: (context, state) {
           // Show loading indicator while syncing from server
           if (state is StepTrackerLoading) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Đang đồng bộ dữ liệu...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('step_tracker.syncing'.tr()),
                 ],
               ),
             );
@@ -101,7 +102,7 @@ class _GoalsPageState extends State<GoalsPage> {
               const SizedBox(height: 20),
 
               // === CONTESTS ===
-              _ContestsCard(),
+              const _ContestsCard(),
               const SizedBox(height: 32),
             ],
           );
@@ -152,10 +153,10 @@ class _GoalsPageState extends State<GoalsPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  Text('Đặt mục tiêu hàng ngày', style: AppTextStyles.heading3),
+                  Text('goals.set_daily_goal'.tr(), style: AppTextStyles.heading3),
                   const SizedBox(height: 8),
                   Text(
-                    'Chọn số bước bạn muốn đạt mỗi ngày',
+                    'goals.set_goal_hint'.tr(),
                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 24),
@@ -168,7 +169,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       fontSize: 48,
                     ),
                   ),
-                  Text('bước/ngày', style: AppTextStyles.bodySmall),
+                  Text('step_tracker.steps_per_day'.tr(), style: AppTextStyles.bodySmall),
                   const SizedBox(height: 20),
 
                   // Slider
@@ -263,7 +264,7 @@ class _GoalsPageState extends State<GoalsPage> {
                         ),
                         elevation: 0,
                       ),
-                      child: Text('Lưu mục tiêu', style: AppTextStyles.buttonLarge),
+                      child: Text('goals.save_goal'.tr(), style: AppTextStyles.buttonLarge),
                     ),
                   ),
                 ],
@@ -345,7 +346,7 @@ class _TodayGoalCard extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  isGoalReached ? 'Hoàn thành mục tiêu! 🎉' : 'Mục tiêu hôm nay',
+                  isGoalReached ? 'goals.goal_reached'.tr() : 'goals.today_goal'.tr(),
                   style: AppTextStyles.heading4.copyWith(
                     color: isGoalReached ? Colors.white : AppColors.textMain,
                   ),
@@ -374,7 +375,7 @@ class _TodayGoalCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Sửa',
+                        'common.edit'.tr(),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -419,7 +420,7 @@ class _TodayGoalCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'hoàn thành',
+                      'goals.completed'.tr(),
                       style: TextStyle(
                         fontSize: 12,
                         color: isGoalReached
@@ -457,7 +458,7 @@ class _TodayGoalCard extends StatelessWidget {
                 ),
               ),
               Text(
-                ' bước',
+                ' ${'step_tracker.steps'.tr()}',
                 style: TextStyle(
                   fontSize: 14,
                   color: isGoalReached
@@ -471,7 +472,7 @@ class _TodayGoalCard extends StatelessWidget {
           if (!isGoalReached) ...[
             const SizedBox(height: 8),
             Text(
-              'Còn ${_fmt(goalSteps - todaySteps)} bước nữa — cố lên! 💪',
+              'goals.steps_remaining'.tr(namedArgs: {'n': _fmt(goalSteps - todaySteps)}),
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
             ),
           ],
@@ -527,7 +528,7 @@ class _StreakCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Chuỗi hoàn thành',
+                  'goals.streak'.tr(),
                   style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 2),
@@ -547,7 +548,7 @@ class _StreakCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        'ngày liên tiếp',
+                        'goals.streak_days'.tr(),
                         style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                       ),
                     ),
@@ -655,7 +656,7 @@ class _WeeklyProgressCard extends StatelessWidget {
             children: [
               const Icon(Icons.calendar_today_rounded, color: AppColors.secondary, size: 20),
               const SizedBox(width: 8),
-              Text('Tuần này', style: AppTextStyles.heading4),
+              Text('goals.this_week'.tr(), style: AppTextStyles.heading4),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -664,7 +665,7 @@ class _WeeklyProgressCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$achievedCount/7 ngày',
+                  'step_tracker.days_achieved'.tr(namedArgs: {'n': '$achievedCount'}),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -763,7 +764,7 @@ class _WeeklyProgressCard extends StatelessWidget {
 
                         // Day label
                         Text(
-                          day.isToday ? 'Nay' : _dayLabel(day.date.weekday),
+                          day.isToday ? 'goals.today_short'.tr() : _dayLabel(day.date.weekday),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: day.isToday ? FontWeight.w700 : FontWeight.w500,
@@ -783,7 +784,7 @@ class _WeeklyProgressCard extends StatelessWidget {
   }
 
   String _dayLabel(int weekday) {
-    const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']; // keep localized short weekday labels
     return labels[weekday - 1];
   }
 
@@ -827,12 +828,12 @@ class _MilestonesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final milestones = [
-      _Milestone('Bước đầu tiên', 'Đi 1.000 bước trong ngày', 1000, Icons.child_care_rounded, const Color(0xFF81C784)),
-      _Milestone('Người đi bộ', 'Đi 5.000 bước trong ngày', 5000, Icons.directions_walk_rounded, const Color(0xFF4CAF50)),
-      _Milestone('Chinh phục mục tiêu', 'Đạt 10.000 bước', 10000, Icons.flag_rounded, const Color(0xFF2196F3)),
-      _Milestone('Siêu đi bộ', 'Đi 20.000 bước trong ngày', 20000, Icons.bolt_rounded, const Color(0xFFF44336)),
-      _Milestone('Tổng 50K', 'Tổng cộng 50.000 bước', 50000, Icons.star_rounded, const Color(0xFFFF9800), isLifetime: true),
-      _Milestone('Tổng 100K', 'Tổng cộng 100.000 bước', 100000, Icons.military_tech_rounded, const Color(0xFF9C27B0), isLifetime: true),
+      _Milestone('goals.milestone_first'.tr(), 'goals.milestone_first_desc'.tr(), 1000, Icons.child_care_rounded, const Color(0xFF81C784)),
+      _Milestone('goals.milestone_walker'.tr(), 'goals.milestone_walker_desc'.tr(), 5000, Icons.directions_walk_rounded, const Color(0xFF4CAF50)),
+      _Milestone('goals.milestone_conquer'.tr(), 'goals.milestone_conquer_desc'.tr(), 10000, Icons.flag_rounded, const Color(0xFF2196F3)),
+      _Milestone('goals.milestone_super'.tr(), 'goals.milestone_super_desc'.tr(), 20000, Icons.bolt_rounded, const Color(0xFFF44336)),
+      _Milestone('goals.milestone_50k'.tr(), 'goals.milestone_50k_desc'.tr(), 50000, Icons.star_rounded, const Color(0xFFFF9800), isLifetime: true),
+      _Milestone('goals.milestone_100k'.tr(), 'goals.milestone_100k_desc'.tr(), 100000, Icons.military_tech_rounded, const Color(0xFF9C27B0), isLifetime: true),
     ];
 
     // Calculate personal best from history
@@ -858,12 +859,12 @@ class _MilestonesCard extends StatelessWidget {
             children: [
               const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFB300), size: 22),
               const SizedBox(width: 8),
-              Text('Thành tựu', style: AppTextStyles.heading4),
+              Text('step_tracker.achievements_title'.tr(), style: AppTextStyles.heading4),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Kỷ lục cá nhân: ${_fmt(personalBest)} bước  ·  Tổng cộng: ${_fmt(totalStepsAllTime)} bước',
+            'step_tracker.personal_best_total'.tr(namedArgs: {'best': _fmt(personalBest), 'total': _fmt(totalStepsAllTime)}),
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
@@ -1092,7 +1093,7 @@ class _ContestsCardState extends State<_ContestsCard> {
                 child: const Icon(Icons.emoji_events_rounded, color: AppColors.primary, size: 22),
               ),
               const SizedBox(width: 12),
-              const Text('Cuộc thi', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+              Text('step_tracker.contests_title'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
             ],
           ),
           const SizedBox(height: 16),
@@ -1109,7 +1110,7 @@ class _ContestsCardState extends State<_ContestsCard> {
                   children: [
                     Icon(Icons.emoji_events_outlined, size: 40, color: AppColors.textSecondary.withValues(alpha: 0.3)),
                     const SizedBox(height: 8),
-                    Text('Chưa tham gia cuộc thi nào', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                    Text('step_tracker.no_contests_joined'.tr(), style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
                   ],
                 ),
               ),
@@ -1130,10 +1131,10 @@ class _ContestsCardState extends State<_ContestsCard> {
       'cancelled': AppColors.danger,
     };
     final statusLabels = {
-      'active': 'Đang diễn ra',
-      'upcoming': 'Sắp diễn ra',
-      'completed': 'Đã kết thúc',
-      'cancelled': 'Đã hủy',
+      'active': 'contest.status_active'.tr(),
+      'upcoming': 'contest.status_upcoming'.tr(),
+      'completed': 'contest.status_completed'.tr(),
+      'cancelled': 'contest.status_cancelled'.tr(),
     };
     final color = statusColors[contest.status] ?? AppColors.textSecondary;
 

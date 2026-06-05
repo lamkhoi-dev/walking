@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -32,7 +33,7 @@ class _ChatListPageState extends State<ChatListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tin nhắn'),
+        title: Text('chat.title'.tr()),
         actions: [
           IconButton(
             icon: const Icon(Icons.search_rounded),
@@ -63,7 +64,7 @@ class _ChatListPageState extends State<ChatListPage> {
           final conversations = state is ConversationListLoaded
               ? state.conversations
               : state is ConversationListDirectCreated
-                  ? state.conversations
+                  ? [state.conversation]
                   : <dynamic>[];
 
           if (conversations.isEmpty) {
@@ -121,7 +122,7 @@ class _ChatListPageState extends State<ChatListPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Chưa có cuộc trò chuyện',
+            'chat.no_conversations'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -130,7 +131,7 @@ class _ChatListPageState extends State<ChatListPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tin nhắn nhóm sẽ tự động xuất hiện\nkhi bạn tham gia nhóm',
+            'chat.group_auto_appear'.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -154,7 +155,7 @@ class _ChatListPageState extends State<ChatListPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Không thể tải tin nhắn',
+            'chat.load_error'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -181,7 +182,7 @@ class _ChatListPageState extends State<ChatListPage> {
                   .add(ConversationListLoadRequested());
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Thử lại'),
+            label: Text('common.retry'.tr()),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(160, 44),
             ),

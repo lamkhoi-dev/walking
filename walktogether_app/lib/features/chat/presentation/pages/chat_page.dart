@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -99,7 +100,7 @@ class _ChatPageState extends State<ChatPage> {
                   children: [
                     Flexible(
                       child: Text(
-                        widget.title ?? 'Nhóm',
+                        widget.title ?? 'group.default_name'.tr(),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -112,7 +113,7 @@ class _ChatPageState extends State<ChatPage> {
                   ],
                 ),
               )
-            : Text(widget.title ?? 'Tin nhắn'),
+            : Text(widget.title ?? 'chat.title'.tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
@@ -122,7 +123,7 @@ class _ChatPageState extends State<ChatPage> {
             IconButton(
               icon: const Icon(Icons.info_outline_rounded),
               onPressed: () => context.push('/groups/${widget.groupId}'),
-              tooltip: 'Chi tiết nhóm',
+              tooltip: 'chat.group_detail'.tr(),
             ),
         ],
       ),
@@ -277,7 +278,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Hãy gửi tin nhắn đầu tiên!',
+            'chat.send_first_message'.tr(),
             style: TextStyle(
               fontSize: 15,
               color: AppColors.textSecondary,
@@ -296,7 +297,7 @@ class _ChatPageState extends State<ChatPage> {
           Icon(Icons.error_outline_rounded,
               size: 64, color: AppColors.danger.withValues(alpha: 0.6)),
           const SizedBox(height: 16),
-          Text('Lỗi tải tin nhắn',
+          Text('chat.load_error'.tr(),
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -316,7 +317,7 @@ class _ChatPageState extends State<ChatPage> {
                   .add(ChatLoadRequested(widget.conversationId));
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Thử lại'),
+            label: Text('common.retry'.tr()),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(160, 44),
             ),

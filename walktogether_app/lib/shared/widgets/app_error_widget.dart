@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../core/constants/app_colors.dart';
 
 /// Error display widget with retry button
@@ -37,7 +38,7 @@ class AppErrorWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Thử lại'),
+                label: Text('common.retry'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

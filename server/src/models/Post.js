@@ -49,6 +49,25 @@ const postSchema = new mongoose.Schema(
         duration: { type: Number, default: 0 },
       },
     ],
+    mediaLayout: {
+      type: String,
+      enum: [
+        null,
+        // 2 images
+        'two_side',        // side-by-side (default for 2)
+        'two_stack',       // top-bottom stacked
+        'two_left_large',  // left 2/3 + right 1/3
+        // 3 images
+        'three_left',      // left large + 2 stacked right (default for 3)
+        'three_top',       // top large + 2 bottom row
+        'three_cols',      // three equal columns
+        // 4 images
+        'four_grid',       // 2×2 grid (default for 4)
+        'four_top_banner', // top large + 3 bottom row
+        'four_left_large', // left large + 3 stacked right
+      ],
+      default: null,
+    },
 
     // === SHARE ===
     sharedPostId: {

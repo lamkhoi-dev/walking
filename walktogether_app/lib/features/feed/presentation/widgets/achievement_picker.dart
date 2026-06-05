@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../contest/data/models/contest_model.dart';
 import '../../../contest/data/repositories/contest_repository.dart';
@@ -104,7 +105,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
           ),
 
           // Title
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Row(
               children: [
@@ -112,7 +113,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
                     color: AppColors.warning, size: 22),
                 SizedBox(width: 8),
                 Text(
-                  'Chia sẻ thành tích',
+                  'feed.share_achievement'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -126,7 +127,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'Chọn cuộc thi để chia sẻ thành tích của bạn',
+              'feed.select_contest_share'.tr(),
               style: TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -171,7 +172,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
                   });
                   _loadContests();
                 },
-                child: const Text('Thử lại'),
+                child: Text('common.retry'.tr()),
               ),
             ],
           ),
@@ -189,8 +190,8 @@ class _AchievementPickerState extends State<AchievementPicker> {
               Icon(Icons.emoji_events_outlined,
                   size: 48, color: Colors.grey.shade300),
               const SizedBox(height: 12),
-              const Text(
-                'Chưa có cuộc thi nào',
+              Text(
+                'feed.no_contests'.tr(),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -199,7 +200,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Tham gia cuộc thi để chia sẻ thành tích!',
+                'feed.join_contest_to_share'.tr(),
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -313,7 +314,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            isActive ? 'Đang diễn ra' : 'Đã kết thúc',
+                            isActive ? 'contest.status_active'.tr() : 'contest.status_completed'.tr(),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -332,7 +333,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
                                 .withValues(alpha: 0.6)),
                         const SizedBox(width: 4),
                         Text(
-                          '$stepsText bước',
+                          'feed.n_steps_unit'.tr(namedArgs: {'n': stepsText}),
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary
@@ -346,7 +347,7 @@ class _AchievementPickerState extends State<AchievementPicker> {
                                 .withValues(alpha: 0.6)),
                         const SizedBox(width: 4),
                         Text(
-                          '${item.totalParticipants} người',
+                          'common.n_people'.tr(namedArgs: {'n': '${item.totalParticipants}'}),
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary

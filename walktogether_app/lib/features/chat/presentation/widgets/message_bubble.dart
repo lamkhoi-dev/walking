@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/conversation_model.dart';
@@ -289,7 +290,7 @@ class _MessageBubbleState extends State<MessageBubble>
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    post.authorName ?? 'Người dùng',
+                    post.authorName ?? 'common.user'.tr(),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -343,7 +344,7 @@ class _MessageBubbleState extends State<MessageBubble>
                 Icon(Icons.open_in_new_rounded, size: 12, color: subColor),
                 const SizedBox(width: 4),
                 Text(
-                  'Xem bài viết',
+                  'chat.view_post'.tr(),
                   style: TextStyle(
                     fontSize: 10,
                     color: subColor,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/storage_service.dart';
@@ -27,6 +28,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
   // Initialize foreground task communication port
   FlutterForegroundTask.initCommunicationPort();
@@ -76,18 +78,24 @@ void main() async {
   await stepSyncService.init(dioClient);
 
   runApp(
-    WalkTogetherApp(
-      storageService: storageService,
-      dioClient: dioClient,
-      authRepository: authRepository,
-      groupRepository: groupRepository,
-      chatRepository: chatRepository,
-      contestRepository: contestRepository,
-      stepCounterService: stepCounterService,
-      stepSyncService: stepSyncService,
-      stepRepository: stepRepository,
-      feedRepository: feedRepository,
-      settingsRepository: settingsRepository,
+    EasyLocalization(
+      supportedLocales: const [Locale('vi'), Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      startLocale: const Locale('vi'),
+      child: WalkTogetherApp(
+        storageService: storageService,
+        dioClient: dioClient,
+        authRepository: authRepository,
+        groupRepository: groupRepository,
+        chatRepository: chatRepository,
+        contestRepository: contestRepository,
+        stepCounterService: stepCounterService,
+        stepSyncService: stepSyncService,
+        stepRepository: stepRepository,
+        feedRepository: feedRepository,
+        settingsRepository: settingsRepository,
+      ),
     ),
   );
 }
@@ -243,6 +251,9 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _appRouter.router,
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
       ),
     );
   }

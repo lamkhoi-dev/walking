@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../shared/widgets/avatar_widget.dart';
@@ -114,7 +116,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
               elevation: 0,
               surfaceTintColor: Colors.transparent,
             ),
-            body: const LoadingWidget(message: 'Đang tải...'),
+            body: LoadingWidget(message: 'group.loading_group'.tr()),
           );
         }
 
@@ -173,7 +175,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     IconButton(
                       icon: const Icon(Icons.qr_code, color: Colors.white),
                       onPressed: () => context.push('/groups/${group.id}/qr'),
-                      tooltip: 'Mã QR nhóm',
+                      tooltip: 'group.qr_code'.tr(),
                     ),
                     if (canManage)
                       PopupMenuButton<String>(
@@ -184,13 +186,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                           }
                         },
                         itemBuilder: (_) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 18),
-                                SizedBox(width: 8),
-                                Text('Chỉnh sửa'),
+                                const Icon(Icons.edit, size: 18),
+                                const SizedBox(width: 8),
+                                Text('common.edit'.tr()),
                               ],
                             ),
                           ),
@@ -222,7 +224,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${group.totalMembers} thành viên',
+                            'feed.member_count'.tr(namedArgs: {'count': group.totalMembers.toString()}),
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: Colors.white.withValues(alpha: 0.8),
                               ),
@@ -243,10 +245,10 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         unselectedLabelColor: AppColors.textSecondary,
                         indicatorColor: AppColors.primary,
                         indicatorWeight: 3,
-                        tabs: const [
-                          Tab(text: 'Bài viết'),
-                          Tab(text: 'Thành viên'),
-                          Tab(text: 'Thông tin'),
+                        tabs: [
+                          Tab(text: 'feed.title'.tr()),
+                          Tab(text: 'group.members'.tr()),
+                          Tab(text: 'settings.title'.tr()),
                         ],
                       ),
                     ),
@@ -289,7 +291,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             child: OutlinedButton.icon(
               onPressed: () => _showAddMembersSheet(context, group),
               icon: const Icon(Icons.person_add, size: 18),
-              label: const Text('Thêm thành viên'),
+              label: Text('group.add_members'.tr()),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
@@ -306,7 +308,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           child: group.members.isEmpty
               ? Center(
                   child: Text(
-                    'Chưa có thành viên',
+                    'group.no_members'.tr(),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -356,12 +358,12 @@ class _GroupDetailPageState extends State<GroupDetailPage>
       children: [
         // Description section
         _InfoCard(
-          title: 'Mô tả',
+          title: 'group.description_label'.tr(),
           icon: Icons.description_outlined,
           child: Text(
             group.description?.isNotEmpty == true
                 ? group.description!
-                : 'Chưa có mô tả',
+                : 'group.no_description'.tr(),
             style: AppTextStyles.bodyMedium.copyWith(
               color: group.description?.isNotEmpty == true
                   ? AppColors.textMain
@@ -377,7 +379,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
         // Creator
         if (group.createdByName != null)
           _InfoCard(
-            title: 'Người tạo',
+            title: 'group.creator_label'.tr(),
             icon: Icons.person_outline,
             child: Text(
               group.createdByName!,
@@ -388,7 +390,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
         // Created date
         _InfoCard(
-          title: 'Ngày tạo',
+          title: 'group.created_date_label'.tr(),
           icon: Icons.calendar_today_outlined,
           child: Text(
             _formatDate(group.createdAt),
@@ -399,12 +401,12 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
         // Stats
         _InfoCard(
-          title: 'Thống kê',
+          title: 'group.stats_label'.tr(),
           icon: Icons.bar_chart_outlined,
           child: Row(
             children: [
               _StatItem(
-                label: 'Thành viên',
+                label: 'group.members_label'.tr(),
                 value: '${group.totalMembers}',
                 icon: Icons.people_outline,
               ),
@@ -438,22 +440,22 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                   child: const Icon(Icons.emoji_events, color: Colors.white, size: 24),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Cuộc thi đi bộ',
-                        style: TextStyle(
+                        'group.walking_contest'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'Xem và tham gia cuộc thi của nhóm',
-                        style: TextStyle(
+                        'group.view_contests'.tr(),
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.white70,
                         ),
@@ -478,14 +480,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Chỉnh sửa nhóm'),
+        title: Text('group.edit_group'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               decoration: InputDecoration(
-                labelText: 'Tên nhóm',
+                labelText: 'group.group_name'.tr(),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -495,7 +497,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             TextField(
               controller: descController,
               decoration: InputDecoration(
-                labelText: 'Mô tả',
+                labelText: 'group.description'.tr(),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -508,7 +510,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Hủy',
+              'common.cancel'.tr(),
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -526,9 +528,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     );
               }
             },
-            child: const Text(
-              'Lưu',
-              style: TextStyle(color: AppColors.primary),
+            child: Text(
+              'common.save'.tr(),
+              style: const TextStyle(color: AppColors.primary),
             ),
           ),
         ],
@@ -607,7 +609,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Thêm thành viên'),
+                      child: Text('group.add_members'.tr()),
                     ),
                   ),
                 ],
@@ -629,13 +631,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Xóa thành viên'),
-        content: Text('Bạn có chắc muốn xóa "$userName" khỏi nhóm?'),
+        title: Text('group.remove_member'.tr()),
+        content: Text('group.remove_member_confirm'.tr(namedArgs: {'name': userName})),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Hủy',
+              'common.cancel'.tr(),
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -646,9 +648,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     GroupDetailRemoveMember(groupId, userId),
                   );
             },
-            child: const Text(
-              'Xóa',
-              style: TextStyle(color: AppColors.danger),
+            child: Text(
+              'common.delete'.tr(),
+              style: const TextStyle(color: AppColors.danger),
             ),
           ),
         ],

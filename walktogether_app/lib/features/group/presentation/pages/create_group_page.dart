@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -50,8 +51,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tạo nhóm thành công!'),
+        SnackBar(
+          content: Text('group.create_success'.tr()),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.success,
         ),
@@ -66,7 +67,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi: ${e.toString()}'),
+          content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.danger,
         ),
@@ -79,7 +80,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Tạo nhóm mới', style: AppTextStyles.heading4),
+        title: Text('group.create_new_group'.tr(), style: AppTextStyles.heading4),
         backgroundColor: AppColors.surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -90,12 +91,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           padding: const EdgeInsets.all(16),
           children: [
             // Group name
-            _buildSectionLabel('Tên nhóm *'),
+            _buildSectionLabel('group.group_name_required'.tr()),
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                hintText: 'Nhập tên nhóm',
+                hintText: 'group.group_name_hint'.tr(),
                 hintStyle: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -120,10 +121,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Vui lòng nhập tên nhóm';
+                  return 'group.group_name_required_msg'.tr();
                 }
                 if (value.trim().length < 2) {
-                  return 'Tên nhóm phải có ít nhất 2 ký tự';
+                  return 'group.group_name_min_chars'.tr();
                 }
                 return null;
               },
@@ -131,13 +132,13 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             const SizedBox(height: 20),
 
             // Description
-            _buildSectionLabel('Mô tả'),
+            _buildSectionLabel('group.description'.tr()),
             const SizedBox(height: 8),
             TextFormField(
               controller: _descController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Mô tả nhóm (tùy chọn)',
+                hintText: 'group.description_optional_hint'.tr(),
                 hintStyle: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -205,7 +206,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         )
                       : const Icon(Icons.check),
                   label: Text(
-                    _isSubmitting ? 'Đang tạo...' : 'Tạo nhóm',
+                    _isSubmitting ? 'group.creating'.tr() : 'group.create_group'.tr(),
                     style: AppTextStyles.buttonMedium,
                   ),
                   style: ElevatedButton.styleFrom(

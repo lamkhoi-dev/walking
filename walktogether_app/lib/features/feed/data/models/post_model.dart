@@ -21,6 +21,7 @@ class PostModel {
   final bool isOfficial;
   final bool isPinned;
   final DateTime? pinnedAt;
+  final String? mediaLayout;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -46,6 +47,7 @@ class PostModel {
     this.isOfficial = false,
     this.isPinned = false,
     this.pinnedAt,
+    this.mediaLayout,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -104,6 +106,7 @@ class PostModel {
       pinnedAt: json['pinnedAt'] != null
           ? DateTime.tryParse(json['pinnedAt'] as String)
           : null,
+      mediaLayout: json['mediaLayout'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -117,6 +120,7 @@ class PostModel {
     DateTime? editedAt,
     bool? isPinned,
     DateTime? pinnedAt,
+    String? mediaLayout,
   }) {
     return PostModel(
       id: id,
@@ -140,6 +144,7 @@ class PostModel {
       isOfficial: isOfficial,
       isPinned: isPinned ?? this.isPinned,
       pinnedAt: pinnedAt ?? this.pinnedAt,
+      mediaLayout: mediaLayout ?? this.mediaLayout,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

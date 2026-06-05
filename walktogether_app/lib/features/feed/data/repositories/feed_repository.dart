@@ -51,6 +51,7 @@ class FeedRepository {
     String? sharedContestId,
     int? achievementRank,
     int? achievementSteps,
+    String? mediaLayout,
   }) async {
     final formData = FormData.fromMap({
       'content': content,
@@ -62,6 +63,7 @@ class FeedRepository {
       if (sharedContestId != null) 'sharedContestId': sharedContestId,
       if (achievementRank != null) 'achievementRank': achievementRank,
       if (achievementSteps != null) 'achievementSteps': achievementSteps,
+      if (mediaLayout != null) 'mediaLayout': mediaLayout,
     });
 
     if (images != null) {

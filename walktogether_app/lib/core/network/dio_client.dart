@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants/api_endpoints.dart';
 import '../constants/app_constants.dart';
 import '../services/storage_service.dart';
@@ -112,7 +113,7 @@ class DioClient {
         return _handleResponseError(e.response);
       default:
         return ApiException(
-          message: e.message ?? 'Đã xảy ra lỗi không xác định',
+          message: e.message ?? 'error.unknown'.tr(),
           statusCode: e.response?.statusCode,
         );
     }
@@ -124,7 +125,7 @@ class DioClient {
     }
 
     final data = response.data;
-    final message = data is Map ? (data['message'] ?? 'Lỗi') : 'Lỗi';
+    final message = data is Map ? (data['message'] ?? 'error.generic'.tr()) : 'error.generic'.tr();
     final errorMap = data is Map && data['error'] is Map ? data['error'] as Map : null;
     final errorCode = errorMap?['code'];
 
@@ -140,7 +141,7 @@ class DioClient {
       case 422:
         return ApiException(message: message, statusCode: 422, errorCode: 'VALIDATION_ERROR', details: errorMap?['details']);
       case 429:
-        return ApiException(message: 'Quá nhiều request. Vui lòng thử lại sau.', statusCode: 429, errorCode: 'RATE_LIMIT');
+        return ApiException(message: 'error.rate_limit'.tr(), statusCode: 429, errorCode: 'RATE_LIMIT');
       default:
         return ServerException(message: message);
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/step_sync_service.dart';
@@ -70,24 +71,24 @@ class SyncStatusWidget extends StatelessWidget {
   String get _label {
     switch (status) {
       case StepSyncStatus.syncing:
-        return 'Đang đồng bộ...';
+        return 'step_tracker.syncing'.tr();
       case StepSyncStatus.synced:
         return _lastSyncLabel;
       case StepSyncStatus.offline:
-        return 'Ngoại tuyến';
+        return 'step_tracker.offline'.tr();
       case StepSyncStatus.error:
-        return 'Lỗi đồng bộ';
+        return 'step_tracker.sync_failed'.tr();
       case StepSyncStatus.idle:
-        return 'Chạm để đồng bộ';
+        return 'step_tracker.tap_to_sync'.tr();
     }
   }
 
   String get _lastSyncLabel {
-    if (lastSyncTime == null) return 'Đã đồng bộ';
+    if (lastSyncTime == null) return 'step_tracker.synced'.tr();
     final diff = DateTime.now().difference(lastSyncTime!);
-    if (diff.inMinutes < 1) return 'Vừa đồng bộ';
-    if (diff.inMinutes < 60) return 'Đồng bộ ${diff.inMinutes}p trước';
-    return 'Đồng bộ ${diff.inHours}h trước';
+    if (diff.inMinutes < 1) return 'step_tracker.synced'.tr();
+    if (diff.inMinutes < 60) return 'step_tracker.sync_minutes_ago'.tr(namedArgs: {'n': diff.inMinutes.toString()});
+    return 'step_tracker.sync_hours_ago'.tr(namedArgs: {'n': diff.inHours.toString()});
   }
 
   Color get _bgColor {

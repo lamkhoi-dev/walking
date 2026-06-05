@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -35,8 +36,8 @@ class SuspendedPage extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              const Text(
-                'Công ty bị tạm ngưng',
+              Text(
+                'auth.suspended_title'.tr(),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
@@ -47,8 +48,7 @@ class SuspendedPage extends StatelessWidget {
               const SizedBox(height: 12),
 
               Text(
-                'Công ty của bạn đã bị tạm ngưng hoạt động.\n'
-                'Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.',
+                'auth.suspended_desc'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -80,7 +80,7 @@ class SuspendedPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Trạng thái: Tạm ngưng',
+                      'auth.status_suspended'.tr(),
                       style: TextStyle(
                         color: Colors.orange.shade700,
                         fontWeight: FontWeight.w600,
@@ -95,7 +95,7 @@ class SuspendedPage extends StatelessWidget {
 
               // Contact support
               Text(
-                'Email hỗ trợ: support@walktogether.com',
+                'auth.support_email'.tr(),
                 style: TextStyle(
                   color: AppColors.textSecondary.withValues(alpha: 0.7),
                   fontSize: 13,
@@ -110,7 +110,7 @@ class SuspendedPage extends StatelessWidget {
                   context.read<AuthBloc>().add(AuthLogoutRequested());
                 },
                 icon: const Icon(Icons.logout, size: 18),
-                label: const Text('Đăng xuất'),
+                label: Text('auth.logout'.tr()),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                 ),

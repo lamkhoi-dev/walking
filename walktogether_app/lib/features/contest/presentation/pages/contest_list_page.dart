@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -63,7 +64,7 @@ class _ContestListView extends StatelessWidget {
     final canManage = _canManageGroup(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cuộc thi - $groupName'),
+        title: Text('contest.list_title'.tr(namedArgs: {'group': groupName})),
       ),
       floatingActionButton: canManage
           ? FloatingActionButton.extended(
@@ -79,9 +80,9 @@ class _ContestListView extends StatelessWidget {
               },
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Tạo cuộc thi',
-                style: TextStyle(color: Colors.white),
+              label: Text(
+                'contest.create_title'.tr(),
+                style: const TextStyle(color: Colors.white),
               ),
             )
           : null,
@@ -104,7 +105,7 @@ class _ContestListView extends StatelessWidget {
                           .read<ContestListBloc>()
                           .add(ContestListLoadRequested(groupId: groupId));
                     },
-                    child: const Text('Thử lại'),
+                    child: Text('common.retry'.tr()),
                   ),
                 ],
               ),
@@ -121,7 +122,7 @@ class _ContestListView extends StatelessWidget {
                         size: 64, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
-                      'Chưa có cuộc thi nào',
+                      'contest.no_contests'.tr(),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[600],
@@ -130,7 +131,7 @@ class _ContestListView extends StatelessWidget {
                     if (canManage) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Tạo cuộc thi đầu tiên cho nhóm!',
+                        'contest.create_first'.tr(),
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey[400],
@@ -153,11 +154,11 @@ class _ContestListView extends StatelessWidget {
                 children: [
                   // Active contest section
                   if (state.activeContest != null) ...[
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                       child: Text(
-                        '🔥 ĐANG DIỄN RA',
-                        style: TextStyle(
+                        '🔥 ${'contest.status_active'.tr().toUpperCase()}',
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppColors.success,
@@ -176,11 +177,11 @@ class _ContestListView extends StatelessWidget {
 
                   // Upcoming section
                   if (state.upcomingContests.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                       child: Text(
-                        '📅 SẮP DIỄN RA',
-                        style: TextStyle(
+                        '📅 ${'contest.status_upcoming'.tr().toUpperCase()}',
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppColors.info,
@@ -199,11 +200,11 @@ class _ContestListView extends StatelessWidget {
 
                   // Past section
                   if (state.pastContests.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                       child: Text(
-                        '📋 ĐÃ KẾT THÚC',
-                        style: TextStyle(
+                        '📋 ${'contest.status_completed'.tr().toUpperCase()}',
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textSecondary,

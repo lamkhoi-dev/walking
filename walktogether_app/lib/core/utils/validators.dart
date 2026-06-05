@@ -1,21 +1,24 @@
+import 'package:easy_localization/easy_localization.dart';
+
 /// Form validators
 class Validators {
   Validators._();
 
-  static String? required(String? value, [String fieldName = 'Trường này']) {
+  static String? required(String? value, [String? fieldName]) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName không được để trống';
+      final name = fieldName ?? 'validator.this_field'.tr();
+      return 'validator.field_required'.tr(namedArgs: {'field': name});
     }
     return null;
   }
 
   static String? email(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email không được để trống';
+      return 'validator.email_required'.tr();
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Email không hợp lệ';
+      return 'validator.email_invalid'.tr();
     }
     return null;
   }
@@ -24,44 +27,45 @@ class Validators {
     if (value == null || value.trim().isEmpty) return null; // Phone is optional
     final phoneRegex = RegExp(r'^(0|\+84)[0-9]{9}$');
     if (!phoneRegex.hasMatch(value.trim())) {
-      return 'Số điện thoại không hợp lệ';
+      return 'validator.phone_invalid'.tr();
     }
     return null;
   }
 
   static String? password(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Mật khẩu không được để trống';
+      return 'validator.password_required'.tr();
     }
     if (value.length < 6) {
-      return 'Mật khẩu phải có ít nhất 6 ký tự';
+      return 'validator.password_min_length'.tr();
     }
     return null;
   }
 
   static String? confirmPassword(String? value, String password) {
     if (value == null || value.isEmpty) {
-      return 'Vui lòng xác nhận mật khẩu';
+      return 'validator.confirm_password'.tr();
     }
     if (value != password) {
-      return 'Mật khẩu không khớp';
+      return 'validator.password_mismatch'.tr();
     }
     return null;
   }
 
   static String? companyCode(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Mã công ty không được để trống';
+      return 'validator.company_code_required'.tr();
     }
     if (value.trim().length != 6) {
-      return 'Mã công ty phải có 6 ký tự';
+      return 'validator.company_code_length'.tr();
     }
     return null;
   }
 
-  static String? minLength(String? value, int min, [String fieldName = 'Trường này']) {
+  static String? minLength(String? value, int min, [String? fieldName]) {
     if (value == null || value.trim().length < min) {
-      return '$fieldName phải có ít nhất $min ký tự';
+      final name = fieldName ?? 'validator.this_field'.tr();
+      return 'validator.min_length'.tr(namedArgs: {'field': name, 'min': '$min'});
     }
     return null;
   }
@@ -69,7 +73,7 @@ class Validators {
   /// Email or Phone validator — user can use either
   static String? emailOrPhone(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Vui lòng nhập email hoặc số điện thoại';
+      return 'validator.email_or_phone_required'.tr();
     }
     final v = value.trim();
     // Check if it looks like phone

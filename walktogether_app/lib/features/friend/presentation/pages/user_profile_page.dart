@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../shared/widgets/avatar_widget.dart';
@@ -88,12 +89,12 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
       if (!mounted) return;
       setState(() => _friendshipStatus = FriendshipStatus.pendingSent);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã gửi lời mời kết bạn'), backgroundColor: AppColors.success),
+        SnackBar(content: Text('friend.request_sent_success'.tr()), backgroundColor: AppColors.success),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -105,12 +106,12 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
       if (!mounted) return;
       setState(() => _friendshipStatus = FriendshipStatus.friends);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã chấp nhận lời mời'), backgroundColor: AppColors.success),
+        SnackBar(content: Text('friend.accept_success'.tr()), backgroundColor: AppColors.success),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -124,7 +125,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -138,7 +139,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -152,7 +153,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể mở tin nhắn: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('friend.cannot_open_msg'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -161,13 +162,13 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Huỷ kết bạn?'),
-        content: Text('Bạn có chắc muốn huỷ kết bạn với ${_profile?.user.fullName ?? ''}?'),
+        title: Text('friend.unfriend_title'.tr()),
+        content: Text('friend.unfriend_confirm'.tr(namedArgs: {'name': _profile?.user.fullName ?? ''})),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Không')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('common.no'.tr())),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Huỷ kết bạn', style: TextStyle(color: AppColors.danger)),
+            child: Text('friend.unfriend'.tr(), style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -180,7 +181,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -205,9 +206,9 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
               const SizedBox(height: 12),
-              Text(_error ?? 'Không tìm thấy người dùng', style: const TextStyle(color: AppColors.textSecondary)),
+              Text(_error ?? 'user.not_found'.tr(), style: const TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: _loadProfile, child: const Text('Thử lại')),
+              ElevatedButton(onPressed: _loadProfile, child: Text('common.retry'.tr())),
             ],
           ),
         ),
@@ -246,10 +247,10 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                     labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 3,
-                    tabs: const [
-                      Tab(text: 'Bài viết'),
-                      Tab(text: 'Thông tin'),
-                      Tab(text: 'Thống kê'),
+                    tabs: [
+                      Tab(text: 'feed.title'.tr()),
+                      Tab(text: 'profile.info_tab'.tr()),
+                      Tab(text: 'profile.stats_tab'.tr()),
                     ],
                   ),
                 ),
@@ -338,7 +339,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                               children: [
                                 Icon(user.role == 'company_admin' ? Icons.verified_rounded : Icons.person, size: 14, color: Colors.white.withValues(alpha: 0.9)),
                                 const SizedBox(width: 5),
-                                Text(user.role == 'company_admin' ? 'Quản trị viên' : 'Thành viên', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
+                                Text(user.role == 'company_admin' ? 'profile.admin_role'.tr() : 'profile.member_role'.tr(), style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
                               ],
                             ),
                           ),
@@ -371,8 +372,8 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   onSelected: (v) {},
                   itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'block', child: Text('Chặn người dùng')),
-                    const PopupMenuItem(value: 'report', child: Text('Báo cáo')),
+                    PopupMenuItem(value: 'block', child: Text('common.block'.tr())),
+                    PopupMenuItem(value: 'report', child: Text('common.report'.tr())),
                   ],
                 ),
               ),
@@ -388,11 +389,11 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 ),
                 child: IntrinsicHeight(
                   child: Row(children: [
-                    _SocialStat(count: _profile!.friendCount.toString(), label: 'Bạn bè'),
+                    _SocialStat(count: _profile!.friendCount.toString(), label: 'friend.title'.tr()),
                     VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                    _SocialStat(count: _profile!.postCount.toString(), label: 'Bài viết'),
+                    _SocialStat(count: _profile!.postCount.toString(), label: 'feed.title'.tr()),
                     VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                    _SocialStat(count: _profile!.groupCount.toString(), label: 'Nhóm'),
+                    _SocialStat(count: _profile!.groupCount.toString(), label: 'group.title'.tr()),
                   ]),
                 ),
               ),
@@ -413,7 +414,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
           child: ElevatedButton.icon(
             onPressed: _sendFriendRequest,
             icon: const Icon(Icons.person_add_rounded, size: 20),
-            label: const Text('Kết bạn', style: TextStyle(fontWeight: FontWeight.w700)),
+            label: Text('friend.add_friend'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -432,7 +433,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
               child: OutlinedButton.icon(
                 onPressed: null,
                 icon: const Icon(Icons.hourglass_top_rounded, size: 20),
-                label: const Text('Đã gửi lời mời', style: TextStyle(fontWeight: FontWeight.w600)),
+                label: Text('friend.sent_request'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   side: const BorderSide(color: AppColors.divider),
@@ -443,7 +444,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
             const SizedBox(height: 6),
             TextButton(
               onPressed: _cancelRequest,
-              child: const Text('Huỷ lời mời', style: TextStyle(color: AppColors.danger, fontSize: 13)),
+              child: Text('friend.cancel_request'.tr(), style: const TextStyle(color: AppColors.danger, fontSize: 13)),
             ),
           ],
         );
@@ -457,7 +458,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 child: ElevatedButton.icon(
                   onPressed: _acceptRequest,
                   icon: const Icon(Icons.check_rounded, size: 20),
-                  label: const Text('Chấp nhận', style: TextStyle(fontWeight: FontWeight.w700)),
+                  label: Text('friend.accept'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -474,7 +475,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 child: OutlinedButton.icon(
                   onPressed: _rejectRequest,
                   icon: const Icon(Icons.close_rounded, size: 20),
-                  label: const Text('Từ chối', style: TextStyle(fontWeight: FontWeight.w600)),
+                  label: Text('friend.reject'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.danger,
                     side: const BorderSide(color: AppColors.danger),
@@ -496,7 +497,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 child: ElevatedButton.icon(
                   onPressed: _openDirectChat,
                   icon: const Icon(Icons.chat_bubble_rounded, size: 18),
-                  label: const Text('Nhắn tin', style: TextStyle(fontWeight: FontWeight.w700)),
+                  label: Text('chat.title'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -514,7 +515,7 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 child: OutlinedButton.icon(
                   onPressed: _unfriend,
                   icon: const Icon(Icons.check_circle_rounded, size: 20),
-                  label: const Text('Bạn bè ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+                  label: Text('friend.friends_check'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.secondary,
                     side: const BorderSide(color: AppColors.secondary),
@@ -548,10 +549,10 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
                 child: const Icon(Icons.article_outlined, size: 48, color: AppColors.primary),
               ),
               const SizedBox(height: 20),
-              const Text('Chưa có bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+              Text('profile.no_posts'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
               const SizedBox(height: 8),
               Text(
-                '${_profile!.user.fullName} chưa đăng bài viết nào',
+                'friend.user_no_posts'.tr(namedArgs: {'name': _profile!.user.fullName}),
                 style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
@@ -597,14 +598,14 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _InfoTile(icon: Icons.person_rounded, label: 'Tên', value: user.fullName),
+        _InfoTile(icon: Icons.person_rounded, label: 'friend.name_label'.tr(), value: user.fullName),
         if (user.role != null)
-          _InfoTile(icon: Icons.badge_rounded, label: 'Vai trò', value: user.role == 'company_admin' ? 'Quản trị viên' : 'Thành viên'),
+        _InfoTile(icon: Icons.badge_rounded, label: 'profile.role_label'.tr(), value: user.role == 'company_admin' ? 'profile.admin_role'.tr() : 'profile.member_role'.tr()),
         if (_profile!.company != null)
-          _InfoTile(icon: Icons.business_rounded, label: 'Công ty', value: _profile!.company!.name),
-        _InfoTile(icon: Icons.people_rounded, label: 'Bạn bè', value: '${_profile!.friendCount} bạn bè'),
-        _InfoTile(icon: Icons.article_rounded, label: 'Bài viết', value: '${_profile!.postCount} bài viết'),
-        _InfoTile(icon: Icons.group_rounded, label: 'Nhóm', value: '${_profile!.groupCount} nhóm'),
+          _InfoTile(icon: Icons.business_rounded, label: 'profile.company_label'.tr(), value: _profile!.company!.name),
+        _InfoTile(icon: Icons.people_rounded, label: 'friend.title'.tr(), value: 'friend.n_friends'.tr(namedArgs: {'n': '${_profile!.friendCount}'})),
+        _InfoTile(icon: Icons.article_rounded, label: 'feed.title'.tr(), value: 'friend.n_posts'.tr(namedArgs: {'n': '${_profile!.postCount}'})),
+        _InfoTile(icon: Icons.group_rounded, label: 'group.title'.tr(), value: 'friend.n_groups'.tr(namedArgs: {'n': '${_profile!.groupCount}'})),
       ],
     );
   }
@@ -625,12 +626,12 @@ class _UserProfilePageState extends State<UserProfilePage> with TickerProviderSt
               child: const Icon(Icons.bar_chart_rounded, size: 48, color: AppColors.indigo),
             ),
             const SizedBox(height: 20),
-            const Text('Thống kê', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+            Text('profile.stats_tab'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
             const SizedBox(height: 8),
             Text(
               _friendshipStatus == FriendshipStatus.friends
-                  ? 'Thống kê hoạt động sẽ hiển thị ở đây'
-                  : 'Kết bạn để xem thống kê hoạt động',
+                  ? 'profile.stats_hint_friend'.tr()
+                  : 'profile.stats_hint_stranger'.tr(),
               style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),

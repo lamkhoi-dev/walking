@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../shared/widgets/loading_widget.dart';
@@ -58,7 +59,7 @@ class _ChatTabsPageState extends State<ChatTabsPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Chat', style: AppTextStyles.heading3),
+        title: Text('nav.groups'.tr(), style: AppTextStyles.heading3),
         centerTitle: false,
         backgroundColor: AppColors.surface,
         elevation: 0,
@@ -67,7 +68,7 @@ class _ChatTabsPageState extends State<ChatTabsPage>
           IconButton(
             icon: const Icon(Icons.qr_code_scanner, color: AppColors.textMain),
             onPressed: () => context.push('/groups/qr-scanner'),
-            tooltip: 'Quét QR',
+            tooltip: 'group.scan_qr'.tr(),
           ),
         ],
         bottom: TabBar(
@@ -84,9 +85,9 @@ class _ChatTabsPageState extends State<ChatTabsPage>
             fontWeight: FontWeight.w500,
             fontSize: 14,
           ),
-          tabs: const [
-            Tab(text: 'Tin nhắn'),
-            Tab(text: 'Nhóm'),
+          tabs: [
+            Tab(text: 'chat.dm_tab'.tr()),
+            Tab(text: 'group.title'.tr()),
           ],
         ),
       ),
@@ -186,7 +187,7 @@ class _DirectMessagesTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Chưa có tin nhắn',
+            'chat.no_conversations'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -195,7 +196,7 @@ class _DirectMessagesTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tin nhắn riêng sẽ xuất hiện ở đây',
+            'chat.dm_placeholder'.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -220,7 +221,7 @@ class _GroupsTab extends StatelessWidget {
         BlocBuilder<GroupListBloc, GroupListState>(
           builder: (context, state) {
             if (state is GroupListLoading) {
-              return const LoadingWidget(message: 'Đang tải nhóm...');
+              return LoadingWidget(message: 'chat.loading_groups'.tr());
             }
 
             if (state is GroupListError) {
@@ -282,7 +283,7 @@ class _GroupsTab extends StatelessWidget {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
-              label: const Text('Tạo nhóm'),
+              label: Text('group.create_group'.tr()),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -306,14 +307,14 @@ class _GroupsTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Chưa có nhóm nào',
+              'feed.no_groups'.tr(),
               style: AppTextStyles.heading4.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Quét mã QR để tham gia nhóm!',
+              'chat.scan_qr_hint'.tr(),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,

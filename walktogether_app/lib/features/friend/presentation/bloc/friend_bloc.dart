@@ -153,7 +153,7 @@ class FriendBloc extends Bloc<FriendEvent, FriendState> {
   Future<void> _onSendRequest(FriendSendRequest event, Emitter<FriendState> emit) async {
     try {
       await repository.sendRequest(event.userId);
-      emit(const FriendActionSuccess('Đã gửi lời mời kết bạn'));
+      emit(const FriendActionSuccess('friend.request_sent_success'));
     } catch (e) {
       debugPrint('FriendBloc: sendRequest error: $e');
       emit(FriendError(e.toString()));
@@ -163,7 +163,7 @@ class FriendBloc extends Bloc<FriendEvent, FriendState> {
   Future<void> _onAcceptRequest(FriendAcceptRequest event, Emitter<FriendState> emit) async {
     try {
       await repository.acceptRequest(event.friendshipId);
-      emit(const FriendActionSuccess('Đã chấp nhận lời mời'));
+      emit(const FriendActionSuccess('friend.accept_success'));
     } catch (e) {
       debugPrint('FriendBloc: acceptRequest error: $e');
       emit(FriendError(e.toString()));
@@ -173,7 +173,7 @@ class FriendBloc extends Bloc<FriendEvent, FriendState> {
   Future<void> _onRejectRequest(FriendRejectRequest event, Emitter<FriendState> emit) async {
     try {
       await repository.rejectRequest(event.friendshipId);
-      emit(const FriendActionSuccess('Đã từ chối lời mời'));
+      emit(const FriendActionSuccess('friend.reject_success'));
     } catch (e) {
       debugPrint('FriendBloc: rejectRequest error: $e');
       emit(FriendError(e.toString()));
@@ -183,7 +183,7 @@ class FriendBloc extends Bloc<FriendEvent, FriendState> {
   Future<void> _onCancelRequest(FriendCancelRequest event, Emitter<FriendState> emit) async {
     try {
       await repository.cancelRequest(event.friendshipId);
-      emit(const FriendActionSuccess('Đã huỷ lời mời'));
+      emit(const FriendActionSuccess('friend.cancel_request'));
     } catch (e) {
       debugPrint('FriendBloc: cancelRequest error: $e');
       emit(FriendError(e.toString()));
@@ -193,7 +193,7 @@ class FriendBloc extends Bloc<FriendEvent, FriendState> {
   Future<void> _onUnfriend(FriendUnfriend event, Emitter<FriendState> emit) async {
     try {
       await repository.unfriend(event.friendId);
-      emit(const FriendActionSuccess('Đã huỷ kết bạn'));
+      emit(const FriendActionSuccess('friend.unfriend_success'));
     } catch (e) {
       debugPrint('FriendBloc: unfriend error: $e');
       emit(FriendError(e.toString()));

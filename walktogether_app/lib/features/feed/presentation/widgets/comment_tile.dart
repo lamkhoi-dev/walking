@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/post_model.dart';
 import 'package:intl/intl.dart';
@@ -124,8 +125,8 @@ class CommentTile extends StatelessWidget {
                                       .withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Text(
-                                  'Bạn',
+                                child: Text(
+                                  'common.you'.tr(),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -183,7 +184,7 @@ class CommentTile extends StatelessWidget {
                           GestureDetector(
                             onTap: () => _showDeleteSheet(context),
                             child: Text(
-                              'Xóa',
+                              'common.delete'.tr(),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -285,14 +286,14 @@ class CommentTile extends StatelessWidget {
                       color: AppColors.danger.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.delete_outline_rounded,
                             size: 20, color: AppColors.danger),
                         SizedBox(width: 8),
                         Text(
-                          'Xóa bình luận',
+                          'feed.delete_comment'.tr(),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -316,8 +317,8 @@ class CommentTile extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text(
-                  'Hủy',
+                child: Text(
+                  'common.cancel'.tr(),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -336,7 +337,7 @@ class CommentTile extends StatelessWidget {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    if (diff.inMinutes < 1) return 'Vừa xong';
+    if (diff.inMinutes < 1) return 'common.just_now'.tr();
     if (diff.inMinutes < 60) return '${diff.inMinutes}p';
     if (diff.inHours < 24) return '${diff.inHours}h';
     if (diff.inDays < 7) return '${diff.inDays}d';

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 class ConversationModel {
   final String id;
   final String type; // 'group' or 'direct'
@@ -36,7 +38,7 @@ class ConversationModel {
     }
     // For direct, return the other participant's name
     final other = participants.where((p) => p.id != currentUserId).firstOrNull;
-    return other?.fullName ?? 'Hội thoại';
+    return other?.fullName ?? 'chat.conversation_fallback'.tr();
   }
 
   /// Display avatar for the conversation

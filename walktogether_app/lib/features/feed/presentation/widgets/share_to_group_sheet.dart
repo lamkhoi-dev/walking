@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../group/data/models/group_model.dart';
@@ -92,7 +93,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
         final count = _selectedGroupIds.length;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã chia sẻ vào $count nhóm!'),
+            content: Text('feed.share_success'.tr(namedArgs: {'count': count.toString()})),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -104,7 +105,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $e'),
+            content: Text('common.error_generic'.tr(namedArgs: {'error': e.toString()})),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
           ),
@@ -152,9 +153,9 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
                   child: const Icon(Icons.share_rounded, color: AppColors.primary, size: 18),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Chia sẻ bài viết',
+                    'common.share'.tr(),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -192,7 +193,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
                     const Icon(Icons.groups_rounded, size: 18, color: AppColors.textSecondary),
                     const SizedBox(width: 8),
                     Text(
-                      'Chọn nhóm để chia sẻ',
+                      'feed.select_groups_share'.tr(),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -208,7 +209,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${_selectedGroupIds.length} nhóm',
+                          'feed.n_groups_selected'.tr(namedArgs: {'n': '${_selectedGroupIds.length}'}),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -264,8 +265,8 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Chia sẻ',
+                    : Text(
+                        'common.share'.tr(),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -396,7 +397,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
             children: [
               const Icon(Icons.error_outline, size: 36, color: AppColors.danger),
               const SizedBox(height: 8),
-              Text('Không thể tải nhóm', style: TextStyle(color: AppColors.textSecondary)),
+              Text('common.error'.tr(), style: TextStyle(color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -412,7 +413,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
               Icon(Icons.groups_outlined, size: 40, color: Colors.grey.shade300),
               const SizedBox(height: 8),
               Text(
-                'Không có nhóm nào để chia sẻ',
+                'common.no_data'.tr(),
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ],
@@ -484,7 +485,7 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '${group.totalMembers} thành viên',
+                        '${group.totalMembers} ${'group.members_label'.tr()}',
                           style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                         ),
                       ],
@@ -515,9 +516,9 @@ class _ShareToGroupSheetState extends State<ShareToGroupSheet> {
 
   String _timeAgo(DateTime dateTime) {
     final diff = DateTime.now().difference(dateTime);
-    if (diff.inDays > 0) return '${diff.inDays} ngày trước';
-    if (diff.inHours > 0) return '${diff.inHours} giờ trước';
-    if (diff.inMinutes > 0) return '${diff.inMinutes} phút trước';
-    return 'Vừa xong';
+    if (diff.inDays > 0) return 'common.time_days'.tr(namedArgs: {'n': '${diff.inDays}'});
+    if (diff.inHours > 0) return 'common.time_hours'.tr(namedArgs: {'n': '${diff.inHours}'});
+    if (diff.inMinutes > 0) return 'common.time_minutes'.tr(namedArgs: {'n': '${diff.inMinutes}'});
+    return 'common.just_now'.tr();
   }
 }

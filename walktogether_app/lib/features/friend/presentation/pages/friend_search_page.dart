@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -79,12 +80,12 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
         );
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã gửi lời mời đến ${user.fullName}'), backgroundColor: AppColors.success),
+        SnackBar(content: Text('friend.sent_to'.tr(namedArgs: {'name': user.fullName})), backgroundColor: AppColors.success),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -96,9 +97,9 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Tìm kiếm',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain),
+        title: Text(
+          'friend.search_title'.tr(),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain),
         ),
       ),
       body: Column(
@@ -111,7 +112,7 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
               controller: _searchController,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: 'Nhập tên để tìm kiếm...',
+                hintText: 'friend.search_hint'.tr(),
                 prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -145,9 +146,9 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
                           children: [
                             Icon(Icons.person_search_rounded, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.3)),
                             const SizedBox(height: 12),
-                            const Text(
-                              'Tìm người dùng để kết bạn',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                            Text(
+                              'friend.find_hint'.tr(),
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
                             ),
                           ],
                         ),
@@ -159,9 +160,9 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
                               children: [
                                 Icon(Icons.search_off_rounded, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.3)),
                                 const SizedBox(height: 12),
-                                const Text(
-                                  'Không tìm thấy người dùng',
-                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                                Text(
+                                  'friend.not_found'.tr(),
+                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
                                 ),
                               ],
                             ),
@@ -243,7 +244,7 @@ class _SearchResultTile extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: onAddFriend,
             icon: const Icon(Icons.person_add_rounded, size: 16),
-            label: const Text('Kết bạn', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            label: Text('friend.add_friend'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -260,7 +261,7 @@ class _SearchResultTile extends StatelessWidget {
             color: AppColors.divider,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Text('Đã gửi', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+          child: Text('friend.sent_request'.tr(), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
         );
       case FriendshipStatus.pendingReceived:
         return Container(
@@ -269,15 +270,15 @@ class _SearchResultTile extends StatelessWidget {
             color: AppColors.primaryLight,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Text('Phản hồi', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+          child: Text('friend.respond'.tr(), style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
         );
       case FriendshipStatus.friends:
-        return const Row(
+        return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_rounded, size: 18, color: AppColors.secondary),
-            SizedBox(width: 4),
-            Text('Bạn bè', style: TextStyle(fontSize: 12, color: AppColors.secondary, fontWeight: FontWeight.w600)),
+            const Icon(Icons.check_circle_rounded, size: 18, color: AppColors.secondary),
+            const SizedBox(width: 4),
+            Text('friend.friends'.tr(), style: const TextStyle(fontSize: 12, color: AppColors.secondary, fontWeight: FontWeight.w600)),
           ],
         );
       case FriendshipStatus.self:

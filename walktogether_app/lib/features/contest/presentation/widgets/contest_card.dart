@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/contest_model.dart';
 
@@ -69,14 +70,14 @@ class ContestCard extends StatelessWidget {
                   Icon(Icons.group, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    contest.groupName ?? 'Nhóm',
+                    contest.groupName ?? 'group.title'.tr(),
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(width: 16),
                   Icon(Icons.people, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    '${contest.participants.length} người',
+                    '${contest.participants.length} ${'contest.participants_label'.tr()}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
@@ -118,22 +119,22 @@ class _StatusBadge extends StatelessWidget {
       case 'active':
         bgColor = AppColors.success.withValues(alpha: 0.15);
         textColor = AppColors.success;
-        label = 'Đang diễn ra';
+        label = 'contest.status_active'.tr();
         break;
       case 'upcoming':
         bgColor = AppColors.info.withValues(alpha: 0.15);
         textColor = AppColors.info;
-        label = 'Sắp diễn ra';
+        label = 'contest.status_upcoming'.tr();
         break;
       case 'completed':
         bgColor = AppColors.textSecondary.withValues(alpha: 0.15);
         textColor = AppColors.textSecondary;
-        label = 'Đã kết thúc';
+        label = 'contest.status_completed'.tr();
         break;
       case 'cancelled':
         bgColor = AppColors.danger.withValues(alpha: 0.15);
         textColor = AppColors.danger;
-        label = 'Đã huỷ';
+        label = 'contest.status_cancelled'.tr();
         break;
       default:
         bgColor = Colors.grey[200]!;

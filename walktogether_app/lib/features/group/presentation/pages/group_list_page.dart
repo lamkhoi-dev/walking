@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -40,7 +41,7 @@ class _GroupListPageState extends State<GroupListPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Nhóm', style: AppTextStyles.heading3),
+        title: Text('group.title'.tr(), style: AppTextStyles.heading3),
         centerTitle: false,
         backgroundColor: AppColors.surface,
         elevation: 0,
@@ -49,19 +50,19 @@ class _GroupListPageState extends State<GroupListPage> {
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.textMain),
             onPressed: () => context.push('/groups/search'),
-            tooltip: 'Tìm kiếm nhóm',
+            tooltip: 'group.search_title'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.qr_code_scanner, color: AppColors.textMain),
             onPressed: () => _showQRScanner(context),
-            tooltip: 'Quét QR',
+            tooltip: 'group.scan_qr'.tr(),
           ),
         ],
       ),
       body: BlocBuilder<GroupListBloc, GroupListState>(
         builder: (context, state) {
           if (state is GroupListLoading) {
-            return const LoadingWidget(message: 'Đang tải nhóm...');
+            return LoadingWidget(message: 'group.loading_groups'.tr());
           }
 
           if (state is GroupListError) {
@@ -109,7 +110,7 @@ class _GroupListPageState extends State<GroupListPage> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
-              label: const Text('Tạo nhóm'),
+              label: Text('group.create_group'.tr()),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -132,7 +133,7 @@ class _GroupListPageState extends State<GroupListPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Chưa có nhóm nào',
+              'group.no_groups'.tr(),
               style: AppTextStyles.heading4.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -140,8 +141,8 @@ class _GroupListPageState extends State<GroupListPage> {
             const SizedBox(height: 8),
             Text(
               isAdmin
-                  ? 'Tạo nhóm đầu tiên để bắt đầu kết nối với nhân viên'
-                  : 'Bạn chưa tham gia nhóm nào. Hãy quét mã QR để tham gia!',
+                  ? 'group.no_groups_admin_hint'.tr()
+                  : 'group.no_groups_member_hint'.tr(),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
@@ -158,13 +159,13 @@ class _GroupListPageState extends State<GroupListPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Xóa nhóm'),
-        content: Text('Bạn có chắc muốn xóa nhóm "$groupName"? Hành động này không thể hoàn tác.'),
+        title: Text('group.delete_group'.tr()),
+        content: Text('group.delete_group_confirm'.tr(namedArgs: {'name': groupName})),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Hủy',
+              'common.cancel'.tr(),
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -173,9 +174,9 @@ class _GroupListPageState extends State<GroupListPage> {
               Navigator.of(dialogContext).pop();
               context.read<GroupListBloc>().add(GroupDeleteRequested(groupId));
             },
-            child: const Text(
-              'Xóa',
-              style: TextStyle(color: AppColors.danger),
+            child: Text(
+              'common.delete'.tr(),
+              style: const TextStyle(color: AppColors.danger),
             ),
           ),
         ],

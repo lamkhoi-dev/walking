@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -23,7 +24,7 @@ class GroupQRPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Mã QR nhóm', style: AppTextStyles.heading4),
+        title: Text('group.qr_code'.tr(), style: AppTextStyles.heading4),
         backgroundColor: AppColors.surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -42,7 +43,7 @@ class GroupQRPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Quét mã QR để tham gia nhóm',
+                'group.qr_scan_hint'.tr(),
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -77,10 +78,10 @@ class GroupQRPage extends StatelessWidget {
                   ),
                   embeddedImage: null,
                   errorStateBuilder: (context, error) {
-                    return const Center(
+                    return Center(
                       child: Text(
-                        'Không thể tạo mã QR',
-                        style: TextStyle(color: AppColors.danger),
+                        'group.qr_error'.tr(),
+                        style: const TextStyle(color: AppColors.danger),
                       ),
                     );
                   },
@@ -109,7 +110,7 @@ class GroupQRPage extends StatelessWidget {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'Chia sẻ mã QR này cho thành viên mới',
+                        'group.qr_share_hint'.tr(),
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                         ),
@@ -128,14 +129,14 @@ class GroupQRPage extends StatelessWidget {
                   onPressed: () {
                     // TODO: Implement share functionality with share_plus
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng chia sẻ đang phát triển'),
+                      SnackBar(
+                        content: Text('group.feature_in_dev'.tr()),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
                   },
                   icon: const Icon(Icons.share_outlined, size: 20),
-                  label: const Text('Chia sẻ mã QR'),
+                  label: Text('group.share_qr'.tr()),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary),

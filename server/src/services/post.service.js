@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
  * Create a new post
  * Handles visibility normalization: 'all_groups' → populates visibleToGroups with author's groups
  */
-const createPost = async (authorId, { content, visibility, visibleToGroups, media, type, sharedPostId, sharedContestId, achievementRank, achievementSteps }) => {
+const createPost = async (authorId, { content, visibility, visibleToGroups, media, type, sharedPostId, sharedContestId, achievementRank, achievementSteps, mediaLayout }) => {
   const author = await User.findById(authorId).select('companyId role');
   if (!author) {
     const err = new Error('Người dùng không tồn tại');
@@ -58,6 +58,7 @@ const createPost = async (authorId, { content, visibility, visibleToGroups, medi
     type: postType,
     content: content || '',
     media: media || [],
+    mediaLayout: mediaLayout || null,
     isOfficial,
     sharedPostId: sharedPostId || undefined,
     sharedContestId: sharedContestId || undefined,

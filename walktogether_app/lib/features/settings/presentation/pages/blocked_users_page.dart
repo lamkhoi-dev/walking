@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/repositories/settings_repository.dart';
@@ -29,7 +30,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã bỏ chặn $name'),
+            content: Text('settings.unblocked'.tr(namedArgs: {'name': name})),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -41,7 +42,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $e'),
+            content: Text('common.error_generic'.tr(namedArgs: {'error': e.toString()})),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
           ),
@@ -55,7 +56,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Người đã chặn'),
+        title: Text('settings.blocked_users'.tr()),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textMain,
@@ -79,14 +80,14 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
                   Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
                   const SizedBox(height: 12),
                   Text(
-                    'Không thể tải danh sách',
+                    'common.error'.tr(),
                     style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
                   ),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: () => setState(() => _loadBlockedUsers()),
                     icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Thử lại'),
+                    label: Text('common.retry'.tr()),
                   ),
                 ],
               ),
@@ -103,7 +104,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
                   Icon(Icons.check_circle_outline, size: 56, color: AppColors.primary.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text(
-                    'Bạn chưa chặn ai',
+                    'settings.blocked_users'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -112,7 +113,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Danh sách người bị chặn sẽ hiện ở đây',
+                    'common.no_data'.tr(),
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -130,7 +131,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
             itemBuilder: (context, index) {
               final user = users[index];
               final id = user['_id']?.toString() ?? '';
-              final name = user['fullName']?.toString() ?? 'Người dùng';
+              final name = user['fullName']?.toString() ?? 'chat.user_label'.tr();
               final avatar = user['avatar']?.toString();
 
               return Container(
@@ -184,8 +185,8 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
                           side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
                         ),
                       ),
-                      child: const Text(
-                        'Bỏ chặn',
+                      child: Text(
+                        'common.block'.tr(),
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),

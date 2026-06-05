@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -49,7 +50,7 @@ class MemberListTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                'Trưởng nhóm',
+                'group.group_leader'.tr(),
                 style: AppTextStyles.bodySmall.copyWith(
                   fontSize: 10,
                   color: AppColors.primary,
@@ -92,7 +93,7 @@ class MemberListTile extends StatelessWidget {
                 size: 22,
               ),
               onPressed: onRemove,
-              tooltip: 'Xóa thành viên',
+              tooltip: 'group.remove_member'.tr(),
             )
           : null,
       onTap: onTap,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../data/models/friendship_model.dart';
@@ -78,12 +79,12 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
       setState(() => _requests.removeWhere((r) => r.friendshipId == request.friendshipId));
       _loadFriends(); // Refresh friends list
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã chấp nhận ${request.user.fullName}'), backgroundColor: AppColors.success),
+        SnackBar(content: Text('${'friend.accept'.tr()} ${request.user.fullName}'), backgroundColor: AppColors.success),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -96,7 +97,7 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
       );
     }
   }
@@ -108,10 +109,7 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Bạn bè',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain),
-        ),
+        title: Text('friend.title'.tr(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain)),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_search_rounded, color: AppColors.primary),
@@ -126,12 +124,12 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
           indicatorColor: AppColors.primary,
           indicatorWeight: 3,
           tabs: [
-            const Tab(text: 'Danh sách'),
+          Tab(text: 'friend.title'.tr()),
             Tab(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Lời mời'),
+                  Text('friend.requests'.tr()),
                   if (_requests.isNotEmpty) ...[
                     const SizedBox(width: 6),
                     Container(
@@ -171,7 +169,7 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Tìm bạn bè...',
+              hintText: 'friend.search_hint'.tr(),
               prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
               filled: true,
               fillColor: AppColors.surface,
@@ -200,7 +198,7 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
                           Icon(Icons.people_outline_rounded, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.4)),
                           const SizedBox(height: 12),
                           Text(
-                            _searchQuery.isNotEmpty ? 'Không tìm thấy' : 'Chưa có bạn bè',
+                            _searchQuery.isNotEmpty ? 'common.no_data'.tr() : 'friend.title'.tr(),
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
                           ),
                         ],
@@ -239,8 +237,8 @@ class _FriendsPageState extends State<FriendsPage> with TickerProviderStateMixin
           children: [
             Icon(Icons.mail_outline_rounded, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
-            const Text(
-              'Không có lời mời nào',
+            Text(
+              'profile.no_invitations'.tr(),
               style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
             ),
           ],
@@ -368,7 +366,7 @@ class _RequestCard extends StatelessWidget {
                             elevation: 0,
                             padding: EdgeInsets.zero,
                           ),
-                          child: const Text('Chấp nhận', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                          child: Text('friend.accept'.tr(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                         ),
                       ),
                     ),
@@ -384,7 +382,7 @@ class _RequestCard extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             padding: EdgeInsets.zero,
                           ),
-                          child: const Text('Từ chối', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          child: Text('friend.reject'.tr(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),

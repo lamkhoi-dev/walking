@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -66,7 +67,7 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Đang khởi tạo bộ đếm bước...',
+            'step_tracker.initializing'.tr(),
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -122,7 +123,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 child: StepStatCard(
                   icon: Icons.straighten_rounded,
                   value: _formatDistance(state.distance),
-                  label: 'Khoảng cách',
+                  label: 'step_tracker.distance'.tr(),
                   iconColor: AppColors.secondary,
                 ),
               ),
@@ -131,7 +132,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 child: StepStatCard(
                   icon: Icons.local_fire_department_rounded,
                   value: _formatCalories(state.calories),
-                  label: 'Calo',
+                  label: 'step_tracker.calories'.tr(),
                   iconColor: AppColors.pendingOrange,
                 ),
               ),
@@ -142,7 +143,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   child: StepStatCard(
                     icon: Icons.flag_rounded,
                     value: '${(state.progress * 100).toInt()}%',
-                    label: 'Mục tiêu',
+                    label: 'step_tracker.goal'.tr(),
                     iconColor: AppColors.primary,
                   ),
                 ),
@@ -162,7 +163,7 @@ class _ActivityPageState extends State<ActivityPage> {
             child: OutlinedButton.icon(
               onPressed: () => context.push('/goals'),
               icon: const Icon(Icons.emoji_events_rounded, size: 20),
-              label: Text('Xem mục tiêu & thành tựu',
+              label: Text('step_tracker.view_goals'.tr(),
                   style: AppTextStyles.buttonMedium.copyWith(color: AppColors.primary)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
@@ -198,7 +199,7 @@ class _ActivityPageState extends State<ActivityPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hoạt động hôm nay', style: AppTextStyles.heading3),
+              Text('step_tracker.today_activity'.tr(), style: AppTextStyles.heading3),
               const SizedBox(height: 4),
               Text(
                 _todayLabel(),
@@ -226,17 +227,17 @@ class _ActivityPageState extends State<ActivityPage> {
     switch (status) {
       case 'walking':
         icon = Icons.directions_walk_rounded;
-        label = 'Đang đi bộ';
+        label = 'step_tracker.walking'.tr();
         color = AppColors.primary;
         break;
       case 'stopped':
         icon = Icons.accessibility_new_rounded;
-        label = 'Đang đứng yên';
+        label = 'step_tracker.standing'.tr();
         color = AppColors.textSecondary;
         break;
       default:
         icon = Icons.help_outline_rounded;
-        label = 'Chưa xác định';
+        label = 'step_tracker.unknown'.tr();
         color = AppColors.textSecondary;
     }
 
@@ -279,7 +280,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 size: 22,
               ),
               label: Text(
-                state.isTracking ? 'Tạm dừng' : 'Tiếp tục',
+                state.isTracking ? 'step_tracker.pause'.tr() : 'step_tracker.resume'.tr(),
                 style: AppTextStyles.buttonMedium,
               ),
               style: ElevatedButton.styleFrom(
@@ -307,7 +308,7 @@ class _ActivityPageState extends State<ActivityPage> {
         ),
         child: Center(
           child: Text(
-            'Chưa có dữ liệu theo giờ',
+            'step_tracker.no_hourly_data'.tr(),
             style: AppTextStyles.bodySmall,
           ),
         ),
@@ -333,7 +334,7 @@ class _ActivityPageState extends State<ActivityPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bước chân theo giờ', style: AppTextStyles.labelLarge),
+          Text('step_tracker.hourly_steps'.tr(), style: AppTextStyles.labelLarge),
           const SizedBox(height: 16),
           SizedBox(
             height: 100,
@@ -389,7 +390,7 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Widget _buildError(String message) {
-    final isPermissionError = message.contains('quyền') || message.contains('cảm biến') || message.contains('permission');
+    final isPermissionError = message.contains('permission') || message.contains('quyền') || message.contains('cảm biến') || message.contains('authorized');
 
     return Center(
       child: Padding(
@@ -414,14 +415,14 @@ class _ActivityPageState extends State<ActivityPage> {
             ),
             const SizedBox(height: 20),
             Text(
-              isPermissionError ? 'Đếm bước chưa hoạt động' : 'Lỗi bộ đếm bước',
+              isPermissionError ? 'step_tracker.permission_error_title'.tr() : 'step_tracker.counter_error_title'.tr(),
               style: AppTextStyles.heading4,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               isPermissionError
-                  ? 'Tính năng đếm bước cần quyền truy cập cảm biến chuyển động để hoạt động. Bạn có thể bật quyền này trong Cài đặt bất cứ lúc nào.'
+                  ? 'step_tracker.permission_error_desc'.tr()
                   : message,
               style: AppTextStyles.bodySmall.copyWith(height: 1.5),
               textAlign: TextAlign.center,
@@ -443,7 +444,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   ),
                   elevation: 0,
                 ),
-                child: const Text('Thử lại', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text('common.retry'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
             if (isPermissionError) ...[
@@ -452,7 +453,7 @@ class _ActivityPageState extends State<ActivityPage> {
               GestureDetector(
                 onTap: () => openAppSettings(),
                 child: Text(
-                  'Mở Cài đặt',
+                  'step_tracker.open_settings'.tr(),
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                     decoration: TextDecoration.underline,
@@ -482,12 +483,17 @@ class _ActivityPageState extends State<ActivityPage> {
 
   String _todayLabel() {
     final now = DateTime.now();
-    const weekdays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-    const months = [
-      '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+    final weekdayKeys = [
+      'step_tracker.weekday_mon', 'step_tracker.weekday_tue', 'step_tracker.weekday_wed',
+      'step_tracker.weekday_thu', 'step_tracker.weekday_fri', 'step_tracker.weekday_sat', 'step_tracker.weekday_sun',
     ];
-    return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month]}';
+    final monthKeys = [
+      '', 'step_tracker.month_1', 'step_tracker.month_2', 'step_tracker.month_3',
+      'step_tracker.month_4', 'step_tracker.month_5', 'step_tracker.month_6',
+      'step_tracker.month_7', 'step_tracker.month_8', 'step_tracker.month_9',
+      'step_tracker.month_10', 'step_tracker.month_11', 'step_tracker.month_12',
+    ];
+    return '${weekdayKeys[now.weekday - 1].tr()}, ${now.day} ${monthKeys[now.month].tr()}';
   }
 }
 
@@ -584,7 +590,7 @@ class _MyGroupsSectionState extends State<_MyGroupsSection> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Nhóm của tôi',
+                'group.title'.tr(),
                 style: AppTextStyles.labelLarge.copyWith(fontSize: 15),
               ),
             ),
@@ -594,7 +600,7 @@ class _MyGroupsSectionState extends State<_MyGroupsSection> {
                 // The shell uses index 2 for groups
               },
               child: Text(
-                '${_groups.length} nhóm',
+                'common.n_groups'.tr(namedArgs: {'n': '${_groups.length}'}),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -676,7 +682,7 @@ class _MyGroupsSectionState extends State<_MyGroupsSection> {
                                   color: AppColors.textSecondary.withValues(alpha: 0.6)),
                               const SizedBox(width: 4),
                               Text(
-                                '${group.totalMembers} thành viên',
+                                '${group.totalMembers} ${'group.members'.tr()}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
@@ -773,7 +779,7 @@ class _MyGroupsSectionState extends State<_MyGroupsSection> {
                   color: AppColors.textSecondary.withValues(alpha: 0.5)),
               const SizedBox(width: 8),
               Text(
-                'Chưa có cuộc thi nào',
+                'contest.no_contests'.tr(),
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ],
@@ -848,7 +854,7 @@ class _MyGroupsSectionState extends State<_MyGroupsSection> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${contest.participants.length} người · ${isActive ? (daysLeft > 0 ? 'Còn $daysLeft ngày' : 'Hôm nay') : contest.status == 'completed' ? 'Đã kết thúc' : 'Sắp diễn ra'}',
+                        '${contest.participants.length} ${'common.people'.tr()} · ${isActive ? (daysLeft > 0 ? '${'contest.days_left'.tr(namedArgs: {'n': daysLeft.toString()})}' : 'step_tracker.today'.tr()) : contest.status == 'completed' ? 'contest.status_completed'.tr() : 'contest.status_upcoming'.tr()}',
                         style: TextStyle(
                           fontSize: 11,
                           color: AppColors.textSecondary,
@@ -868,7 +874,7 @@ class _MyGroupsSectionState extends State<_MyGroupsSection> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isActive ? 'Đang diễn ra' : contest.status == 'completed' ? 'Hoàn thành' : 'Chờ',
+                    isActive ? 'contest.status_active'.tr() : contest.status == 'completed' ? 'contest.status_completed'.tr() : 'contest.status_upcoming'.tr(),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -951,14 +957,14 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Cuộc thi đang diễn ra',
+                'contest.active_title'.tr(),
                 style: AppTextStyles.labelLarge.copyWith(fontSize: 15),
               ),
             ),
             TextButton(
               onPressed: () => context.push('/goals'),
               child: Text(
-                'Xem tất cả',
+                'common.view_all'.tr(),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1035,7 +1041,7 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            contest.groupName ?? 'Nhóm',
+                            contest.groupName ?? 'group.title'.tr(),
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -1053,7 +1059,7 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        daysLeft > 0 ? 'Còn $daysLeft ngày' : 'Hôm nay',
+                        daysLeft > 0 ? 'contest.days_left_short'.tr(namedArgs: {'n': daysLeft.toString()}) : 'step_tracker.today'.tr(),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -1095,7 +1101,7 @@ class _ActiveContestsSectionState extends State<_ActiveContestsSection> {
                     Icon(Icons.group_rounded, size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
-                      '${contest.participants.length} người tham gia',
+                      '${contest.participants.length} ${'contest.participants_label'.tr()}',
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],

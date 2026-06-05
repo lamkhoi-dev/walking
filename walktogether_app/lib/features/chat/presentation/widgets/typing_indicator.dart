@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 
 /// "Đang gõ..." indicator with animated dots
@@ -38,8 +39,8 @@ class _TypingIndicatorState extends State<TypingIndicator>
     if (widget.typingNames.isEmpty) return const SizedBox.shrink();
 
     final text = widget.typingNames.length == 1
-        ? '${widget.typingNames.first} đang gõ'
-        : '${widget.typingNames.length} người đang gõ';
+        ? 'chat.typing_single'.tr(namedArgs: {'name': widget.typingNames.first})
+        : 'chat.typing_multiple'.tr(namedArgs: {'n': '${widget.typingNames.length}'});
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, bottom: 4),

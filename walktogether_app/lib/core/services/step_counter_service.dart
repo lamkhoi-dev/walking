@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -90,8 +91,8 @@ class StepCounterService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'step_counter_channel',
-        channelName: 'Đếm bước chân',
-        channelDescription: 'Hiển thị khi đang đếm bước chân.',
+        channelName: 'step_tracker.channel_name'.tr(),
+        channelDescription: 'step_tracker.channel_desc'.tr(),
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         onlyAlertOnce: true,
@@ -134,8 +135,8 @@ class StepCounterService {
     try {
       final result = await FlutterForegroundTask.startService(
         serviceId: 200, // Must match StepNotificationHelper.NOTIFICATION_ID
-        notificationTitle: 'Đang đếm bước chân...',
-        notificationText: 'Đang khởi động...',
+        notificationTitle: 'step_tracker.notification_title'.tr(),
+        notificationText: 'step_tracker.notification_starting'.tr(),
         callback: stepCounterCallback,
       );
       debugPrint('Foreground service start: $result');
@@ -226,7 +227,7 @@ class StepCounterService {
       final status = await Permission.activityRecognition.request();
       if (!status.isGranted) {
         debugPrint('ACTIVITY_RECOGNITION permission denied: $status');
-        throw Exception('Cần cấp quyền nhận diện hoạt động để đếm bước chân');
+        throw Exception('step_tracker.permission_required'.tr());
       }
       debugPrint('ACTIVITY_RECOGNITION granted — safe to start pedometer/service');
     }
@@ -363,7 +364,7 @@ class StepCounterService {
         msg.contains('denied') ||
         msg.contains('restricted')) {
       _stepController.addError(
-        Exception('Tính năng đếm bước cần quyền "Motion & Fitness". Bạn có thể bật trong Cài đặt bất cứ lúc nào.'),
+        Exception('step_tracker.motion_permission_hint'.tr()),
       );
     }
   }

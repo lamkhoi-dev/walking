@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../bloc/settings_bloc.dart';
@@ -40,7 +41,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Đổi mật khẩu thành công! ✅'),
+          content: Text('settings.password_changed'.tr()),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -57,7 +58,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Đổi mật khẩu'),
+        title: Text('settings.change_password'.tr()),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textMain,
@@ -104,7 +105,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Mật khẩu mới phải có ít nhất 6 ký tự',
+                          'settings.password_min_6'.tr(),
                           style: TextStyle(
                             color: AppColors.info,
                             fontSize: 13,
@@ -136,14 +137,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     children: [
                       _buildPasswordField(
                         controller: _currentPasswordController,
-                        label: 'Mật khẩu hiện tại',
+                        label: 'settings.current_password'.tr(),
                         icon: Icons.lock_outline,
                         isVisible: _showCurrent,
                         onToggle: () =>
                             setState(() => _showCurrent = !_showCurrent),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Vui lòng nhập mật khẩu hiện tại';
+                            return 'settings.current_password'.tr();
                           }
                           return null;
                         },
@@ -151,17 +152,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       const SizedBox(height: 20),
                       _buildPasswordField(
                         controller: _newPasswordController,
-                        label: 'Mật khẩu mới',
+                        label: 'settings.new_password'.tr(),
                         icon: Icons.lock_reset_rounded,
                         isVisible: _showNew,
                         onToggle: () =>
                             setState(() => _showNew = !_showNew),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Vui lòng nhập mật khẩu mới';
+                            return 'settings.new_password'.tr();
                           }
                           if (v.length < 6) {
-                            return 'Mật khẩu phải có ít nhất 6 ký tự';
+                            return 'settings.password_min_6'.tr();
                           }
                           return null;
                         },
@@ -169,17 +170,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       const SizedBox(height: 20),
                       _buildPasswordField(
                         controller: _confirmPasswordController,
-                        label: 'Xác nhận mật khẩu mới',
+                        label: 'settings.confirm_new_password'.tr(),
                         icon: Icons.check_circle_outline,
                         isVisible: _showConfirm,
                         onToggle: () =>
                             setState(() => _showConfirm = !_showConfirm),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Vui lòng xác nhận mật khẩu';
+                            return 'settings.confirm_new_password'.tr();
                           }
                           if (v != _newPasswordController.text) {
-                            return 'Mật khẩu xác nhận không khớp';
+                            return 'settings.password_mismatch'.tr();
                           }
                           return null;
                         },
@@ -215,8 +216,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Đổi mật khẩu',
+                            : Text(
+                                'settings.change_password'.tr(),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,

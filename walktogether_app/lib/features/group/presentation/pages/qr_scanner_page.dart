@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -34,7 +35,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
-          'Quét mã QR',
+          'group.qr_title'.tr(),
           style: AppTextStyles.heading4.copyWith(color: Colors.white),
         ),
         backgroundColor: Colors.transparent,
@@ -88,7 +89,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Hướng camera vào mã QR của nhóm',
+                  'group.qr_title'.tr(),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: Colors.white,
                   ),
@@ -101,14 +102,14 @@ class _QRScannerPageState extends State<QRScannerPage> {
           if (_isProcessing)
             Container(
               color: Colors.black.withValues(alpha: 0.7),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircularProgressIndicator(color: AppColors.primary),
                     SizedBox(height: 16),
                     Text(
-                      'Đang tham gia nhóm...',
+                      'group.joining'.tr(),
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],
@@ -135,13 +136,13 @@ class _QRScannerPageState extends State<QRScannerPage> {
         uri.host != 'group' ||
         uri.pathSegments.length != 2 ||
         uri.pathSegments[0] != 'join') {
-      _showError('Mã QR không hợp lệ. Vui lòng quét mã QR của nhóm WalkTogether.');
+      _showError('group.join_error'.tr());
       return;
     }
 
     final groupId = uri.pathSegments[1];
     if (groupId.isEmpty) {
-      _showError('Mã QR không chứa thông tin nhóm hợp lệ.');
+      _showError('group.group_not_found'.tr());
       return;
     }
 
@@ -159,8 +160,8 @@ class _QRScannerPageState extends State<QRScannerPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã tham gia nhóm thành công!'),
+        SnackBar(
+          content: Text('group.joined_success'.tr()),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.success,
         ),
@@ -175,11 +176,11 @@ class _QRScannerPageState extends State<QRScannerPage> {
       setState(() => _isProcessing = false);
       _controller.start();
 
-      String message = 'Không thể tham gia nhóm. Vui lòng thử lại.';
+      String message = 'group.join_error'.tr();
       if (e.toString().contains('already')) {
-        message = 'Bạn đã là thành viên của nhóm này.';
+        message = 'group.already_member'.tr();
       } else if (e.toString().contains('not found')) {
-        message = 'Không tìm thấy nhóm.';
+        message = 'group.group_not_found'.tr();
       }
 
       _showError(message);

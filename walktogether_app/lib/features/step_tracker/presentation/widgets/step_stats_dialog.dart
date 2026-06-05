@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -221,9 +222,9 @@ class _StepStatsDialogState extends State<StepStatsDialog>
             children: [
               const Icon(Icons.insights_rounded, color: Colors.white, size: 26),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Thống kê bước chân',
+                  'step_tracker.stats_title'.tr(),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -244,23 +245,23 @@ class _StepStatsDialogState extends State<StepStatsDialog>
             children: [
               _miniStat(
                 Icons.directions_walk_rounded,
-                'Tổng cộng',
+                'step_tracker.header_total'.tr(),
                 _fmtLarge(allTime.total),
-                'bước',
+                'step_tracker.unit_steps'.tr(),
               ),
               const SizedBox(width: 16),
               _miniStat(
                 Icons.calendar_month_rounded,
-                'Số ngày',
+                'step_tracker.header_days'.tr(),
                 '${allTime.totalDays}',
-                'ngày tracking',
+                'step_tracker.header_days_tracking'.tr(),
               ),
               const SizedBox(width: 16),
               _miniStat(
                 Icons.emoji_events_rounded,
-                'Kỷ lục',
+                'step_tracker.header_record'.tr(),
                 _fmtLarge(allTime.best),
-                'bước/ngày',
+                'step_tracker.unit_steps_per_day'.tr(),
               ),
             ],
           ),
@@ -315,10 +316,10 @@ class _StepStatsDialogState extends State<StepStatsDialog>
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         unselectedLabelStyle:
             const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        tabs: const [
-          Tab(text: '7 ngày'),
-          Tab(text: '30 ngày'),
-          Tab(text: 'Tất cả'),
+        tabs: [
+          Tab(text: 'step_tracker.tab_7_days'.tr()),
+          Tab(text: 'step_tracker.tab_30_days'.tr()),
+          Tab(text: 'step_tracker.tab_all'.tr()),
         ],
       ),
     );
@@ -332,23 +333,23 @@ class _StepStatsDialogState extends State<StepStatsDialog>
           _statCard(
             icon: Icons.show_chart_rounded,
             iconColor: AppColors.secondary,
-            label: 'Trung bình',
+            label: 'step_tracker.avg_label'.tr(),
             value: _fmtLarge(summary.avg),
-            unit: 'bước/ngày',
+            unit: 'step_tracker.unit_steps_per_day'.tr(),
           ),
           const SizedBox(width: 10),
           _statCard(
             icon: Icons.check_circle_outline_rounded,
             iconColor: AppColors.success,
-            label: 'Đạt mục tiêu',
+            label: 'goals.goal_reached'.tr(),
             value: '${summary.daysAchieved}/${summary.totalDays}',
-            unit: 'ngày',
+            unit: 'step_tracker.days_unit'.tr(),
           ),
           const SizedBox(width: 10),
           _statCard(
             icon: Icons.route_rounded,
             iconColor: AppColors.pendingOrange,
-            label: 'Quãng đường',
+            label: 'step_tracker.distance_label'.tr(),
             value: '${(summary.total * 0.762 / 1000).toStringAsFixed(1)}',
             unit: 'km',
           ),
@@ -405,10 +406,10 @@ class _StepStatsDialogState extends State<StepStatsDialog>
 
   Widget _buildChart(List<_StepDay> records) {
     if (records.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
+      return Padding(
+        padding: const EdgeInsets.all(24),
         child: Center(
-          child: Text('Chưa có dữ liệu', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text('step_tracker.no_data'.tr(), style: const TextStyle(color: AppColors.textSecondary)),
         ),
       );
     }
@@ -446,7 +447,7 @@ class _StepStatsDialogState extends State<StepStatsDialog>
               padding: const EdgeInsets.symmetric(horizontal: 1.5),
               child: Tooltip(
                 message:
-                    '${_formatDateShort(day.date)}\n${_fmtLarge(day.steps)} bước',
+                    '${_formatDateShort(day.date)}\n${_fmtLarge(day.steps)} ${'step_tracker.unit_steps'.tr()}',
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -481,7 +482,7 @@ class _StepStatsDialogState extends State<StepStatsDialog>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      day.isToday ? 'Nay' : '${day.date.day}',
+                      day.isToday ? 'step_tracker.today_short'.tr() : '${day.date.day}',
                       style: TextStyle(
                         fontSize: 8,
                         fontWeight:
@@ -503,16 +504,16 @@ class _StepStatsDialogState extends State<StepStatsDialog>
 
   Widget _buildDailyList(List<_StepDay> records) {
     if (records.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32),
+      return Padding(
+        padding: const EdgeInsets.all(32),
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.directions_walk_rounded,
+              const Icon(Icons.directions_walk_rounded,
                   size: 48, color: AppColors.divider),
-              SizedBox(height: 12),
-              Text('Chưa có dữ liệu bước chân',
-                  style: TextStyle(color: AppColors.textSecondary)),
+              const SizedBox(height: 12),
+              Text('step_tracker.no_step_data'.tr(),
+                  style: const TextStyle(color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -594,9 +595,9 @@ class _StepStatsDialogState extends State<StepStatsDialog>
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              'Hôm nay',
-                              style: TextStyle(
+                            child: Text(
+                              'step_tracker.today_label'.tr(),
+                              style: const TextStyle(
                                   fontSize: 9,
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700),
@@ -695,9 +696,11 @@ class _StepStatsDialogState extends State<StepStatsDialog>
   }
 
   String _dayOfWeekLabel(int weekday) {
-    const labels = [
-      'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm',
-      'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'
+    final labels = [
+      'step_tracker.weekday_monday'.tr(), 'step_tracker.weekday_tuesday'.tr(),
+      'step_tracker.weekday_wednesday'.tr(), 'step_tracker.weekday_thursday'.tr(),
+      'step_tracker.weekday_friday'.tr(), 'step_tracker.weekday_saturday'.tr(),
+      'step_tracker.weekday_sunday'.tr()
     ];
     return labels[weekday - 1];
   }

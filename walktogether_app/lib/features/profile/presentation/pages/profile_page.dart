@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/network/dio_client.dart';
@@ -136,17 +137,17 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 16),
-              const Text('Đổi ảnh đại diện', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              Text('profile.change_avatar'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
-                title: const Text('Chụp ảnh'),
+                title: Text('profile.take_photo'.tr()),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_rounded, color: AppColors.secondary),
-                title: const Text('Chọn từ thư viện'),
+                title: Text('profile.choose_library'.tr()),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -167,7 +168,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
     // Show loading
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đang tải ảnh lên...'), duration: Duration(seconds: 10)),
+      SnackBar(content: Text('profile.uploading_photo'.tr()), duration: const Duration(seconds: 10)),
     );
 
     try {
@@ -177,7 +178,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật ảnh đại diện!'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text('profile.avatar_updated'.tr()), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
         );
         // Refresh user data
         context.read<AuthBloc>().add(AuthCheckRequested());
@@ -186,7 +187,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text('common.error_generic'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
         );
       }
     }
@@ -230,10 +231,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 3,
                     labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                    tabs: const [
-                      Tab(text: 'Bài viết'),
-                      Tab(text: 'Thông tin'),
-                      Tab(text: 'Thống kê'),
+                    tabs: [
+                      Tab(text: 'feed.title'.tr()),
+                      Tab(text: 'profile.info_tab'.tr()),
+                      Tab(text: 'profile.stats_tab'.tr()),
                     ],
                   ),
                 ),
@@ -367,7 +368,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                                     const Text('🔥', style: TextStyle(fontSize: 13)),
                                     const SizedBox(width: 4),
-                                    Text('${_stats!.streak} ngày', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                                    Text('profile.n_day_streak'.tr(namedArgs: {'n': '${_stats!.streak}'}), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                                   ]),
                                 ),
                               if (_stats != null) ...[
@@ -410,15 +411,15 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   child: Row(children: [
                     _SocialStatColumn(
                       count: '${user.friendCount}',
-                      label: 'Bạn bè',
+                      label: 'profile.friends_label'.tr(),
                       onTap: () => context.push('/friends'),
                       badgeCount: _pendingRequestCount,
                       badgePulse: _badgePulseController,
                     ),
                     VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                    _SocialStatColumn(count: '${user.postCount}', label: 'Bài viết', onTap: () => _tabController.animateTo(0)),
+                    _SocialStatColumn(count: '${user.postCount}', label: 'profile.posts_label'.tr(), onTap: () => _tabController.animateTo(0)),
                     VerticalDivider(color: AppColors.divider.withValues(alpha: 0.5), width: 1, indent: 4, endIndent: 4),
-                    _SocialStatColumn(count: '${user.groupCount}', label: 'Nhóm'),
+                    _SocialStatColumn(count: '${user.groupCount}', label: 'group.title'.tr()),
                   ]),
                 ),
               ),
@@ -444,9 +445,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     final stats = _stats;
     if (stats == null) {
       debugPrint('ProfilePage: stats is null, returning empty');
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: Text('Đang tải thống kê...')),
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(child: Text('profile.loading_stats'.tr())),
       );
     }
 
@@ -460,7 +461,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             child: _QuickStatCard(
               icon: Icons.directions_walk,
               value: _formatNumber(stats.allTime.totalSteps),
-              label: 'Tổng bước',
+              label: 'profile.total_steps'.tr(),
               color: AppColors.primary,
             ),
           ),
@@ -469,7 +470,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             child: _QuickStatCard(
               icon: Icons.straighten,
               value: _formatDistance(stats.allTime.totalDistance),
-              label: 'Quãng đường',
+              label: 'profile.distance_label'.tr(),
               color: Colors.green,
             ),
           ),
@@ -478,7 +479,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             child: _QuickStatCard(
               icon: Icons.local_fire_department,
               value: _formatCalories(stats.allTime.totalCalories),
-              label: 'Calo',
+              label: 'profile.calories_label'.tr(),
               color: Colors.orange,
             ),
           ),
@@ -494,22 +495,22 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Personal Info Section
-          _buildSectionTitle('Thông tin cá nhân', Icons.person_outline),
+          _buildSectionTitle('profile.personal_info'.tr(), Icons.person_outline),
           const SizedBox(height: 12),
           _buildInfoCard([
             _InfoItem(
               icon: Icons.email_outlined,
-              label: 'Email',
-              value: user.email ?? 'Chưa cập nhật',
+              label: 'auth.email'.tr(),
+              value: user.email ?? 'profile.not_updated'.tr(),
             ),
             _InfoItem(
               icon: Icons.phone_outlined,
-              label: 'Số điện thoại',
-              value: user.phone ?? 'Chưa cập nhật',
+              label: 'auth.phone'.tr(),
+              value: user.phone ?? 'profile.not_updated'.tr(),
             ),
             _InfoItem(
               icon: Icons.calendar_today_outlined,
-              label: 'Ngày tham gia',
+              label: 'profile.joined_date'.tr(),
               value: user.createdAt != null ? _formatDate(user.createdAt!) : 'N/A',
             ),
           ]),
@@ -518,14 +519,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
           // Company Section
           if (company != null) ...[
-            _buildSectionTitle('Công ty', Icons.business_outlined),
+            _buildSectionTitle('profile.company_label'.tr(), Icons.business_outlined),
             const SizedBox(height: 12),
             _buildCompanyCard(company, user.role),
             const SizedBox(height: 24),
           ],
 
           // Actions Section
-          _buildSectionTitle('Tài khoản', Icons.settings_outlined),
+          _buildSectionTitle('profile.account_label'.tr(), Icons.settings_outlined),
           const SizedBox(height: 12),
           _buildActionsList(),
 
@@ -568,7 +569,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
     final stats = _stats;
     if (stats == null) {
-      return const Center(child: Text('Không có dữ liệu'));
+      return Center(child: Text('common.no_data'.tr()));
     }
 
     return SingleChildScrollView(
@@ -585,21 +586,21 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           const SizedBox(height: 24),
 
           // Today Stats
-          _buildSectionTitle('Hôm nay', Icons.today),
+          _buildSectionTitle('step_tracker.today'.tr(), Icons.today),
           const SizedBox(height: 12),
           _buildTodayCard(stats.today),
           const SizedBox(height: 24),
 
           // This Week
-          _buildSectionTitle('Tuần này', Icons.date_range),
+          _buildSectionTitle('profile.this_week'.tr(), Icons.date_range),
           const SizedBox(height: 12),
-          _buildPeriodCard(stats.week, 'tuần'),
+          _buildPeriodCard(stats.week, 'profile.week_unit'.tr()),
           const SizedBox(height: 24),
 
           // This Month
-          _buildSectionTitle('Tháng này', Icons.calendar_month),
+          _buildSectionTitle('profile.this_month'.tr(), Icons.calendar_month),
           const SizedBox(height: 12),
-          _buildPeriodCard(stats.month, 'tháng'),
+          _buildPeriodCard(stats.month, 'profile.month_unit'.tr()),
           const SizedBox(height: 24),
 
           // Personal Records
@@ -757,7 +758,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         Icon(Icons.people, size: 14, color: AppColors.textSecondary),
                         const SizedBox(width: 4),
                         Text(
-                          '${company.totalMembers} thành viên',
+                          '${company.totalMembers} ${'group.members_label'.tr()}',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -786,7 +787,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Mã công ty',
+                        'profile.company_code'.tr(),
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -807,10 +808,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: company.code!));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đã sao chép mã công ty'),
+                        SnackBar(
+                          content: Text('profile.code_copied'.tr()),
                           behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 1),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     },
@@ -832,12 +833,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     switch (status) {
       case 'approved':
         color = AppColors.success;
-        label = 'Đã duyệt';
+        label = 'profile.status_approved'.tr();
         icon = Icons.check_circle;
         break;
       case 'pending':
         color = AppColors.warning;
-        label = 'Chờ duyệt';
+        label = 'profile.status_pending'.tr();
         icon = Icons.access_time;
         break;
       default:
@@ -887,19 +888,19 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         children: [
           _buildActionItem(
             icon: Icons.settings_outlined,
-            label: 'Cài đặt',
+            label: 'profile.settings_label'.tr(),
             onTap: () => context.push('/settings'),
           ),
           Divider(height: 1, indent: 56, color: Colors.grey.shade100),
           _buildActionItem(
             icon: Icons.notifications_outlined,
-            label: 'Thông báo',
+            label: 'profile.notifications_label'.tr(),
             onTap: () => context.push('/settings'),
           ),
           Divider(height: 1, indent: 56, color: Colors.grey.shade100),
           _buildActionItem(
             icon: Icons.help_outline,
-            label: 'Trợ giúp & Hỗ trợ',
+            label: 'profile.help_support'.tr(),
             onTap: () {
               // TODO: Implement help page
             },
@@ -907,7 +908,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           Divider(height: 1, indent: 56, color: Colors.grey.shade100),
           _buildActionItem(
             icon: Icons.logout,
-            label: 'Đăng xuất',
+            label: 'auth.logout'.tr(),
             color: AppColors.danger,
             onTap: () => _confirmLogout(context),
           ),
@@ -979,7 +980,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           _buildTodayStatItem(
             Icons.directions_walk,
             _formatNumber(today.steps),
-            'Bước',
+            'profile.steps_label'.tr(),
           ),
           Container(
             width: 1,
@@ -989,7 +990,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           _buildTodayStatItem(
             Icons.straighten,
             _formatDistance(today.distance),
-            'Quãng đường',
+            'profile.distance_label'.tr(),
           ),
           Container(
             width: 1,
@@ -1051,14 +1052,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               Expanded(
                 child: _buildPeriodStatItem(
                   _formatNumber(period.totalSteps),
-                  'Tổng bước',
+                  'profile.total_steps'.tr(),
                   AppColors.primary,
                 ),
               ),
               Expanded(
                 child: _buildPeriodStatItem(
                   _formatDistance(period.totalDistance),
-                  'Quãng đường',
+                  'profile.distance_label'.tr(),
                   Colors.green,
                 ),
               ),
@@ -1070,14 +1071,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               Expanded(
                 child: _buildPeriodStatItem(
                   _formatNumber(period.avgStepsPerDay),
-                  'TB/ngày',
+                  'profile.avg_per_day'.tr(),
                   Colors.blue,
                 ),
               ),
               Expanded(
                 child: _buildPeriodStatItem(
                   '${period.daysTracked}',
-                  'Ngày hoạt động',
+                  'profile.active_days'.tr(),
                   Colors.purple,
                 ),
               ),
@@ -1143,8 +1144,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Chỉnh sửa hồ sơ',
+              Text(
+                'profile.edit_profile'.tr(),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -1154,7 +1155,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: 'Họ và tên',
+                  labelText: 'profile.full_name'.tr(),
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1179,8 +1180,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         context.read<AuthBloc>().add(AuthCheckRequested());
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Cập nhật thành công'),
+                          SnackBar(
+                            content: Text('profile.update_success'.tr()),
                             backgroundColor: AppColors.success,
                           ),
                         );
@@ -1189,7 +1190,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Lỗi: $e'),
+                            content: Text('common.error_generic'.tr(namedArgs: {'error': e.toString()})),
                             backgroundColor: AppColors.danger,
                           ),
                         );
@@ -1204,8 +1205,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Lưu thay đổi',
+                  child: Text(
+                    'profile.save_changes'.tr(),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -1234,15 +1235,15 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               child: const Icon(Icons.logout, color: AppColors.danger),
             ),
             const SizedBox(width: 12),
-            const Text('Đăng xuất'),
+            Text('auth.logout'.tr()),
           ],
         ),
-        content: const Text('Bạn có chắc muốn đăng xuất khỏi tài khoản?'),
+        content: Text('auth.logout_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Hủy',
+              'common.cancel'.tr(),
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -1258,7 +1259,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Đăng xuất'),
+            child: Text('auth.logout'.tr()),
           ),
         ],
       ),
@@ -1268,9 +1269,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   String _roleLabel(String role) {
     switch (role) {
       case 'company_admin':
-        return 'Quản trị viên';
+        return 'profile.admin_role'.tr();
       case 'member':
-        return 'Thành viên';
+        return 'profile.member_role'.tr();
       default:
         return role;
     }
@@ -1382,13 +1383,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 child: const Icon(Icons.edit_note_rounded, size: 48, color: AppColors.primary),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Chưa có bài viết nào',
+              Text(
+                'profile.no_posts'.tr(),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain),
               ),
               const SizedBox(height: 8),
               Text(
-                'Chia sẻ khoảnh khắc đầu tiên của bạn!',
+                'profile.share_first_moment'.tr(),
                 style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
@@ -1401,7 +1402,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   if (mounted) context.read<AuthBloc>().add(AuthCheckRequested());
                 },
                 icon: const Icon(Icons.add_rounded, size: 20),
-                label: const Text('Tạo bài viết'),
+                label: Text('feed.create_post'.tr()),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -1482,13 +1483,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
-            const Text('Chỉnh sửa bài viết', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text('feed.edit_post'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Nội dung bài viết...',
+                hintText: 'feed.post_content_hint'.tr(),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
@@ -1504,13 +1505,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                       Navigator.pop(context);
                       _loadMyPosts(refresh: true);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đã cập nhật bài viết'), backgroundColor: AppColors.success),
+                        SnackBar(content: Text('profile.post_updated'.tr()), backgroundColor: AppColors.success),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                        SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
                       );
                     }
                   }
@@ -1520,7 +1521,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Lưu thay đổi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                child: Text('profile.save_changes'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -1534,12 +1535,12 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Xoá bài viết?'),
-        content: const Text('Bài viết sẽ bị xoá vĩnh viễn.'),
+        title: Text('feed.delete_post_title'.tr()),
+        content: Text('profile.delete_post_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Huỷ'),
+            child: Text('common.cancel'.tr()),
           ),
           FilledButton(
             onPressed: () async {
@@ -1552,13 +1553,13 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.danger),
+                    SnackBar(content: Text('common.error_detail'.tr(namedArgs: {'error': e.toString()})), backgroundColor: AppColors.danger),
                   );
                 }
               }
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text('Xoá'),
+            child: Text('common.delete'.tr()),
           ),
         ],
       ),
@@ -1571,18 +1572,18 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     if (stats == null) return const SizedBox.shrink();
 
     final badges = <Map<String, dynamic>>[
-      {'emoji': '🎯', 'title': 'Bước đầu tiên', 'achieved': stats.allTime.totalSteps > 0, 'desc': 'Ghi nhận bước đầu tiên'},
-      {'emoji': '🏃', 'title': '10K Club', 'achieved': stats.allTime.totalSteps >= 10000, 'desc': '10,000 bước tổng cộng'},
-      {'emoji': '🔥', 'title': 'Streak Master', 'achieved': stats.streak >= 7, 'desc': '7 ngày liên tiếp'},
-      {'emoji': '⭐', 'title': 'Tuần lễ vàng', 'achieved': stats.week.daysTracked >= 7, 'desc': 'Hoạt động cả tuần'},
-      {'emoji': '🏆', 'title': 'Marathon', 'achieved': stats.allTime.totalDistance >= 42195, 'desc': 'Tổng 42.195 km'},
-      {'emoji': '💪', 'title': 'Calorie Burner', 'achieved': stats.allTime.totalCalories >= 10000, 'desc': 'Đốt 10,000 calo'},
+      {'emoji': '🎯', 'title': 'profile.badge_first_step'.tr(), 'achieved': stats.allTime.totalSteps > 0, 'desc': 'profile.badge_first_step_desc'.tr()},
+      {'emoji': '🏃', 'title': '10K Club', 'achieved': stats.allTime.totalSteps >= 10000, 'desc': 'profile.badge_10k_desc'.tr()},
+      {'emoji': '🔥', 'title': 'Streak Master', 'achieved': stats.streak >= 7, 'desc': 'profile.badge_streak_desc'.tr()},
+      {'emoji': '⭐', 'title': 'profile.golden_week'.tr(), 'achieved': stats.week.daysTracked >= 7, 'desc': 'profile.golden_week_desc'.tr()},
+      {'emoji': '🏆', 'title': 'Marathon', 'achieved': stats.allTime.totalDistance >= 42195, 'desc': 'profile.badge_marathon_desc'.tr()},
+      {'emoji': '💪', 'title': 'Calorie Burner', 'achieved': stats.allTime.totalCalories >= 10000, 'desc': 'profile.badge_calorie_desc'.tr()},
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Huy hiệu thành tích', Icons.military_tech_rounded),
+        _buildSectionTitle('profile.achievement_badges'.tr(), Icons.military_tech_rounded),
         const SizedBox(height: 12),
         GridView.builder(
           shrinkWrap: true,
@@ -1656,7 +1657,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Hoạt động tuần này', Icons.bar_chart_rounded),
+        _buildSectionTitle('profile.week_activity'.tr(), Icons.bar_chart_rounded),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
@@ -1671,8 +1672,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             children: [
               Row(
                 children: [
-                  Text('Trung bình: ', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                  Text('${_formatNumber(avg)} bước/ngày', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                  Text('profile.average'.tr(), style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  Text('${_formatNumber(avg)} ${'step_tracker.steps_per_day'.tr()}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1722,7 +1723,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Kỷ lục cá nhân', Icons.emoji_events_rounded),
+        _buildSectionTitle('profile.personal_records'.tr(), Icons.emoji_events_rounded),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
@@ -1738,10 +1739,10 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           child: Column(
             children: [
               if (stats.allTime.bestDay != null)
-                _recordRow('🏅', 'Bước cao nhất/ngày', '${_formatNumber(stats.allTime.bestDay!.steps)} bước'),
-              _recordRow('📏', 'Tổng quãng đường', _formatDistance(stats.allTime.totalDistance)),
-              _recordRow('🔥', 'Chuỗi liên tiếp', '${stats.streak} ngày'),
-              _recordRow('📅', 'Ngày hoạt động', '${stats.allTime.daysTracked} ngày'),
+                _recordRow('🏅', 'profile.best_day_steps'.tr(), 'profile.n_steps'.tr(namedArgs: {'n': _formatNumber(stats.allTime.bestDay!.steps)})),
+              _recordRow('📏', 'profile.total_distance'.tr(), _formatDistance(stats.allTime.totalDistance)),
+              _recordRow('🔥', 'profile.streak_consecutive'.tr(), 'profile.n_days'.tr(namedArgs: {'n': '${stats.streak}'})),
+              _recordRow('📅', 'profile.active_days'.tr(), 'profile.n_days'.tr(namedArgs: {'n': '${stats.allTime.daysTracked}'})),
             ],
           ),
         ),

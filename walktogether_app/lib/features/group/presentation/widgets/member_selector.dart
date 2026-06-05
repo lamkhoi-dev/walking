@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -79,7 +80,7 @@ class _MemberSelectorState extends State<MemberSelector> {
       }
     } catch (e) {
       setState(() {
-        _error = 'Không thể tải danh sách';
+        _error = 'group.cannot_load_list'.tr();
         _isLoading = false;
       });
     }
@@ -114,7 +115,7 @@ class _MemberSelectorState extends State<MemberSelector> {
                 id: f.id,
                 fullName: f.fullName,
                 avatar: f.avatar,
-                subtitle: 'Bạn bè',
+                subtitle: 'group.friends_tab'.tr(),
               ))
           .toList();
       _isLoading = false;
@@ -149,7 +150,7 @@ class _MemberSelectorState extends State<MemberSelector> {
         // Header
         Row(
           children: [
-            Text('Chọn thành viên', style: AppTextStyles.labelLarge),
+            Text('group.select_members'.tr(), style: AppTextStyles.labelLarge),
             const SizedBox(width: 8),
             if (_selectedIds.isNotEmpty)
               Container(
@@ -175,14 +176,14 @@ class _MemberSelectorState extends State<MemberSelector> {
           Row(
             children: [
               _SourceChip(
-                label: 'Công ty',
+                label: 'group.company_tab'.tr(),
                 icon: Icons.business_rounded,
                 isSelected: _source == _MemberSource.company,
                 onTap: () => _switchSource(_MemberSource.company),
               ),
               const SizedBox(width: 8),
               _SourceChip(
-                label: 'Bạn bè',
+                label: 'group.friends_tab'.tr(),
                 icon: Icons.people_rounded,
                 isSelected: _source == _MemberSource.friends,
                 onTap: () => _switchSource(_MemberSource.friends),
@@ -197,8 +198,8 @@ class _MemberSelectorState extends State<MemberSelector> {
           controller: _searchController,
           decoration: InputDecoration(
             hintText: _source == _MemberSource.friends
-                ? 'Tìm kiếm bạn bè...'
-                : 'Tìm kiếm thành viên...',
+                ? 'group.search_friends'.tr()
+                : 'group.search_members'.tr(),
             hintStyle: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -249,7 +250,7 @@ class _MemberSelectorState extends State<MemberSelector> {
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () => _loadMembers(),
-                    child: const Text('Thử lại'),
+                    child: Text('common.retry'.tr()),
                   ),
                 ],
               ),
@@ -272,8 +273,8 @@ class _MemberSelectorState extends State<MemberSelector> {
                   const SizedBox(height: 8),
                   Text(
                     _source == _MemberSource.friends
-                        ? 'Không tìm thấy bạn bè'
-                        : 'Không tìm thấy thành viên',
+                        ? 'group.no_friends_found'.tr()
+                        : 'group.no_members_found'.tr(),
                     style: AppTextStyles.bodySmall,
                   ),
                 ],
