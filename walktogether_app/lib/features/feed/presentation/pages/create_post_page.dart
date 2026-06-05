@@ -83,22 +83,31 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImages() async {
     if (_images.length >= 4) return;
-    final pickedList = await _picker.pickMultiImage(
-      maxWidth: 1920,
-      maxHeight: 1920,
-      imageQuality: 85,
-    );
+    final pickedList = await _picker.pickMultiImage();
     if (pickedList.isNotEmpty) {
       int added = 0;
       for (var picked in pickedList) {
         if (_images.length >= 4) break;
-        final file = File(picked.path);
-        if (file.existsSync()) {
-          final size = file.lengthSync();
+        try {
+          // XFile handles content URIs and strange paths better than File.lengthSync()
+          final size = await picked.length();
           if (size <= AppConstants.maxVideoSize) {
-            _images.add(file);
-            added++;
+            final file = File(picked.path);
+            if (await file.exists()) {
+               _images.add(file);
+               added++;
+            } else {
+               // Fallback: if the path has issues, read bytes and write to a safe temp file
+               final bytes = await picked.readAsBytes();
+               final safePath = '${Directory.systemTemp.path}/safe_${DateTime.now().millisecondsSinceEpoch}.jpg';
+               final safeFile = File(safePath);
+               await safeFile.writeAsBytes(bytes);
+               _images.add(safeFile);
+               added++;
+            }
           }
+        } catch (e) {
+          debugPrint('Error processing picked image: $e');
         }
       }
       if (added > 0) {
