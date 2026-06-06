@@ -1,19 +1,30 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
 class EmailService {
   constructor() {
-    this.resend = process.env.RESEND_API_KEY
-      ? new Resend(process.env.RESEND_API_KEY)
-      : null;
+    this.transporter = null;
+    this._init();
+  }
 
-    if (!this.resend) {
-      logger.warn('Email service not configured (RESEND_API_KEY missing) — OTPs will be logged to console only');
+  _init() {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      logger.warn('Email service not configured (EMAIL_USER/EMAIL_PASS missing) — OTPs will be logged to console only');
+      return;
     }
+    this.transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT, 10) || 587,
+      secure: process.env.EMAIL_PORT === '465',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
   }
 
   async sendPasswordResetOtp(toEmail, otp, fullName) {
-    if (!this.resend) {
+    if (!this.transporter) {
       logger.info(`[DEV] Password reset OTP for ${toEmail}: ${otp}`);
       return;
     }
@@ -45,19 +56,12 @@ class EmailService {
 </body>
 </html>`;
 
-    const from = process.env.EMAIL_FROM || 'Runly <onboarding@resend.dev>';
-
-    const { error } = await this.resend.emails.send({
-      from,
+    await this.transporter.sendMail({
+      from: `"Runly App" <${process.env.EMAIL_USER}>`,
       to: toEmail,
       subject: `${otp} là mã đặt lại mật khẩu Runly của bạn`,
       html,
     });
-
-    if (error) {
-      logger.error('Resend email error:', error);
-      throw new Error(error.message);
-    }
 
     logger.info(`Password reset OTP sent to: ${toEmail}`);
   }
