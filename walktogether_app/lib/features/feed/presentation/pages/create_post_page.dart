@@ -101,15 +101,50 @@ class _CreatePostPageState extends State<CreatePostPage> {
             final safeFile = await File(safePath).writeAsBytes(bytes, flush: true);
             _images.add(safeFile);
             added++;
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Kích thước ảnh quá lớn (giới hạn 50MB)'),
+                  backgroundColor: AppColors.danger,
+                ),
+              );
+            }
           }
         } catch (e) {
           debugPrint('Error processing picked image: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Lỗi xử lý ảnh: $e'),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
         }
       }
       if (added > 0) {
         setState(() {
           _resetLayoutIfNeeded();
         });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Không import được ảnh nào vào bài viết'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không có ảnh nào được chọn từ thư viện'),
+            backgroundColor: AppColors.textSecondary,
+          ),
+        );
       }
     }
   }
