@@ -164,6 +164,12 @@ class _FeedPageState extends State<FeedPage> {
   Widget _buildFeed(FeedLoaded state) {
     if (state.posts.isEmpty) return _buildEmpty();
 
+    // Read auth state once here — avoids per-item BLoC access on every rebuild
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
+    final isCompanyAdmin = authState is AuthAuthenticated && authState.user.role == 'company_admin';
+    final currentCompanyId = authState is AuthAuthenticated ? authState.user.companyId : null;
+
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: () async {
@@ -186,48 +192,42 @@ class _FeedPageState extends State<FeedPage> {
             );
           }
           final post = state.posts[index];
-          final authState = context.read<AuthBloc>().state;
-          final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
           final isOwner = post.author.id == currentUserId;
-          final isCompanyAdmin = authState is AuthAuthenticated && authState.user.role == 'company_admin';
-          final isSameCompany = authState is AuthAuthenticated && authState.user.companyId == post.companyId;
-          return PostCard(
-            post: post,
-            isCompanyAdmin: isCompanyAdmin,
-            onLike: () => context.read<FeedBloc>().add(FeedPostLikeToggled(post.id)),
-            onComment: () async {
-              await context.push('/post/${post.id}');
-              if (context.mounted) {
-                context.read<FeedBloc>().add(const FeedRefreshRequested());
-              }
-            },
-            onShare: (post.type != 'shared_contest')
-                ? () => _sharePost(context, post)
-                : null,
-            onTap: () async {
-              await context.push('/post/${post.id}');
-              if (context.mounted) {
-                context.read<FeedBloc>().add(const FeedRefreshRequested());
-              }
-            },
-            onEdit: isOwner && post.type != 'shared_post' && post.type != 'shared_contest'
-                ? () => _showEditSheet(post)
-                : null,
-            onDelete: isOwner
-                ? () => _confirmDeletePost(post)
-                : null,
-            onPin: isCompanyAdmin && isSameCompany
-                ? () => context.read<FeedBloc>().add(FeedPostPinToggled(post.id))
-                : null,
-            onReport: isOwner ? null : () {
-              ReportDialog.show(
-                context,
-                targetType: 'post',
-                targetId: post.id,
-                repository: context.read<SettingsRepository>(),
-              );
-            },
-            onBlock: isOwner ? null : () => _confirmBlockFromFeed(post),
+          final isSameCompany = currentCompanyId != null && currentCompanyId == post.companyId;
+          return RepaintBoundary(
+            child: PostCard(
+              post: post,
+              isCompanyAdmin: isCompanyAdmin,
+              onLike: () => context.read<FeedBloc>().add(FeedPostLikeToggled(post.id)),
+              onComment: () async {
+                await context.push('/post/${post.id}');
+                if (context.mounted) {
+                  context.read<FeedBloc>().add(const FeedRefreshRequested());
+                }
+              },
+              onShare: (post.type != 'shared_contest')
+                  ? () => _sharePost(context, post)
+                  : null,
+              onTap: () => context.push('/post/${post.id}'),
+              onEdit: isOwner && post.type != 'shared_post' && post.type != 'shared_contest'
+                  ? () => _showEditSheet(post)
+                  : null,
+              onDelete: isOwner
+                  ? () => _confirmDeletePost(post)
+                  : null,
+              onPin: isCompanyAdmin && isSameCompany
+                  ? () => context.read<FeedBloc>().add(FeedPostPinToggled(post.id))
+                  : null,
+              onReport: isOwner ? null : () {
+                ReportDialog.show(
+                  context,
+                  targetType: 'post',
+                  targetId: post.id,
+                  repository: context.read<SettingsRepository>(),
+                );
+              },
+              onBlock: isOwner ? null : () => _confirmBlockFromFeed(post),
+            ),
           );
         },
       ),

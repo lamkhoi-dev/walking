@@ -124,6 +124,8 @@ class PostCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: 28,
                           height: 28,
+                          memCacheWidth: 84,
+                          memCacheHeight: 84,
                         ),
                       )
                     : Center(
@@ -176,6 +178,8 @@ class PostCard extends StatelessWidget {
                 height: 140,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                memCacheWidth: 800,
+                memCacheHeight: 420,
                 placeholder: (_, __) => _imagePlaceholder(140),
                 errorWidget: (_, __, ___) => _imagePlaceholder(140),
               ),
@@ -494,6 +498,8 @@ class PostCard extends StatelessWidget {
                       child: CachedNetworkImage(
                         imageUrl: post.author.avatar!,
                         fit: BoxFit.cover,
+                        memCacheWidth: 126,
+                        memCacheHeight: 126,
                         placeholder: (_, __) => _avatarPlaceholder(),
                         errorWidget: (_, __, ___) => _avatarPlaceholder(),
                       ),
@@ -1058,6 +1064,7 @@ class PostCard extends StatelessWidget {
                 fit: fit,
                 height: height,
                 width: width ?? double.infinity,
+                memCacheWidth: 1080,
                 placeholder: (_, __) => _imagePlaceholder(height ?? 200),
                 errorWidget: (_, __, ___) => _videoPlaceholder(height ?? 200),
               )
@@ -1110,6 +1117,7 @@ class PostCard extends StatelessWidget {
           fit: fit,
           height: height,
           width: width ?? double.infinity,
+          memCacheWidth: 1080,
           placeholder: (_, __) => _imagePlaceholder(height ?? 200),
           errorWidget: (_, __, ___) => _imagePlaceholder(height ?? 200),
         ),

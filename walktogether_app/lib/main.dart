@@ -33,13 +33,7 @@ void main() async {
   // Initialize foreground task communication port
   FlutterForegroundTask.initCommunicationPort();
 
-  // Lock portrait orientation
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  // Set status bar style
+  // Set status bar style (sync — no await needed)
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -47,15 +41,17 @@ void main() async {
     ),
   );
 
-  // Initialize locale data for date formatting (Vietnamese)
-  await initializeDateFormatting('vi', null);
-
-  // Initialize Hive for local storage
-  await Hive.initFlutter();
-
-  // Initialize services
+  // Initialize everything that can run in parallel
   final storageService = StorageService();
-  await storageService.init();
+  await Future.wait([
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]),
+    initializeDateFormatting('vi', null),
+    Hive.initFlutter(),
+    storageService.init(),
+  ]);
 
   final dioClient = DioClient(storageService);
 
@@ -71,11 +67,13 @@ void main() async {
   final feedRepository = FeedRepository(dioClient);
   final settingsRepository = SettingsRepository(dio: dioClient);
 
-  // Initialize step services
+  // Initialize step services in parallel
   final stepCounterService = StepCounterService();
-  await stepCounterService.init();
   final stepSyncService = StepSyncService();
-  await stepSyncService.init(dioClient);
+  await Future.wait([
+    stepCounterService.init(),
+    stepSyncService.init(dioClient),
+  ]);
 
   runApp(
     EasyLocalization(
@@ -196,9 +194,9 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     // Sync steps when app goes to background/inactive
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused) {
       StepSyncService().syncNow();
-      debugPrint('App lifecycle: $state — syncing steps');
+      debugPrint('App lifecycle: paused — syncing steps');
     }
   }
 
