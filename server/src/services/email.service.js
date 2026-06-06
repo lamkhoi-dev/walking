@@ -1,30 +1,24 @@
-const nodemailer = require('nodemailer');
+const Brevo = require('@getbrevo/brevo');
 const logger = require('../utils/logger');
 
 class EmailService {
   constructor() {
-    this.transporter = null;
+    this.client = null;
     this._init();
   }
 
   _init() {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      logger.warn('Email service not configured (EMAIL_USER/EMAIL_PASS missing) — OTPs will be logged to console only');
+    if (!process.env.BREVO_API_KEY) {
+      logger.warn('Email service not configured (BREVO_API_KEY missing) — OTPs will be logged to console only');
       return;
     }
-    this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT, 10) || 587,
-      secure: process.env.EMAIL_PORT === '465',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const defaultClient = Brevo.ApiClient.instance;
+    defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+    this.client = new Brevo.TransactionalEmailsApi();
   }
 
   async sendPasswordResetOtp(toEmail, otp, fullName) {
-    if (!this.transporter) {
+    if (!this.client) {
       logger.info(`[DEV] Password reset OTP for ${toEmail}: ${otp}`);
       return;
     }
@@ -56,13 +50,13 @@ class EmailService {
 </body>
 </html>`;
 
-    await this.transporter.sendMail({
-      from: `"Runly App" <${process.env.EMAIL_USER}>`,
-      to: toEmail,
-      subject: `${otp} là mã đặt lại mật khẩu Runly của bạn`,
-      html,
-    });
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { name: 'Runly App', email: 'walkingapp51@gmail.com' };
+    sendSmtpEmail.to = [{ email: toEmail }];
+    sendSmtpEmail.subject = `${otp} là mã đặt lại mật khẩu Runly của bạn`;
+    sendSmtpEmail.htmlContent = html;
 
+    await this.client.sendTransacEmail(sendSmtpEmail);
     logger.info(`Password reset OTP sent to: ${toEmail}`);
   }
 }
