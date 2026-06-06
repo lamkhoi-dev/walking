@@ -12,6 +12,9 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/pending_approval_page.dart';
 import '../../features/auth/presentation/pages/rejected_page.dart';
 import '../../features/auth/presentation/pages/suspended_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
+import '../../features/auth/data/repositories/auth_repository.dart';
 import '../../features/home/presentation/pages/home_shell_page.dart';
 import '../../features/group/data/repositories/group_repository.dart';
 // GroupListBloc is provided at app level in main.dart
@@ -74,8 +77,9 @@ class AuthChangeNotifier extends ChangeNotifier {
 /// GoRouter configuration with auth guard
 class AppRouter {
   final AuthChangeNotifier authNotifier;
+  final AuthRepository? authRepository;
 
-  AppRouter({required this.authNotifier});
+  AppRouter({required this.authNotifier, this.authRepository});
 
   late final GoRouter router = GoRouter(
     initialLocation: '/',
@@ -89,7 +93,9 @@ class AppRouter {
       final isAuthPage = currentPath == '/login' ||
           currentPath == '/register' ||
           currentPath == '/' ||
-          currentPath == '/connecting';
+          currentPath == '/connecting' ||
+          currentPath == '/forgot-password' ||
+          currentPath == '/reset-password';
 
       // Server cold start in progress — stay on connecting page
       if (isConnecting) {
@@ -99,7 +105,8 @@ class AppRouter {
 
       // Not logged in → go to welcome (if not already on auth pages)
       if (!loggedIn) {
-        if (currentPath == '/' || currentPath == '/login' || currentPath == '/register') {
+        if (currentPath == '/' || currentPath == '/login' || currentPath == '/register' ||
+            currentPath == '/forgot-password' || currentPath == '/reset-password') {
           return null;
         }
         return '/';
@@ -152,6 +159,19 @@ class AppRouter {
         path: '/register',
         name: 'register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => ForgotPasswordPage(authRepository: authRepository!),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        name: 'reset-password',
+        builder: (context, state) => ResetPasswordPage(
+          email: state.extra as String,
+          authRepository: authRepository!,
+        ),
       ),
       GoRoute(
         path: '/pending-approval',

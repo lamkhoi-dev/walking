@@ -105,4 +105,24 @@ class AuthRepository {
   Future<bool> hasToken() async {
     return await _storage.hasToken();
   }
+
+  /// Send OTP to email for password reset
+  Future<void> forgotPassword(String email) async {
+    await _dio.post(
+      ApiEndpoints.forgotPassword,
+      data: {'email': email},
+    );
+  }
+
+  /// Reset password using OTP
+  Future<void> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    await _dio.post(
+      ApiEndpoints.resetPassword,
+      data: {'email': email, 'otp': otp, 'newPassword': newPassword},
+    );
+  }
 }

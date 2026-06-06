@@ -397,6 +397,35 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Forgot password — send OTP to email
+ * POST /api/v1/auth/forgot-password
+ */
+const forgotPassword = async (req, res, next) => {
+  try {
+    await authService.forgotPassword(req.body.email);
+    // Always respond 200 to prevent email enumeration
+    return success(res, 200, 'Nếu email tồn tại, mã OTP đã được gửi đến hộp thư của bạn');
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Reset password using OTP
+ * POST /api/v1/auth/reset-password
+ */
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    await authService.resetPassword(email, otp, newPassword);
+    return success(res, 200, 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.');
+  } catch (err) {
+    if (err.statusCode) return error(res, err.statusCode, err.message);
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   registerCompany,
@@ -413,4 +442,6 @@ module.exports = {
   unblockUser,
   getBlockedUsers,
   getUserProfile,
+  forgotPassword,
+  resetPassword,
 };

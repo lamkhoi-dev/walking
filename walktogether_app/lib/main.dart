@@ -157,7 +157,7 @@ class WalkTogetherApp extends StatelessWidget {
             ),
           ),
         ],
-        child: _AppView(storageService: storageService),
+        child: _AppView(storageService: storageService, authRepository: authRepository),
       ),
     );
   }
@@ -165,7 +165,8 @@ class WalkTogetherApp extends StatelessWidget {
 
 class _AppView extends StatefulWidget {
   final StorageService storageService;
-  const _AppView({required this.storageService});
+  final AuthRepository authRepository;
+  const _AppView({required this.storageService, required this.authRepository});
 
   @override
   State<_AppView> createState() => _AppViewState();
@@ -180,7 +181,7 @@ class _AppViewState extends State<_AppView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _authNotifier = AuthChangeNotifier();
-    _appRouter = AppRouter(authNotifier: _authNotifier);
+    _appRouter = AppRouter(authNotifier: _authNotifier, authRepository: widget.authRepository);
   }
 
   @override

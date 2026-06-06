@@ -67,10 +67,33 @@ const validate = (schema) => {
   };
 };
 
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().trim().lowercase().required().messages({
+    'string.empty': 'Email là bắt buộc',
+    'string.email': 'Email không hợp lệ',
+    'any.required': 'Email là bắt buộc',
+  }),
+});
+
+const resetPasswordSchema = Joi.object({
+  email: Joi.string().email().trim().lowercase().required(),
+  otp: Joi.string().length(6).pattern(/^\d+$/).required().messages({
+    'string.length': 'Mã OTP phải có 6 chữ số',
+    'string.pattern.base': 'Mã OTP chỉ gồm chữ số',
+    'any.required': 'Mã OTP là bắt buộc',
+  }),
+  newPassword: Joi.string().min(6).required().messages({
+    'string.min': 'Mật khẩu mới phải có ít nhất 6 ký tự',
+    'any.required': 'Mật khẩu mới là bắt buộc',
+  }),
+});
+
 module.exports = {
   registerSchema,
   registerCompanySchema,
   loginSchema,
   refreshTokenSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   validate,
 };

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Company = require('../models/Company');
@@ -9,6 +10,7 @@ const Group = require('../models/Group');
 const config = require('../config/env');
 const generateCompanyCode = require('../utils/generateCompanyCode');
 const friendService = require('./friend.service');
+const emailService = require('./email.service');
 const logger = require('../utils/logger');
 
 class AuthService {
@@ -389,6 +391,54 @@ class AuthService {
       .populate('blockedUsers', 'fullName avatar')
       .lean();
     return user?.blockedUsers || [];
+  }
+
+  /**
+   * Forgot password — generate OTP and send email
+   * Always responds successfully to prevent email enumeration
+   */
+  async forgotPassword(email) {
+    const user = await User.findOne({ email, isActive: true });
+    if (!user) return; // Silently succeed — don't leak whether email exists
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await User.findByIdAndUpdate(user._id, {
+      passwordResetToken: hashedOtp,
+      passwordResetExpires: expires,
+    });
+
+    await emailService.sendPasswordResetOtp(email, otp, user.fullName);
+    logger.info(`Password reset OTP sent: ${email}`);
+  }
+
+  /**
+   * Reset password — verify OTP and update password
+   */
+  async resetPassword(email, otp, newPassword) {
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    const user = await User.findOne({
+      email,
+      passwordResetToken: hashedOtp,
+      passwordResetExpires: { $gt: new Date() },
+    }).select('+password +passwordResetToken +passwordResetExpires');
+
+    if (!user) {
+      const err = new Error('Mã OTP không hợp lệ hoặc đã hết hạn');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    user.password = newPassword; // pre-save hook hashes it
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    logger.info(`Password reset successful: ${email}`);
   }
 }
 
