@@ -109,6 +109,7 @@ class _ChatInputBarState extends State<ChatInputBar>
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
+        requestFullMetadata: false,
       );
       if (picked == null) return;
 

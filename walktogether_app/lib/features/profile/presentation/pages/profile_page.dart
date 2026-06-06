@@ -160,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     if (source == null || !mounted) return;
 
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 85);
+    final picked = await picker.pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 85, requestFullMetadata: false);
     if (picked == null || !mounted) return;
 
     // Trim path to handle space in scaled filenames from image_picker
