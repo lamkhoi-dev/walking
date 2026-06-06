@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -145,8 +146,26 @@ class _CreatePostPageState extends State<CreatePostPage> {
     for (final asset in assets) {
       if (_images.length >= 4) break;
       try {
-        final File? file = await asset.originFile;
+        File? file = await asset.originFile;
         if (file == null) continue;
+
+        // iPhone saves photos as HEIC by default — convert to JPEG so the server accepts it
+        final ext = file.path.split('.').last.toLowerCase();
+        if (ext == 'heic' || ext == 'heif') {
+          final originalSize = asset.orientatedSize;
+          final jpegBytes = await asset.thumbnailDataWithSize(
+            ThumbnailSize(originalSize.width.toInt(), originalSize.height.toInt()),
+            format: ThumbnailFormat.jpeg,
+            quality: 92,
+          );
+          if (jpegBytes != null) {
+            final tempDir = await getTemporaryDirectory();
+            final jpegFile = File('${tempDir.path}/${asset.id}.jpg');
+            await jpegFile.writeAsBytes(jpegBytes);
+            file = jpegFile;
+          }
+        }
+
         final int size = await file.length();
         if (size <= AppConstants.maxVideoSize) {
           _images.add(file);
@@ -155,7 +174,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Kích thước ảnh quá lớn (giới hạn 50MB)'),
+                content: const Text('Kích thước ảnh quá lớn (giới hạn 50MB)'),
                 backgroundColor: AppColors.danger,
               ),
             );

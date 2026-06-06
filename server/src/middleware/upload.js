@@ -23,8 +23,8 @@ const chatStorage = new CloudinaryStorage({
     return {
       folder: 'walktogether/chat',
       resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-      transformation: [{ width: 1024, height: 1024, crop: 'limit', quality: 'auto' }],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
+      transformation: [{ width: 1024, height: 1024, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
     };
   },
 });
@@ -47,8 +47,8 @@ const postStorage = new CloudinaryStorage({
     return {
       folder: 'walktogether/posts',
       resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-      transformation: [{ width: 1920, height: 1920, crop: 'limit', quality: 'auto' }],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
+      transformation: [{ width: 1920, height: 1920, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
     };
   },
 });
@@ -58,20 +58,21 @@ const avatarStorage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'walktogether/avatars',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'face', quality: 'auto' }],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'],
+    transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' }],
   },
 });
 
 const fileFilter = (req, file, cb) => {
   const allowedMimes = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'image/heic', 'image/heif',  // iPhone default format
     'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo',
   ];
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ hỗ trợ file ảnh (jpg, png, gif, webp) hoặc video (mp4, mov, webm)'), false);
+    cb(new Error('Chỉ hỗ trợ file ảnh (jpg, png, gif, webp, heic) hoặc video (mp4, mov, webm)'), false);
   }
 };
 
