@@ -16,6 +16,10 @@ class EmailService {
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.EMAIL_PORT, 10) || 587,
       secure: process.env.EMAIL_PORT === '465',
+      family: 4, // force IPv4 — Railway does not support IPv6 outbound
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
