@@ -63,8 +63,11 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^18.0.1
 
+  # File system
+  path_provider: ^2.1.5
+
   # Image
-  image_picker: ^1.1.2
+  image_picker: ^1.2.2
   cached_network_image: ^3.4.1
 
   # QR Code

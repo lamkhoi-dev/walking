@@ -6,7 +6,9 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 import 'step_counter_task.dart';
+
 
 /// Service for counting steps using device pedometer sensor.
 /// Stores data per-user in Hive for offline resilience.
@@ -30,6 +32,8 @@ class StepCounterService {
   late final Pedometer _pedometer = Pedometer();
   Box? _box;
   String? _currentUserId;
+  String? _switchingToUserId;
+  String? _lastKnownDate; // in-memory cache — avoids Hive read on every step event
   StreamSubscription<int>? _stepSubscription;
   StreamSubscription<PedestrianStatus>? _statusSubscription;
 
@@ -49,15 +53,17 @@ class StepCounterService {
   String? get currentUserId => _currentUserId;
 
   /// Get the user's daily step goal (default 10000)
-  int get dailyGoal => _box?.get(_keyDailyGoal, defaultValue: 10000) ?? 10000;
+  int get dailyGoal => (_box != null && _box!.isOpen) ? (_box?.get(_keyDailyGoal, defaultValue: 10000) ?? 10000) : 10000;
 
   /// Set the user's daily step goal
   Future<void> setDailyGoal(int goal) async {
-    await _box?.put(_keyDailyGoal, goal);
+    if (_box != null && _box!.isOpen) {
+      await _box?.put(_keyDailyGoal, goal);
+    }
   }
 
   /// Get current streak (consecutive days meeting goal)
-  int get currentStreak => _box?.get(_keyStreak, defaultValue: 0) ?? 0;
+  int get currentStreak => (_box != null && _box!.isOpen) ? (_box?.get(_keyStreak, defaultValue: 0) ?? 0) : 0;
 
   /// Get goal history map: { "YYYY-MM-DD": { "steps": int, "goal": int, "achieved": bool } }
   Map<String, dynamic> get goalHistory {
@@ -84,6 +90,12 @@ class StepCounterService {
     if (_isInitialized) return;
     _isInitialized = true;
     _initForegroundTask();
+  }
+
+  /// Today's date as YYYY-MM-DD string, cached in memory
+  String _todayDateStr() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
   /// Configure foreground task notification & options
@@ -121,9 +133,12 @@ class StepCounterService {
     if (_currentUserId == null) return;
 
     // Save userId so TaskHandler can find the Hive box
-    final metaBox = await Hive.openBox('foreground_meta');
+    const metaBoxName = 'foreground_meta';
+    final metaBox = Hive.isBoxOpen(metaBoxName)
+        ? Hive.box(metaBoxName)
+        : await Hive.openBox(metaBoxName);
     await metaBox.put('userId', _currentUserId!);
-    await metaBox.close();
+    if (metaBox.isOpen) await metaBox.close();
 
     // Request notification permission (Android 13+)
     // NOTE: ACTIVITY_RECOGNITION must already be granted before this call
@@ -161,31 +176,82 @@ class StepCounterService {
       return;
     }
 
-    // Stop tracking & close previous box safely
-    await stopTracking();
-    if (_box != null) {
-      try {
-        if (_box!.isOpen) await _box!.close();
-      } catch (e) {
-        debugPrint('Warning: error closing previous box: $e');
+    if (_switchingToUserId == userId) {
+      debugPrint('Step counter: already switching to user $userId, ignoring concurrent call');
+      return;
+    }
+    _switchingToUserId = userId;
+
+    try {
+      // Stop tracking & close previous box safely
+      await stopTracking();
+      if (_box != null) {
+        try {
+          if (_box!.isOpen) await _box!.close();
+        } catch (e) {
+          debugPrint('Warning: error closing previous box: $e');
+        }
+        _box = null;
       }
-      _box = null;
+
+      _currentUserId = userId;
+      final boxName = '$_boxPrefix$userId';
+      _box = await _safeOpenBox(boxName);
+
+      // Seed the in-memory date cache from the stored value so the first
+      // _onStepCount doesn't needlessly read Hive again.
+      _lastKnownDate = _box?.get(_keyTrackingDate, defaultValue: '') ?? '';
+
+      // Check if date changed (midnight reset)
+      _checkDateReset();
+
+      // Reset tracking state — actual tracking is restarted by the bloc
+      _isTracking = false;
+      await _box?.put(_keyIsTracking, false);
+
+      // Don't emit todaySteps here — bloc will emit correct value after syncFromServer
+
+      debugPrint('Step counter switched to user: $userId (box: $boxName)');
+    } finally {
+      if (_switchingToUserId == userId) {
+        _switchingToUserId = null;
+      }
+    }
+  }
+
+  Future<Box> _safeOpenBox(String boxName) async {
+    if (Hive.isBoxOpen(boxName)) {
+      debugPrint('Step counter: box $boxName is already open, reusing');
+      return Hive.box(boxName);
     }
 
-    _currentUserId = userId;
-    final boxName = '$_boxPrefix$userId';
-    _box = await Hive.openBox(boxName);
-
-    // Check if date changed (midnight reset)
-    _checkDateReset();
-
-    // Reset tracking state — actual tracking is restarted by the bloc
-    _isTracking = false;
-    await _box?.put(_keyIsTracking, false);
-
-    // Don't emit todaySteps here — bloc will emit correct value after syncFromServer
-
-    debugPrint('Step counter switched to user: $userId (box: $boxName)');
+    int attempts = 0;
+    while (attempts < 3) {
+      try {
+        return await Hive.openBox(boxName);
+      } catch (e) {
+        attempts++;
+        debugPrint('Step counter: Failed to open box $boxName (attempt $attempts/3): $e');
+        if (attempts >= 3) {
+          // Try to delete stuck lock file as a last resort on native/simulator
+          try {
+            final docDir = await getApplicationDocumentsDirectory();
+            final lockFile = File('${docDir.path}/$boxName.lock');
+            if (await lockFile.exists()) {
+              debugPrint('Step counter: Deleting stuck lock file: ${lockFile.path}');
+              await lockFile.delete();
+            }
+          } catch (err) {
+            debugPrint('Step counter: Failed to clear stuck lock file: $err');
+          }
+          // Final attempt after lock file deletion attempt
+          return await Hive.openBox(boxName);
+        }
+        await Future.delayed(Duration(milliseconds: 200 * attempts));
+      }
+    }
+    // unreachable — loop always returns or throws
+    throw StateError('_safeOpenBox: exhausted retries for $boxName');
   }
 
   /// Detach from current user (on logout). Stops tracking, closes box, but preserves data.
@@ -202,6 +268,7 @@ class StepCounterService {
       _box = null;
     }
     _currentUserId = null;
+    _switchingToUserId = null;
     _isTracking = false;
     _stepController.add(0);
     debugPrint('Step counter detached from user');
@@ -274,7 +341,9 @@ class StepCounterService {
   /// Stop step tracking
   Future<void> stopTracking() async {
     _isTracking = false;
-    await _box?.put(_keyIsTracking, false);
+    if (_box != null && _box!.isOpen) {
+      await _box?.put(_keyIsTracking, false);
+    }
 
     await _stepSubscription?.cancel();
     _stepSubscription = null;
@@ -421,9 +490,11 @@ class StepCounterService {
     _box?.put(_keyStreak, streak);
   }
 
-  /// Check if a new day has started → reset baseline
+  /// Check if a new day has started → reset baseline.
+  /// Uses in-memory _lastKnownDate to skip the Hive read on most step events.
   void _checkDateReset() {
     final today = _todayDateStr();
+    if (_lastKnownDate == today) return; // fast path — no Hive read needed
     final storedDate = _box?.get(_keyTrackingDate, defaultValue: '') ?? '';
 
     if (storedDate != today) {
@@ -450,6 +521,7 @@ class StepCounterService {
       _box?.put(_keyServerOffset, 0); // Reset server offset for new day
       _box?.put(_keyHourlySteps, <String, int>{});
       _box?.put(_keyTrackingDate, today);
+      _lastKnownDate = today; // update in-memory cache
     }
   }
 
@@ -459,11 +531,6 @@ class StepCounterService {
   /// Calculate calories from steps
   double caloriesFromSteps(int steps) => steps * 0.04;
 
-  /// Get today's date string YYYY-MM-DD
-  String _todayDateStr() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-  }
 
   /// Restore goal history from server data (called after reinstall when Hive is empty)
   Future<void> restoreGoalHistoryFromServer(List<Map<String, dynamic>> serverRecords) async {
