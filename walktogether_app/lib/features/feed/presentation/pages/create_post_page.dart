@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -81,8 +82,121 @@ class _CreatePostPageState extends State<CreatePostPage> {
     }
   }
 
+  Future<bool> _requestPhotoPermission() async {
+    if (Platform.isIOS) {
+      final status = await Permission.photos.status;
+      if (status.isGranted) {
+        return true;
+      }
+      
+      if (status.isLimited) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Bạn đang cấp quyền giới hạn ảnh. Nếu không tìm thấy ảnh cần chọn, hãy vào Cài đặt máy để chọn "Tất cả ảnh".',
+              ),
+              action: SnackBarAction(
+                label: 'Cài đặt',
+                textColor: Colors.white,
+                onPressed: () => openAppSettings(),
+              ),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
+        return true;
+      }
+      
+      if (status.isDenied) {
+        final result = await Permission.photos.request();
+        if (result.isGranted || result.isLimited) {
+          return true;
+        }
+      }
+      
+      if (status.isPermanentlyDenied || status.isDenied) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Quyền truy cập ảnh'),
+              content: const Text(
+                'Runly cần quyền truy cập thư viện ảnh để đăng bài viết kèm ảnh. Vui lòng cấp quyền trong Cài đặt thiết bị.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Đóng'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    openAppSettings();
+                  },
+                  child: const Text('Cài đặt'),
+                ),
+              ],
+            ),
+          );
+        }
+        return false;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> _requestCameraPermission() async {
+    final status = await Permission.camera.status;
+    if (status.isGranted) {
+      return true;
+    }
+    
+    if (status.isDenied) {
+      final result = await Permission.camera.request();
+      if (result.isGranted) {
+        return true;
+      }
+    }
+    
+    if (status.isPermanentlyDenied || status.isDenied) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Quyền máy ảnh'),
+            content: const Text(
+              'Runly cần quyền máy ảnh để chụp ảnh và đăng lên bài viết. Vui lòng cấp quyền trong Cài đặt thiết bị.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Đóng'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  openAppSettings();
+                },
+                child: const Text('Cài đặt'),
+              ),
+            ],
+          ),
+        );
+      }
+      return false;
+    }
+    return false;
+  }
+
   Future<void> _pickImages() async {
     if (_images.length >= 4) return;
+    
+    final hasPermission = await _requestPhotoPermission();
+    if (!hasPermission) return;
+
     final pickedList = await _picker.pickMultiImage();
     if (pickedList.isNotEmpty) {
       int added = 0;
@@ -701,6 +815,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
             color: const Color(0xFF2196F3),
             onTap: _images.length < 4
                 ? () async {
+                    final hasPermission = await _requestCameraPermission();
+                    if (!hasPermission) return;
+                    
                     final picked = await _picker.pickImage(
                       source: ImageSource.camera,
                       maxWidth: 1920, maxHeight: 1920, imageQuality: 85,
