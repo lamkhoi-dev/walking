@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/language_toggle.dart';
@@ -22,6 +23,22 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  void _loadSavedCredentials() {
+    final storage = context.read<StorageService>();
+    if (storage.getRememberMe()) {
+      _emailController.text = storage.getSavedEmail() ?? '';
+      _passwordController.text = storage.getSavedPassword() ?? '';
+      setState(() => _rememberMe = true);
+    }
+  }
 
   @override
   void dispose() {
@@ -32,11 +49,16 @@ class _LoginPageState extends State<LoginPage> {
 
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
+      final storage = context.read<StorageService>();
+      final identifier = _emailController.text.trim();
+      final password = _passwordController.text;
+      if (_rememberMe) {
+        storage.saveCredentials(identifier, password);
+      } else {
+        storage.clearCredentials();
+      }
       context.read<AuthBloc>().add(
-        AuthLoginRequested(
-          identifier: _emailController.text.trim(),
-          password: _passwordController.text,
-        ),
+        AuthLoginRequested(identifier: identifier, password: password),
       );
     }
   }
@@ -135,20 +157,44 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
 
-                  // Forgot password link
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () => context.push('/forgot-password'),
-                      child: const Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _rememberMe = !_rememberMe),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                                activeColor: AppColors.primary,
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Ghi nhớ mật khẩu',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () => context.push('/forgot-password'),
+                        child: const Text(
+                          'Quên mật khẩu?',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 24),

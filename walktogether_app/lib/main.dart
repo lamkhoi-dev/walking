@@ -130,6 +130,7 @@ class WalkTogetherApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<StorageService>.value(value: storageService),
         RepositoryProvider<DioClient>.value(value: dioClient),
         RepositoryProvider<GroupRepository>.value(value: groupRepository),
         RepositoryProvider<ChatRepository>.value(value: chatRepository),

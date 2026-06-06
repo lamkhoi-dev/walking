@@ -62,6 +62,28 @@ class StorageService {
 
   String? getCompanyStatus() => _p.getString(_companyStatusKey);
 
+  // === SAVED CREDENTIALS (remember me) ===
+
+  static const String _savedEmailKey = 'saved_email';
+  static const String _savedPasswordKey = 'saved_password';
+  static const String _rememberMeKey = 'remember_me';
+
+  Future<void> saveCredentials(String email, String password) async {
+    await _p.setString(_savedEmailKey, email);
+    await _p.setString(_savedPasswordKey, password);
+    await _p.setBool(_rememberMeKey, true);
+  }
+
+  Future<void> clearCredentials() async {
+    await _p.remove(_savedEmailKey);
+    await _p.remove(_savedPasswordKey);
+    await _p.setBool(_rememberMeKey, false);
+  }
+
+  String? getSavedEmail() => _p.getString(_savedEmailKey);
+  String? getSavedPassword() => _p.getString(_savedPasswordKey);
+  bool getRememberMe() => _p.getBool(_rememberMeKey) ?? false;
+
   // === CLEAR ===
 
   Future<void> clearAll() async {
