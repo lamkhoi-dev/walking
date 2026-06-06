@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -82,72 +83,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
     }
   }
 
-  Future<bool> _requestPhotoPermission() async {
-    if (Platform.isIOS) {
-      final status = await Permission.photos.status;
-      if (status.isGranted) {
-        return true;
-      }
-      
-      if (status.isLimited) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Bạn đang cấp quyền giới hạn ảnh. Nếu không tìm thấy ảnh cần chọn, hãy vào Cài đặt máy để chọn "Tất cả ảnh".',
-              ),
-              action: SnackBarAction(
-                label: 'Cài đặt',
-                textColor: Colors.white,
-                onPressed: () => openAppSettings(),
-              ),
-              backgroundColor: AppColors.primary,
-              duration: const Duration(seconds: 6),
-            ),
-          );
-        }
-        return true;
-      }
-      
-      if (status.isDenied) {
-        final result = await Permission.photos.request();
-        if (result.isGranted || result.isLimited) {
-          return true;
-        }
-      }
-      
-      if (status.isPermanentlyDenied || status.isDenied) {
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Quyền truy cập ảnh'),
-              content: const Text(
-                'Runly cần quyền truy cập thư viện ảnh để đăng bài viết kèm ảnh. Vui lòng cấp quyền trong Cài đặt thiết bị.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Đóng'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    openAppSettings();
-                  },
-                  child: const Text('Cài đặt'),
-                ),
-              ],
-            ),
-          );
-        }
-        return false;
-      }
-      return false;
-    }
-    return true;
-  }
-
   Future<bool> _requestCameraPermission() async {
     final status = await Permission.camera.status;
     if (status.isGranted) {
@@ -193,73 +128,53 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImages() async {
     if (_images.length >= 4) return;
-    
-    final hasPermission = await _requestPhotoPermission();
-    if (!hasPermission) return;
 
-    final pickedList = await _picker.pickMultiImage();
-    if (pickedList.isNotEmpty) {
-      int added = 0;
-      for (var picked in pickedList) {
-        if (_images.length >= 4) break;
-        try {
-          // Read raw bytes through XFile.readAsBytes() to bypass content URI and space issues,
-          // then save to a clean path under the system temporary directory.
-          final bytes = await picked.readAsBytes();
-          if (bytes.length <= AppConstants.maxVideoSize) {
-            final ext = picked.name.split('.').last.toLowerCase();
-            final tempDir = Directory.systemTemp;
-            final safeDir = Directory('${tempDir.path}/safe_uploads');
-            await safeDir.create(recursive: true);
-            final safePath = '${safeDir.path}/${DateTime.now().millisecondsSinceEpoch}.$ext';
-            final safeFile = await File(safePath).writeAsBytes(bytes, flush: true);
-            _images.add(safeFile);
-            added++;
-          } else {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Kích thước ảnh quá lớn (giới hạn 50MB)'),
-                  backgroundColor: AppColors.danger,
-                ),
-              );
-            }
-          }
-        } catch (e) {
-          debugPrint('Error processing picked image: $e');
+    final List<AssetEntity>? assets = await AssetPicker.pickAssets(
+      context,
+      pickerConfig: AssetPickerConfig(
+        maxAssets: 4 - _images.length,
+        requestType: RequestType.image,
+        themeColor: AppColors.primary,
+        textDelegate: const EnglishAssetPickerTextDelegate(),
+      ),
+    );
+
+    if (assets == null || assets.isEmpty) return;
+
+    int added = 0;
+    for (final asset in assets) {
+      if (_images.length >= 4) break;
+      try {
+        final File? file = await asset.originFile;
+        if (file == null) continue;
+        final int size = await file.length();
+        if (size <= AppConstants.maxVideoSize) {
+          _images.add(file);
+          added++;
+        } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Lỗi xử lý ảnh: $e'),
+                content: Text('Kích thước ảnh quá lớn (giới hạn 50MB)'),
                 backgroundColor: AppColors.danger,
               ),
             );
           }
         }
-      }
-      if (added > 0) {
-        setState(() {
-          _resetLayoutIfNeeded();
-        });
-      } else {
+      } catch (e) {
+        debugPrint('Error processing picked image: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Không import được ảnh nào vào bài viết'),
-              backgroundColor: AppColors.warning,
+            SnackBar(
+              content: Text('Lỗi xử lý ảnh: $e'),
+              backgroundColor: AppColors.danger,
             ),
           );
         }
       }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không có ảnh nào được chọn từ thư viện'),
-            backgroundColor: AppColors.textSecondary,
-          ),
-        );
-      }
+    }
+    if (added > 0) {
+      setState(() => _resetLayoutIfNeeded());
     }
   }
 
@@ -821,6 +736,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     final picked = await _picker.pickImage(
                       source: ImageSource.camera,
                       maxWidth: 1920, maxHeight: 1920, imageQuality: 85,
+                      requestFullMetadata: false,
                     );
                     if (picked != null) {
                       final file = File(picked.path.trim());
