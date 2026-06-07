@@ -100,6 +100,7 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
 
   void _setupSocketListener() {
     _onLeaderboardUpdateCallback = (data) {
+      if (isClosed) return;
       if (data is Map<String, dynamic>) {
         final contestId = data['contestId'] as String?;
         if (contestId == _currentContestId && data['leaderboard'] is List) {

@@ -176,8 +176,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// Setup socket listeners for a conversation
   void _setupSocketListeners() {
     _onNewMessageCallback = (data) {
+      if (isClosed) return;
       if (data is Map<String, dynamic>) {
-        // Server sends { conversationId, message }
         final msgData = data['message'] as Map<String, dynamic>?;
         if (msgData != null &&
             data['conversationId'] == _currentConversationId) {
@@ -188,6 +188,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     };
 
     _onTypingCallback = (data) {
+      if (isClosed) return;
       if (data is Map<String, dynamic> &&
           data['conversationId'] == _currentConversationId) {
         add(ChatTypingReceived(
@@ -202,6 +203,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     // Listen for message_sent confirmation (from server to sender)
     _onMessageSentCallback = (data) {
+      if (isClosed) return;
       if (data is Map<String, dynamic>) {
         final msgData = data['message'] as Map<String, dynamic>?;
         if (msgData != null &&
