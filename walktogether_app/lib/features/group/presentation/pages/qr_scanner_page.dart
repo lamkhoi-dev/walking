@@ -158,13 +158,13 @@ class _QRScannerPageState extends State<QRScannerPage> {
         uri.host != 'group' ||
         uri.pathSegments.length != 2 ||
         uri.pathSegments[0] != 'join') {
-      _showError('group.join_error'.tr());
+      _showError('Mã QR không hợp lệ. Vui lòng quét lại');
       return;
     }
 
     final groupId = uri.pathSegments[1];
     if (groupId.isEmpty) {
-      _showError('group.group_not_found'.tr());
+      _showError('Không tìm thấy ID nhóm trong mã QR');
       return;
     }
 
@@ -198,14 +198,23 @@ class _QRScannerPageState extends State<QRScannerPage> {
       setState(() => _isProcessing = false);
       _controller.start();
 
-      String message = 'group.join_error'.tr();
-      if (e.toString().contains('already')) {
-        message = 'group.already_member'.tr();
-      } else if (e.toString().contains('not found')) {
-        message = 'group.group_not_found'.tr();
+      final errorMsg = e.toString().toLowerCase();
+      if (errorMsg.contains('already') || errorMsg.contains('member')) {
+        // Already a member — navigate to group instead of showing error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bạn đã tham gia nhóm này rồi'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        context.read<GroupListBloc>().add(GroupListLoadRequested());
+        context.push('/groups/$groupId');
+      } else if (errorMsg.contains('not found')) {
+        _showError('Nhóm không tồn tại');
+      } else {
+        _showError('Không thể tham gia nhóm. Vui lòng thử lại');
       }
-
-      _showError(message);
     }
   }
 
@@ -216,6 +225,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
         content: Text(message),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.danger,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
