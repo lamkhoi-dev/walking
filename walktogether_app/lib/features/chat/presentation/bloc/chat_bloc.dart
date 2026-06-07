@@ -213,7 +213,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     };
     _socketService.on('chat:message_sent', _onMessageSentCallback!);
 
-    _socketService.on('chat:typing', _onTypingCallback!);
+    _socketService.on('chat:user_typing', _onTypingCallback!);
   }
 
   /// Remove socket listeners
@@ -227,7 +227,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _onMessageSentCallback = null;
     }
     if (_onTypingCallback != null) {
-      _socketService.off('chat:typing', _onTypingCallback!);
+      _socketService.off('chat:user_typing', _onTypingCallback!);
       _onTypingCallback = null;
     }
   }

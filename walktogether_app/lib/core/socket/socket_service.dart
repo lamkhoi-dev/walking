@@ -9,6 +9,7 @@ class SocketService {
 
   io.Socket? _socket;
   bool _isConnected = false;
+  final Set<String> _activeConversations = {};
 
   bool get isConnected => _isConnected;
   io.Socket? get socket => _socket;
@@ -32,6 +33,10 @@ class SocketService {
 
     _socket!.onConnect((_) {
       _isConnected = true;
+      // Re-join all active rooms after reconnect
+      for (final roomId in _activeConversations) {
+        emit('chat:join', {'conversationId': roomId});
+      }
     });
 
     _socket!.onDisconnect((_) {
@@ -76,11 +81,13 @@ class SocketService {
 
   /// Join a conversation room
   void joinConversation(String conversationId) {
+    _activeConversations.add(conversationId);
     emit('chat:join', {'conversationId': conversationId});
   }
 
   /// Leave a conversation room
   void leaveConversation(String conversationId) {
+    _activeConversations.remove(conversationId);
     emit('chat:leave', {'conversationId': conversationId});
   }
 
