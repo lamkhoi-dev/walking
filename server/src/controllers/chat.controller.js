@@ -1,4 +1,5 @@
 const chatService = require('../services/chat.service');
+const { getIO } = require('../config/socket');
 const { success, error } = require('../utils/response');
 
 /**
@@ -94,6 +95,15 @@ const createMessage = async (req, res, next) => {
       imageUrl,
     });
 
+    // Broadcast to all other participants in real-time
+    try {
+      const io = getIO();
+      io.to(`conversation:${id}`).emit('chat:new_message', {
+        conversationId: id,
+        message,
+      });
+    } catch (_) {}
+
     return success(res, 201, 'Gửi tin nhắn thành công', message);
   } catch (err) {
     next(err);
@@ -144,6 +154,14 @@ const uploadImage = async (req, res, next) => {
       content: '[Hình ảnh]',
       imageUrl: req.file.path,
     });
+
+    try {
+      const io = getIO();
+      io.to(`conversation:${id}`).emit('chat:new_message', {
+        conversationId: id,
+        message,
+      });
+    } catch (_) {}
 
     return success(res, 201, 'Gửi ảnh thành công', message);
   } catch (err) {
