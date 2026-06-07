@@ -177,10 +177,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void _setupSocketListeners() {
     _onNewMessageCallback = (data) {
       if (isClosed) return;
-      if (data is Map<String, dynamic>) {
-        final msgData = data['message'] as Map<String, dynamic>?;
+      final map = data is List ? data.first : data;
+      if (map is Map<String, dynamic>) {
+        final msgData = map['message'] as Map<String, dynamic>?;
         if (msgData != null &&
-            data['conversationId'] == _currentConversationId) {
+            map['conversationId'].toString() == _currentConversationId) {
           final message = MessageModel.fromJson(msgData);
           add(ChatMessageReceived(message));
         }
@@ -189,12 +190,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     _onTypingCallback = (data) {
       if (isClosed) return;
-      if (data is Map<String, dynamic> &&
-          data['conversationId'] == _currentConversationId) {
+      final map = data is List ? data.first : data;
+      if (map is Map<String, dynamic> &&
+          map['conversationId'].toString() == _currentConversationId) {
         add(ChatTypingReceived(
-          userId: data['userId'] as String? ?? '',
-          fullName: data['fullName'] as String? ?? '',
-          isTyping: data['isTyping'] as bool? ?? false,
+          userId: map['userId'] as String? ?? '',
+          fullName: map['fullName'] as String? ?? '',
+          isTyping: map['isTyping'] as bool? ?? false,
         ));
       }
     };
@@ -204,10 +206,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Listen for message_sent confirmation (from server to sender)
     _onMessageSentCallback = (data) {
       if (isClosed) return;
-      if (data is Map<String, dynamic>) {
-        final msgData = data['message'] as Map<String, dynamic>?;
+      final map = data is List ? data.first : data;
+      if (map is Map<String, dynamic>) {
+        final msgData = map['message'] as Map<String, dynamic>?;
         if (msgData != null &&
-            data['conversationId'] == _currentConversationId) {
+            map['conversationId'].toString() == _currentConversationId) {
           final message = MessageModel.fromJson(msgData);
           add(ChatMessageReceived(message));
         }

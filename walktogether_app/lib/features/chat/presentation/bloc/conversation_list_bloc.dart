@@ -96,9 +96,15 @@ class ConversationListBloc
 
     // Listen for incoming messages from socket to update conversation previews
     _onNewMessageCallback = (data) {
-      if (data is Map<String, dynamic>) {
-        final message = MessageModel.fromJson(data);
-        add(ConversationListMessageReceived(message.conversationId, message));
+      if (isClosed) return;
+      final map = data is List ? data.first : data;
+      if (map is Map<String, dynamic>) {
+        final msgData = map['message'] as Map<String, dynamic>?;
+        final conversationId = map['conversationId']?.toString();
+        if (msgData != null && conversationId != null) {
+          final message = MessageModel.fromJson(msgData);
+          add(ConversationListMessageReceived(conversationId, message));
+        }
       }
     };
     _socketService.on('chat:new_message', _onNewMessageCallback!);
