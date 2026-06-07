@@ -199,7 +199,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
       _controller.start();
 
       final errorMsg = e.toString().toLowerCase();
-      if (errorMsg.contains('already') || errorMsg.contains('member')) {
+      if (errorMsg.contains('thành viên') || errorMsg.contains('already') || errorMsg.contains('member')) {
         // Already a member — navigate to group instead of showing error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -210,7 +210,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
         );
         context.read<GroupListBloc>().add(GroupListLoadRequested());
         context.push('/groups/$groupId');
-      } else if (errorMsg.contains('not found')) {
+      } else if (errorMsg.contains('not found') || errorMsg.contains('không tìm thấy')) {
         _showError('Nhóm không tồn tại');
       } else {
         _showError('Không thể tham gia nhóm. Vui lòng thử lại');
