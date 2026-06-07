@@ -149,30 +149,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
         final tempDir = await getTemporaryDirectory();
         File? file;
 
-        // Always convert via thumbnailDataWithSize to avoid stale cache paths on iOS
-        final mimeType = await asset.mimeTypeAsync;
-        final isHeic = mimeType == 'image/heic' || mimeType == 'image/heif';
-
-        if (isHeic) {
-          final originalSize = asset.orientatedSize;
-          final jpegBytes = await asset.thumbnailDataWithSize(
-            ThumbnailSize(originalSize.width.toInt(), originalSize.height.toInt()),
-            format: ThumbnailFormat.jpeg,
-            quality: 92,
-          );
-          if (jpegBytes == null) continue;
-          final jpegFile = File('${tempDir.path}/${asset.id}.jpg');
-          await jpegFile.writeAsBytes(jpegBytes);
-          file = jpegFile;
-        } else {
-          final bytes = await asset.originBytes;
-          if (bytes == null) continue;
-          final title = await asset.titleAsync;
-          final ext = title.contains('.') ? title.split('.').last.toLowerCase() : 'jpg';
-          final tempFile = File('${tempDir.path}/${asset.id}.$ext');
-          await tempFile.writeAsBytes(bytes);
-          file = tempFile;
-        }
+        // Use PHImageManager (thumbnailDataWithSize at full size) for all images
+        // to avoid Library/Caches path failures on iOS (stale cache, iCloud not downloaded).
+        final originalSize = asset.orientatedSize;
+        final jpegBytes = await asset.thumbnailDataWithSize(
+          ThumbnailSize(originalSize.width.toInt(), originalSize.height.toInt()),
+          format: ThumbnailFormat.jpeg,
+          quality: 92,
+        );
+        if (jpegBytes == null) continue;
+        final jpegFile = File('${tempDir.path}/${asset.id}.jpg');
+        await jpegFile.writeAsBytes(jpegBytes);
+        file = jpegFile;
 
         final int size = await file.length();
         if (size <= AppConstants.maxVideoSize) {
