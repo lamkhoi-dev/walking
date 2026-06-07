@@ -28,15 +28,18 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _loadSavedCredentials();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSavedCredentials());
   }
 
   void _loadSavedCredentials() {
+    if (!mounted) return;
     final storage = context.read<StorageService>();
     if (storage.getRememberMe()) {
-      _emailController.text = storage.getSavedEmail() ?? '';
-      _passwordController.text = storage.getSavedPassword() ?? '';
-      setState(() => _rememberMe = true);
+      setState(() {
+        _emailController.text = storage.getSavedEmail() ?? '';
+        _passwordController.text = storage.getSavedPassword() ?? '';
+        _rememberMe = true;
+      });
     }
   }
 
