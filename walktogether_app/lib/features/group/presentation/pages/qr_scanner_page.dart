@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -42,6 +43,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          // Pick QR from gallery
+          IconButton(
+            icon: const Icon(Icons.photo_library_outlined, color: Colors.white),
+            tooltip: 'Chọn từ thư viện',
+            onPressed: _isProcessing ? null : _pickFromGallery,
+          ),
           // Toggle flash
           IconButton(
             icon: ValueListenableBuilder(
@@ -119,6 +126,21 @@ class _QRScannerPageState extends State<QRScannerPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _pickFromGallery() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      requestFullMetadata: false,
+    );
+    if (picked == null) return;
+
+    final result = await _controller.analyzeImage(picked.path);
+    if (result == null || result.barcodes.isEmpty) {
+      if (mounted) _showError('Không tìm thấy mã QR trong ảnh');
+      return;
+    }
+    _onDetect(result);
   }
 
   void _onDetect(BarcodeCapture capture) {

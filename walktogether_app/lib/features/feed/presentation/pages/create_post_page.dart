@@ -146,24 +146,32 @@ class _CreatePostPageState extends State<CreatePostPage> {
     for (final asset in assets) {
       if (_images.length >= 4) break;
       try {
-        File? file = await asset.originFile;
-        if (file == null) continue;
+        final tempDir = await getTemporaryDirectory();
+        File? file;
 
-        // iPhone saves photos as HEIC by default — convert to JPEG so the server accepts it
-        final ext = file.path.split('.').last.toLowerCase();
-        if (ext == 'heic' || ext == 'heif') {
+        // Always convert via thumbnailDataWithSize to avoid stale cache paths on iOS
+        final mimeType = await asset.mimeTypeAsync;
+        final isHeic = mimeType == 'image/heic' || mimeType == 'image/heif';
+
+        if (isHeic) {
           final originalSize = asset.orientatedSize;
           final jpegBytes = await asset.thumbnailDataWithSize(
             ThumbnailSize(originalSize.width.toInt(), originalSize.height.toInt()),
             format: ThumbnailFormat.jpeg,
             quality: 92,
           );
-          if (jpegBytes != null) {
-            final tempDir = await getTemporaryDirectory();
-            final jpegFile = File('${tempDir.path}/${asset.id}.jpg');
-            await jpegFile.writeAsBytes(jpegBytes);
-            file = jpegFile;
-          }
+          if (jpegBytes == null) continue;
+          final jpegFile = File('${tempDir.path}/${asset.id}.jpg');
+          await jpegFile.writeAsBytes(jpegBytes);
+          file = jpegFile;
+        } else {
+          final bytes = await asset.originBytes;
+          if (bytes == null) continue;
+          final title = await asset.titleAsync;
+          final ext = title.contains('.') ? title.split('.').last.toLowerCase() : 'jpg';
+          final tempFile = File('${tempDir.path}/${asset.id}.$ext');
+          await tempFile.writeAsBytes(bytes);
+          file = tempFile;
         }
 
         final int size = await file.length();
