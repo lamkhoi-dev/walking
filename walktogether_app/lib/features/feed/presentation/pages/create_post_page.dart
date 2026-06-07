@@ -158,7 +158,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
           quality: 92,
         );
         if (jpegBytes == null) continue;
-        final jpegFile = File('${tempDir.path}/${asset.id}.jpg');
+        // iOS asset.id = "UUID/L0/001" (contains slashes) — sanitize to avoid
+        // creating non-existent subdirectories under tempDir.
+        final safeId = asset.id.replaceAll('/', '_');
+        final jpegFile = File('${tempDir.path}/$safeId.jpg');
         await jpegFile.writeAsBytes(jpegBytes);
         file = jpegFile;
 
