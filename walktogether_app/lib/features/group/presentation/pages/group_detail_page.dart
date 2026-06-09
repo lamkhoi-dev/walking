@@ -830,8 +830,8 @@ class _GroupFeedTabState extends State<_GroupFeedTab> with AutomaticKeepAliveCli
           return PostCard(
             post: post,
             onLike: () {},
-            onComment: () => context.push('/posts/${post.id}'),
-            onTap: () => context.push('/posts/${post.id}'),
+            onComment: () => context.push('/post/${post.id}'),
+            onTap: () => context.push('/post/${post.id}'),
           );
         },
       ),
