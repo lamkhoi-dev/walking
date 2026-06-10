@@ -73,6 +73,53 @@ app.use('/api/v1/posts', require('./routes/post.routes'));
 app.use('/api/v1/reports', require('./routes/report.routes'));
 app.use('/api/v1/friends', require('./routes/friend.routes'));
 
+// ===== DELETE ACCOUNT PAGE (required by Google Play / App Store) =====
+app.get('/delete-account', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xóa tài khoản Runly</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; color: #333; }
+    h1 { color: #e53e3e; }
+    .step { background: #f7fafc; border-left: 4px solid #4299e1; padding: 12px 16px; margin: 12px 0; border-radius: 4px; }
+    .note { background: #fff5f5; border-left: 4px solid #e53e3e; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+    a { color: #4299e1; }
+  </style>
+</head>
+<body>
+  <h1>Xóa tài khoản Runly</h1>
+  <p>Để yêu cầu xóa tài khoản và toàn bộ dữ liệu của bạn, thực hiện các bước sau:</p>
+
+  <div class="step"><strong>Bước 1:</strong> Mở app Runly trên điện thoại</div>
+  <div class="step"><strong>Bước 2:</strong> Vào <strong>Cài đặt</strong> (Settings)</div>
+  <div class="step"><strong>Bước 3:</strong> Cuộn xuống cuối trang, chọn <strong>"Xóa tài khoản"</strong></div>
+  <div class="step"><strong>Bước 4:</strong> Nhập mật khẩu để xác nhận → bấm <strong>Xác nhận xóa</strong></div>
+
+  <div class="note">
+    <strong>Lưu ý:</strong> Khi xóa tài khoản, toàn bộ dữ liệu bao gồm hồ sơ, bài viết, tin nhắn và lịch sử hoạt động sẽ bị xóa vĩnh viễn và không thể khôi phục.
+  </div>
+
+  <p>Nếu bạn cần hỗ trợ thêm, liên hệ: <a href="mailto:walkingapp51@gmail.com">walkingapp51@gmail.com</a></p>
+
+  <hr>
+  <p><strong>Delete Runly Account (English)</strong></p>
+  <p>To delete your account and all associated data:</p>
+  <ol>
+    <li>Open the Runly app</li>
+    <li>Go to <strong>Settings</strong></li>
+    <li>Scroll to the bottom and tap <strong>"Delete Account"</strong></li>
+    <li>Enter your password to confirm</li>
+  </ol>
+  <p>All data including profile, posts, messages, and activity history will be permanently deleted.</p>
+  <p>Contact: <a href="mailto:walkingapp51@gmail.com">walkingapp51@gmail.com</a></p>
+</body>
+</html>`);
+});
+
 // ===== 404 HANDLER =====
 app.use('*', (req, res) => {
   res.status(404).json({
