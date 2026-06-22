@@ -42,6 +42,8 @@ android {
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    // TikTok Business (App Events) SDK — ad measurement / attribution (via JitPack)
+    implementation 'com.github.tiktok:tiktok-business-android-sdk:1.6.1'
 }
 
 flutter {

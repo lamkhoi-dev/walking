@@ -1,5 +1,6 @@
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/services/tiktok_analytics.dart';
 import '../models/contest_model.dart';
 import '../models/leaderboard_entry_model.dart';
 
@@ -23,7 +24,9 @@ class ContestRepository {
       'startDate': startDate,
       'endDate': endDate,
     });
-    return ContestModel.fromJson(response.data['data']);
+    final contest = ContestModel.fromJson(response.data['data']);
+    TikTokAnalytics().createContest(contestId: contest.id);
+    return contest;
   }
 
   /// Get contests, optionally filtered by group

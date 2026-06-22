@@ -7,6 +7,7 @@ import '../../data/models/register_request.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/company_model.dart';
 import '../../../../core/network/api_exceptions.dart';
+import '../../../../core/services/tiktok_analytics.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -92,6 +93,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
       _emitAuthState(emit, response.user, response.company);
+      _identify(response.user);
+      TikTokAnalytics().login(
+        method: event.identifier.contains('@') ? 'email' : 'phone',
+      );
     } catch (e) {
       emit(AuthError(message: e.toString().replaceFirst('Exception: ', '')));
     }
@@ -116,6 +121,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
       _emitAuthState(emit, response.user, response.company);
+      _identify(response.user);
+      TikTokAnalytics().completeRegistration(
+        method: (event.email?.isNotEmpty == true) ? 'email' : 'phone',
+      );
     } catch (e) {
       emit(AuthError(message: e.toString().replaceFirst('Exception: ', '')));
     }
@@ -127,8 +136,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     _stopStatusPolling();
+    TikTokAnalytics().logout();
     await _authRepository.logout();
     emit(AuthUnauthenticated());
+  }
+
+  /// Associate TikTok events with the logged-in user.
+  void _identify(UserModel user) {
+    TikTokAnalytics().identify(
+      externalId: user.id,
+      userName: user.fullName,
+      phone: user.phone,
+      email: user.email,
+    );
   }
 
   /// Poll company status

@@ -41,6 +41,8 @@
 	<string>Runly cần quyền lưu ảnh và video vào thư viện.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Runly cần truy cập microphone để quay video.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Cho phép Runly đo lường hiệu quả quảng cáo để mang đến nội dung phù hợp hơn với bạn.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

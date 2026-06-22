@@ -1,5 +1,6 @@
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/services/tiktok_analytics.dart';
 import '../models/group_model.dart';
 import '../models/member_model.dart';
 
@@ -24,7 +25,9 @@ class GroupRepository {
         if (avatar != null) 'avatar': avatar,
       },
     );
-    return GroupModel.fromJson(response.data['data']);
+    final group = GroupModel.fromJson(response.data['data']);
+    TikTokAnalytics().createGroup(groupId: group.id);
+    return group;
   }
 
   /// Get all groups for current user
@@ -88,7 +91,9 @@ class GroupRepository {
   /// Join group by QR code (groupId)
   Future<GroupModel> joinByQR(String groupId) async {
     final response = await _dio.post(ApiEndpoints.groupJoin(groupId));
-    return GroupModel.fromJson(response.data['data']);
+    final group = GroupModel.fromJson(response.data['data']);
+    TikTokAnalytics().joinGroup(groupId: group.id);
+    return group;
   }
 
   /// Get company members (for member selection)

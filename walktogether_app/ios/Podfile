@@ -30,6 +30,9 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+  # TikTok Business (App Events) SDK — ad measurement / attribution
+  pod 'TikTokBusinessSDK', '~> 1.6'
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

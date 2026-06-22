@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/services/tiktok_analytics.dart';
 import '../models/post_model.dart';
 
 class FeedRepository {
@@ -105,7 +106,9 @@ class FeedRepository {
         receiveTimeout: const Duration(seconds: 300),
       ),
     );
-    return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    final post = PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    TikTokAnalytics().createPost(type: type, mediaCount: images?.length ?? 0);
+    return post;
   }
 
   /// Update a post's content
